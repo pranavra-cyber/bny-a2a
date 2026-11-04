@@ -1,0 +1,84 @@
+account_id,client_legal_name,client_short_code,fund_name,account_type,base_currency,client_tier,relationship_manager,service_executive,status,opened_date
+3100-LTP-MAIN,Lakeshore Teachers' Pension Plan (synthetic),LTP,Lakeshore Teachers' Pension Plan Core Portfolio (synthetic),CUSTODY,USD,2,P. Nair,T. Haddad,OPEN,2017-05-27
+3101-LTP-EQTY,Lakeshore Teachers' Pension Plan (synthetic),LTP,Lakeshore Teachers' Pension Plan Equity Portfolio (synthetic),CUSTODY,USD,3,P. Nair,N. Osei,OPEN,2024-04-02
+3107-GSE-MAIN,Granite State Employees Retirement (synthetic),GSE,Granite State Employees Retirement Core Portfolio (synthetic),CUSTODY,USD,3,M. Chen,N. Osei,OPEN,2015-08-25
+3108-GSE-EQTY,Granite State Employees Retirement (synthetic),GSE,Granite State Employees Retirement Equity Portfolio (synthetic),CUSTODY,USD,3,S. Lindqvist,N. Osei,OPEN,2024-05-27
+3114-NMI-MAIN,Northbridge Mutual Insurance (synthetic),NMI,Northbridge Mutual Insurance Core Portfolio (synthetic),CUSTODY,USD,1,J. Whitaker,K. Brennan,OPEN,2014-02-21
+3115-NMI-EQTY,Northbridge Mutual Insurance (synthetic),NMI,Northbridge Mutual Insurance Equity Portfolio (synthetic),CUSTODY,USD,3,D. Alvarez,N. Osei,OPEN,2022-05-17
+3121-HAM-MAIN,Harbourview Asset Management (synthetic),HAM,Harbourview Asset Management Core Portfolio (synthetic),CUSTODY,USD,3,D. Alvarez,T. Haddad,OPEN,2022-08-25
+3128-CSF-MAIN,Crescent Sovereign Fund (synthetic),CSF,Crescent Sovereign Fund Core Portfolio (synthetic),CUSTODY,USD,1,J. Whitaker,K. Brennan,OPEN,2020-11-07
+3135-EUE-MAIN,Evergreen University Endowment (synthetic),EUE,Evergreen University Endowment Core Portfolio (synthetic),CUSTODY,USD,3,J. Whitaker,K. Brennan,OPEN,2020-03-01
+3136-EUE-EQTY,Evergreen University Endowment (synthetic),EUE,Evergreen University Endowment Equity Portfolio (synthetic),CUSTODY,USD,3,R. Okafor,A. Moretti,OPEN,2014-03-10
+3142-BMP-MAIN,Bayside Municipal Pension (synthetic),BMP,Bayside Municipal Pension Core Portfolio (synthetic),CUSTODY,USD,1,D. Alvarez,L. Fischer,OPEN,2022-12-24
+3143-BMP-EQTY,Bayside Municipal Pension (synthetic),BMP,Bayside Municipal Pension Equity Portfolio (synthetic),CUSTODY,USD,2,P. Nair,N. Osei,OPEN,2021-03-23
+3149-RCP-MAIN,Ridgeway Capital Partners (synthetic),RCP,Ridgeway Capital Partners Core Portfolio (synthetic),CUSTODY,USD,2,J. Whitaker,A. Moretti,OPEN,2019-01-30
+3150-RCP-EQTY,Ridgeway Capital Partners (synthetic),RCP,Ridgeway Capital Partners Equity Portfolio (synthetic),CUSTODY,USD,2,D. Alvarez,A. Moretti,OPEN,2023-04-28
+3156-OLA-MAIN,Orchard Life Assurance (synthetic),OLA,Orchard Life Assurance Core Portfolio (synthetic),CUSTODY,USD,2,J. Whitaker,T. Haddad,OPEN,2012-12-04
+3163-WPR-MAIN,Westfield Public Retirement System (synthetic),WPR,Westfield Public Retirement System Core Portfolio (synthetic),CUSTODY,USD,2,M. Chen,N. Osei,OPEN,2013-08-10
+3164-WPR-EQTY,Westfield Public Retirement System (synthetic),WPR,Westfield Public Retirement System Equity Portfolio (synthetic),CUSTODY,USD,2,D. Alvarez,L. Fischer,OPEN,2017-06-17
+3170-SIT-MAIN,Silverline Investment Trust (synthetic),SIT,Silverline Investment Trust Core Portfolio (synthetic),CUSTODY,USD,3,D. Alvarez,L. Fischer,OPEN,2018-02-19
+3177-KGA-MAIN,Kestrel Global Advisors (synthetic),KGA,Kestrel Global Advisors Core Portfolio (synthetic),CUSTODY,USD,2,P. Nair,T. Haddad,OPEN,2017-10-17
+3178-KGA-EQTY,Kestrel Global Advisors (synthetic),KGA,Kestrel Global Advisors Equity Portfolio (synthetic),CUSTODY,USD,3,J. Whitaker,T. Haddad,OPEN,2017-01-17
+3184-MFO-MAIN,Monarch Family Office (synthetic),MFO,Monarch Family Office Core Portfolio (synthetic),CUSTODY,USD,3,M. Chen,N. Osei,OPEN,2012-03-18
+3185-MFO-EQTY,Monarch Family Office (synthetic),MFO,Monarch Family Office Equity Portfolio (synthetic),CUSTODY,USD,3,M. Chen,N. Osei,OPEN,2019-09-06
+3191-TIG-MAIN,Tidewater Insurance Group (synthetic),TIG,Tidewater Insurance Group Core Portfolio (synthetic),CUSTODY,USD,3,D. Alvarez,A. Moretti,OPEN,2014-10-11
+3192-TIG-EQTY,Tidewater Insurance Group (synthetic),TIG,Tidewater Insurance Group Equity Portfolio (synthetic),CUSTODY,USD,3,D. Alvarez,T. Haddad,OPEN,2013-02-19
+3198-PCP-MAIN,Pacific Crest Pension Fund (synthetic),PCP,Pacific Crest Pension Fund Core Portfolio (synthetic),CUSTODY,USD,1,D. Alvarez,T. Haddad,OPEN,2015-11-22
+3199-PCP-EQTY,Pacific Crest Pension Fund (synthetic),PCP,Pacific Crest Pension Fund Equity Portfolio (synthetic),CUSTODY,USD,2,R. Okafor,A. Moretti,OPEN,2017-09-19
+3205-AWP-MAIN,Aurora Wealth Partners (synthetic),AWP,Aurora Wealth Partners Core Portfolio (synthetic),CUSTODY,USD,3,R. Okafor,T. Haddad,OPEN,2013-10-21
+3212-IAM-MAIN,Ironwood Asset Management (synthetic),IAM,Ironwood Asset Management Core Portfolio (synthetic),CUSTODY,USD,2,R. Okafor,A. Moretti,OPEN,2022-07-29
+3213-IAM-EQTY,Ironwood Asset Management (synthetic),IAM,Ironwood Asset Management Equity Portfolio (synthetic),CUSTODY,USD,3,R. Okafor,L. Fischer,OPEN,2024-07-25
+3219-BR-MAIN,Bluewater Reinsurance (synthetic),BR,Bluewater Reinsurance Core Portfolio (synthetic),CUSTODY,USD,1,D. Alvarez,K. Brennan,OPEN,2018-03-07
+3220-BR-EQTY,Bluewater Reinsurance (synthetic),BR,Bluewater Reinsurance Equity Portfolio (synthetic),CUSTODY,USD,2,J. Whitaker,A. Moretti,OPEN,2020-03-15
+3226-HCR-MAIN,Highland County Retirement (synthetic),HCR,Highland County Retirement Core Portfolio (synthetic),CUSTODY,USD,1,P. Nair,A. Moretti,OPEN,2016-05-16
+3227-HCR-EQTY,Highland County Retirement (synthetic),HCR,Highland County Retirement Equity Portfolio (synthetic),CUSTODY,USD,3,J. Whitaker,L. Fischer,OPEN,2018-10-26
+3233-SF-MAIN,Sterling Foundation (synthetic),SF,Sterling Foundation Core Portfolio (synthetic),CUSTODY,USD,3,P. Nair,T. Haddad,OPEN,2017-07-08
+3240-CIM-MAIN,Cobalt Investment Managers (synthetic),CIM,Cobalt Investment Managers Core Portfolio (synthetic),CUSTODY,USD,1,P. Nair,A. Moretti,OPEN,2025-01-20
+3247-FC-MAIN,Foxglove Capital (synthetic),FC,Foxglove Capital Core Portfolio (synthetic),CUSTODY,USD,3,D. Alvarez,A. Moretti,OPEN,2022-02-18
+3248-FC-EQTY,Foxglove Capital (synthetic),FC,Foxglove Capital Equity Portfolio (synthetic),CUSTODY,USD,1,M. Chen,A. Moretti,OPEN,2021-08-11
+3254-RHP-MAIN,Riverside Healthcare Pension (synthetic),RHP,Riverside Healthcare Pension Core Portfolio (synthetic),CUSTODY,USD,2,J. Whitaker,T. Haddad,OPEN,2015-10-09
+3255-RHP-EQTY,Riverside Healthcare Pension (synthetic),RHP,Riverside Healthcare Pension Equity Portfolio (synthetic),CUSTODY,USD,3,M. Chen,T. Haddad,OPEN,2018-07-17
+3256-RHP-FXIN,Riverside Healthcare Pension (synthetic),RHP,Riverside Healthcare Pension Fixed Income Portfolio (synthetic),CUSTODY,USD,3,R. Okafor,A. Moretti,OPEN,2020-08-31
+3261-CE-MAIN,Clearwater Endowment (synthetic),CE,Clearwater Endowment Core Portfolio (synthetic),CUSTODY,USD,2,M. Chen,T. Haddad,OPEN,2013-12-10
+3268-NSH-MAIN,Northstar Sovereign Holdings (synthetic),NSH,Northstar Sovereign Holdings Core Portfolio (synthetic),CUSTODY,USD,2,R. Okafor,K. Brennan,OPEN,2022-06-03
+3275-MOA-MAIN,Maple & Oak Advisors (synthetic),MOA,Maple & Oak Advisors Core Portfolio (synthetic),CUSTODY,USD,3,M. Chen,A. Moretti,OPEN,2017-07-21
+3276-MOA-EQTY,Maple & Oak Advisors (synthetic),MOA,Maple & Oak Advisors Equity Portfolio (synthetic),CUSTODY,USD,3,M. Chen,K. Brennan,OPEN,2014-01-15
+3282-SHP-MAIN,Sequoia Hill Pension (synthetic),SHP,Sequoia Hill Pension Core Portfolio (synthetic),CUSTODY,USD,3,S. Lindqvist,K. Brennan,OPEN,2016-10-22
+3289-BML-MAIN,Beacon Mutual Life (synthetic),BML,Beacon Mutual Life Core Portfolio (synthetic),CUSTODY,USD,3,S. Lindqvist,K. Brennan,OPEN,2022-05-13
+3290-BML-EQTY,Beacon Mutual Life (synthetic),BML,Beacon Mutual Life Equity Portfolio (synthetic),CUSTODY,USD,2,D. Alvarez,N. Osei,OPEN,2014-01-08
+3291-BML-FXIN,Beacon Mutual Life (synthetic),BML,Beacon Mutual Life Fixed Income Portfolio (synthetic),CUSTODY,USD,1,M. Chen,L. Fischer,OPEN,2012-01-28
+3296-CAM-MAIN,Copperfield Asset Management (synthetic),CAM,Copperfield Asset Management Core Portfolio (synthetic),CUSTODY,USD,1,S. Lindqvist,A. Moretti,OPEN,2016-12-24
+3297-CAM-EQTY,Copperfield Asset Management (synthetic),CAM,Copperfield Asset Management Equity Portfolio (synthetic),CUSTODY,USD,2,J. Whitaker,L. Fischer,OPEN,2012-01-18
+3303-LIP-MAIN,Larkspur Investment Partners (synthetic),LIP,Larkspur Investment Partners Core Portfolio (synthetic),CUSTODY,USD,3,P. Nair,K. Brennan,OPEN,2022-12-15
+3304-LIP-EQTY,Larkspur Investment Partners (synthetic),LIP,Larkspur Investment Partners Equity Portfolio (synthetic),CUSTODY,USD,2,M. Chen,A. Moretti,OPEN,2021-10-22
+3310-ERT-MAIN,Elmwood Retirement Trust (synthetic),ERT,Elmwood Retirement Trust Core Portfolio (synthetic),CUSTODY,USD,2,R. Okafor,N. Osei,OPEN,2013-07-04
+3317-SPC-MAIN,Summit Peak Capital (synthetic),SPC,Summit Peak Capital Core Portfolio (synthetic),CUSTODY,USD,2,R. Okafor,K. Brennan,OPEN,2012-03-14
+3318-SPC-EQTY,Summit Peak Capital (synthetic),SPC,Summit Peak Capital Equity Portfolio (synthetic),CUSTODY,USD,1,D. Alvarez,L. Fischer,OPEN,2025-02-19
+3324-HLI-MAIN,Harbor Light Insurance (synthetic),HLI,Harbor Light Insurance Core Portfolio (synthetic),CUSTODY,USD,2,D. Alvarez,N. Osei,OPEN,2019-07-20
+3325-HLI-EQTY,Harbor Light Insurance (synthetic),HLI,Harbor Light Insurance Equity Portfolio (synthetic),CUSTODY,USD,2,R. Okafor,T. Haddad,OPEN,2013-11-29
+3331-JSP-MAIN,Juniper State Pension (synthetic),JSP,Juniper State Pension Core Portfolio (synthetic),CUSTODY,USD,3,S. Lindqvist,T. Haddad,OPEN,2012-06-19
+3338-WAM-MAIN,Windward Asset Management (synthetic),WAM,Windward Asset Management Core Portfolio (synthetic),CUSTODY,USD,3,D. Alvarez,A. Moretti,OPEN,2014-12-03
+3345-OE-MAIN,Oakmont Endowment (synthetic),OE,Oakmont Endowment Core Portfolio (synthetic),CUSTODY,USD,1,P. Nair,N. Osei,OPEN,2012-07-28
+3346-OE-EQTY,Oakmont Endowment (synthetic),OE,Oakmont Endowment Equity Portfolio (synthetic),CUSTODY,USD,3,M. Chen,K. Brennan,OPEN,2024-08-24
+3352-PM-MAIN,Prairie Mutual (synthetic),PM,Prairie Mutual Core Portfolio (synthetic),CUSTODY,USD,1,M. Chen,A. Moretti,OPEN,2022-01-17
+3353-PM-EQTY,Prairie Mutual (synthetic),PM,Prairie Mutual Equity Portfolio (synthetic),CUSTODY,USD,2,P. Nair,N. Osei,OPEN,2015-11-23
+3359-FA-MAIN,Fairhaven Advisors (synthetic),FA,Fairhaven Advisors Core Portfolio (synthetic),CUSTODY,USD,3,S. Lindqvist,N. Osei,OPEN,2012-09-23
+3360-FA-EQTY,Fairhaven Advisors (synthetic),FA,Fairhaven Advisors Equity Portfolio (synthetic),CUSTODY,USD,2,D. Alvarez,L. Fischer,OPEN,2024-05-09
+3366-GC-MAIN,Glenmore Capital (synthetic),GC,Glenmore Capital Core Portfolio (synthetic),CUSTODY,USD,2,M. Chen,L. Fischer,OPEN,2017-02-06
+3367-GC-EQTY,Glenmore Capital (synthetic),GC,Glenmore Capital Equity Portfolio (synthetic),CUSTODY,USD,2,S. Lindqvist,L. Fischer,OPEN,2016-02-27
+4471-AGI-GLEQ,Allianz Global Investors GmbH,AGI,AllianzGI Global Equity Fund (synthetic),CUSTODY,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4471-AGC-GLEQ,Allianz Global Investors GmbH,AGI,AllianzGI Global Equity Fund (synthetic) cash,CASH,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4474-AGI-USEQ,Allianz Global Investors GmbH,AGI,AllianzGI US Equity Opportunities Fund (synthetic),CUSTODY,USD,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4474-AGC-USEQ,Allianz Global Investors GmbH,AGI,AllianzGI US Equity Opportunities Fund (synthetic) cash,CASH,USD,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4477-AGI-EUEQ,Allianz Global Investors GmbH,AGI,AllianzGI Europe Equity Growth Fund (synthetic),CUSTODY,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4477-AGC-EUEQ,Allianz Global Investors GmbH,AGI,AllianzGI Europe Equity Growth Fund (synthetic) cash,CASH,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4480-AGI-TECH,Allianz Global Investors GmbH,AGI,AllianzGI Global Technology Fund (synthetic),CUSTODY,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4480-AGC-TECH,Allianz Global Investors GmbH,AGI,AllianzGI Global Technology Fund (synthetic) cash,CASH,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4483-AGI-INCO,Allianz Global Investors GmbH,AGI,AllianzGI Income and Growth Fund (synthetic),CUSTODY,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4483-AGC-INCO,Allianz Global Investors GmbH,AGI,AllianzGI Income and Growth Fund (synthetic) cash,CASH,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4486-AGI-USHY,Allianz Global Investors GmbH,AGI,AllianzGI US High Yield Fund (synthetic),CUSTODY,USD,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4486-AGC-USHY,Allianz Global Investors GmbH,AGI,AllianzGI US High Yield Fund (synthetic) cash,CASH,USD,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4489-AGI-SUST,Allianz Global Investors GmbH,AGI,AllianzGI Sustainable Equity Fund (synthetic),CUSTODY,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4489-AGC-SUST,Allianz Global Investors GmbH,AGI,AllianzGI Sustainable Equity Fund (synthetic) cash,CASH,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4492-AGI-MULT,Allianz Global Investors GmbH,AGI,AllianzGI Multi Asset Balanced Fund (synthetic),CUSTODY,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01
+4492-AGC-MULT,Allianz Global Investors GmbH,AGI,AllianzGI Multi Asset Balanced Fund (synthetic) cash,CASH,EUR,1,R. Okafor,K. Brennan,OPEN,2026-04-01

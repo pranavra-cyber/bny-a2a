@@ -1,0 +1,15 @@
+participant_number,participant_name,type,id_source,status
+0901,The Bank of New York Mellon,CUSTODIAN,public,ACTIVE
+0005,Goldman Sachs & Co. LLC,BROKER_DEALER,public,ACTIVE
+7101,Morgan Stanley & Co. LLC,BROKER_DEALER,synthetic,ACTIVE
+7102,J.P. Morgan Securities LLC,BROKER_DEALER,synthetic,ACTIVE
+7103,BofA Securities Inc,BROKER_DEALER,synthetic,ACTIVE
+7104,Citigroup Global Markets Inc,BROKER_DEALER,synthetic,ACTIVE
+7105,Barclays Capital Inc,BROKER_DEALER,synthetic,ACTIVE
+7106,UBS Securities LLC,BROKER_DEALER,synthetic,ACTIVE
+7107,Jefferies LLC,BROKER_DEALER,synthetic,ACTIVE
+7201,State Street Bank and Trust Co,CUSTODIAN,synthetic,ACTIVE
+7202,JPMorgan Chase Bank NA (custody),CUSTODIAN,synthetic,ACTIVE
+7203,Citibank NA (custody),CUSTODIAN,synthetic,ACTIVE
+7204,The Northern Trust Company,CUSTODIAN,synthetic,ACTIVE
+7105X,Barclays Capital Inc (legacy),BROKER_DEALER,synthetic,INACTIVE

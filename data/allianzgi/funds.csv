@@ -1,0 +1,9 @@
+fund_code,fund_name,domicile,custodian,base_currency
+AGI-GLEQ,AllianzGI Global Equity Fund (synthetic),LU,BNY,EUR
+AGI-USEQ,AllianzGI US Equity Opportunities Fund (synthetic),LU,BNY,USD
+AGI-EUEQ,AllianzGI Europe Equity Growth Fund (synthetic),DE,BNY,EUR
+AGI-TECH,AllianzGI Global Technology Fund (synthetic),LU,BNY,EUR
+AGI-INCO,AllianzGI Income and Growth Fund (synthetic),LU,BNY,EUR
+AGI-USHY,AllianzGI US High Yield Fund (synthetic),UK,BNY,USD
+AGI-SUST,AllianzGI Sustainable Equity Fund (synthetic),DE,BNY,EUR
+AGI-MULT,AllianzGI Multi Asset Balanced Fund (synthetic),UK,BNY,EUR
