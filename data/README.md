@@ -14,12 +14,12 @@ Real firm names give context. People, accounts, funds and every record are inven
 |---|---|
 | BNY / Custody Platform Extracts | Client & Account Master, Reference Data (securities master, SSIs), Settlement Instructions Log, Instruction Repair Queue, Safekeeping Positions, Cash Ledger, Fails & Exceptions Tracker, Client Inquiries (DISC export) |
 | BNY / Procedures | Settlement Operations Procedures, Repair Queue Runbook, AllianzGI Service Level Summary |
-| BNY / Correspondence | Ops Team Chat Export - Nov 18-19, Email - AllianzGI amendment acknowledgement |
+| BNY / Correspondence | Ops Team Chat Export - Nov 18-19 |
 | Goldman Sachs / Ops Extracts | Equity Trade Blotter, Allocations & Confirms, DTC Deliveries, Fails Management, Box & Inventory, Counterparty SSI Book, Stock Loan & Borrow |
 | Goldman Sachs / Procedures | Fails Desk Procedures |
 | Goldman Sachs / Correspondence | Fails Desk Email Thread - NVDA DK |
 | DTC | Settlement Activity Feed, Participant Directory |
-| Allianz Global Investors | OMS Orders Export, Allocations, Fund List, Approved Broker List, Email - Allocation amendment to BNY 2026-11-18 |
+| Allianz Global Investors | OMS Orders Export, Allocations, Fund List, Approved Broker List, OMS Log - Allocation amendment 2026-11-18 |
 
 Each firm sees only its own data. The same trade appears in several firms' systems under different IDs, formats and time zones, linked only by shared fields: trade date, ISIN, quantity, price, counterparty, settlement date and the DTC delivery reference.
 
@@ -31,16 +31,13 @@ AllianzGI Global Equity Fund (synthetic), fund AGI-GLEQ, BNY account 4471-AGI-GL
 |---|---|---|
 | 18 Nov 21:10 CET | AllianzGI | Allocation v1 for 8,000 sent to BNY (ALC-26-322-0773-1, order AGI-ORD-26-322-0773) |
 | 18 Nov 15:10 ET | BNY | Instruction BNYI-20261118-5527301 for 8,000, counterparty participant 0005, SENT_TO_DTC |
-| 18 Nov 23:38 CET | AllianzGI → BNY | Email: amendment to 10,000 |
-| 18 Nov 23:40 CET | AllianzGI | Allocation v2 for 10,000 (ALC-26-322-0773-2); CTM-77104562 re-affirmed at 10,000 by Goldman (22:52 UTC) |
-| 18 Nov 18:05 ET (00:05 CET) | BNY | Amendment BNYI-20261118-5529944 for 10,000 arrives with counterparty participant blank → IN_REPAIR |
-| 18 Nov 18:06 ET | BNY | Repair item RQ-20261118-0412, MISSING_CPTY_PARTICIPANT, routed to a human, cutoff 19 Nov 14:30 ET. Nobody works it overnight. |
+| 18 Nov 23:40 CET | AllianzGI | Allocation v2 for 10,000 (ALC-26-322-0773-2); CTM-77104562 re-affirmed at 10,000 by Goldman (22:52 UTC). The amended custodian instruction to BNY is queued for approval and **never released** (NOT_SENT) |
 | 19 Nov 08:15 ET | DTC | Goldman (0005) delivers 10,000 to BNY (0901), DTC-DO-20261119-000318 |
 | 19 Nov 08:16 ET | DTC / BNY | BNY's live instruction says 8,000 → DK, reason QTY_MISMATCH; BNY opens EXC-20261119-0907 |
 | 19 Nov 13:17 UTC | Goldman | Fail GS-FAIL-20261119-0091, DK_BY_RECEIVER, unassigned |
 | 19 Nov 08:30 ET onward | BNY / Goldman | Ops chat and Goldman email thread: neither side can quickly find the right contact at the other |
 
-The correct counterparty SSI is SSI-GS-US-EQ-0005 (ACTIVE). The data ends around 09:00 ET on 19 Nov with nothing resolved: the prototype starts from there.
+BNY cannot change a client instruction on its own: only AllianzGI can re-instruct. The correct counterparty SSI is SSI-GS-US-EQ-0005 (ACTIVE). The data ends around 09:00 ET on 19 Nov with nothing resolved: the prototype starts from there.
 
 **Near-misses built in, so an agent has to check rather than pattern-match:**
 

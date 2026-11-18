@@ -64,7 +64,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 
 ## bny/settlement_instructions
 
-**Workbook:** BNY Settlement Instructions Log · **Folder:** BNY/Custody Platform Extracts · **Imitates:** BNY settlement instruction processing platform · **Rows:** 2259
+**Workbook:** BNY Settlement Instructions Log · **Folder:** BNY/Custody Platform Extracts · **Imitates:** BNY settlement instruction processing platform · **Rows:** 2258
 
 | Column | Type / format | Description and allowed values | Example |
 |---|---|---|---|
@@ -90,7 +90,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 
 ## bny/repair_queue
 
-**Workbook:** BNY Instruction Repair Queue · **Folder:** BNY/Custody Platform Extracts · **Imitates:** BNY instruction repair workflow, incl. digital employee DE-REPAIR-01 · **Rows:** 144
+**Workbook:** BNY Instruction Repair Queue · **Folder:** BNY/Custody Platform Extracts · **Imitates:** BNY instruction repair workflow, incl. digital employee DE-REPAIR-01 · **Rows:** 143
 
 | Column | Type / format | Description and allowed values | Example |
 |---|---|---|---|

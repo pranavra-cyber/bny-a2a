@@ -1,0 +1,1437 @@
+{
+ "version": 1,
+ "runId": "r_8c13a98a",
+ "scenario": "fp8",
+ "recordedMode": "live",
+ "model": "gpt-6.1-terra",
+ "recordedAt": "2026-11-18T03:57:27.273Z",
+ "summary": {
+  "id": "r_8c13a98a",
+  "scenario": "fp8",
+  "mode": "live",
+  "model": "gpt-6.1-terra",
+  "status": "escalated",
+  "statusReason": "data-aggregation",
+  "startedAt": "2026-11-18T03:57:24.157Z",
+  "clock": "2026-11-19T14:02:21.000Z",
+  "scenarioStart": "2026-11-19T14:02:00.000Z",
+  "cutoff": "2026-11-19T16:30:00.000Z",
+  "budget": {
+   "limitUsd": 0.2,
+   "spentUsd": 0,
+   "tokensIn": 0,
+   "tokensOut": 0,
+   "calls": 0,
+   "exhausted": false
+  },
+  "turns": 6,
+  "negotiationMinutes": 0.35,
+  "pendingApprovals": [],
+  "guided": false,
+  "copilotBusy": false,
+  "turn": null,
+  "guideStage": 0
+ },
+ "events": [
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Question 1 to BNY",
+   "detail": "Which fund is this receipt for?",
+   "flags": [
+    "outbound"
+   ],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_12f9e1",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_12f9e1",
+      "taskId": "pending",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Which fund is this receipt for?"
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_fields": [
+          "fund"
+         ]
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.status",
+       "sentAt": "2026-11-19T14:02:00.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:nVcKZz8m9TXiqPziOIU4u3… (simulated)",
+       "nonce": "29cc34067ba9088d",
+       "timestamp": "2026-11-19T14:02:00.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 1,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 4
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Gateway accepted settlement.status",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.status schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.status approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 1 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "2 fields within allowlist"
+    }
+   ],
+   "flags": [
+    "accepted"
+   ],
+   "taskState": "submitted",
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_12f9e1",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_12f9e1",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Which fund is this receipt for?"
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_fields": [
+          "fund"
+         ]
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.status",
+       "sentAt": "2026-11-19T14:02:00.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:nVcKZz8m9TXiqPziOIU4u3… (simulated)",
+       "nonce": "29cc34067ba9088d",
+       "timestamp": "2026-11-19T14:02:00.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 2,
+   "at": "2026-11-19T14:02:04.000Z",
+   "wallMs": 685
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Aggregation monitor: within policy",
+   "checks": [
+    {
+     "id": "aggregation",
+     "label": "Request pattern",
+     "ok": true,
+     "detail": "fields asked so far: fund"
+    }
+   ],
+   "flags": [],
+   "seq": 3,
+   "at": "2026-11-19T14:02:04.000Z",
+   "wallMs": 685
+  },
+  {
+   "kind": "message",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-settlement-agent",
+    "name": "BNY Settlement Ops Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "To Goldman: answer 1",
+   "detail": "That is client information and cannot be shared through this channel.",
+   "flags": [
+    "outbound"
+   ],
+   "taskState": "input-required",
+   "seq": 4,
+   "at": "2026-11-19T14:02:04.000Z",
+   "wallMs": 685
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Outbound filter: 2 approved field(s)",
+   "checks": [
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "dtc_reference, requested_action"
+    },
+    {
+     "id": "labels",
+     "label": "Data labels",
+     "ok": true,
+     "detail": "every field public or internal"
+    },
+    {
+     "id": "disclosure",
+     "label": "Disclosure scan",
+     "ok": true,
+     "detail": "no internal or client data in text"
+    },
+    {
+     "id": "terms",
+     "label": "Usage terms",
+     "ok": true,
+     "detail": "purpose: this case only · retain 30 days · no model training"
+    },
+    {
+     "id": "aggregation",
+     "label": "Request pattern",
+     "ok": true,
+     "detail": "fields asked so far: fund"
+    }
+   ],
+   "flags": [],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_a869fe",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer bny…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_a869fe",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "agent",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "That is client information and cannot be shared through this channel."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_action": "none"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "bny-gateway",
+       "to": "gs-outreach",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:04.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:W8hChpE4Fs6pKbvp20lsaJ… (simulated)",
+       "nonce": "d37d330a7ab0664f",
+       "timestamp": "2026-11-19T14:02:04.000Z",
+       "agentInstanceId": "bny-gateway#1",
+       "usageTerms": {
+        "purpose": "case task_e5a54b only",
+        "retainDays": 30,
+        "noTraining": true
+       }
+      }
+     }
+    }
+   },
+   "taskState": "input-required",
+   "seq": 5,
+   "at": "2026-11-19T14:02:07.000Z",
+   "wallMs": 1167
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY (via network)",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "BNY: answer 1",
+   "shared": {
+    "from": "BNY",
+    "fields": {
+     "dtc_reference": "DTC-DO-20261119-000318",
+     "requested_action": "none"
+    },
+    "text": "That is client information and cannot be shared through this channel."
+   },
+   "taskState": "input-required",
+   "seq": 6,
+   "at": "2026-11-19T14:02:07.000Z",
+   "wallMs": 1167
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Question 2 to BNY",
+   "detail": "What trade date do you hold for it?",
+   "flags": [
+    "outbound"
+   ],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_dc3d03",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_dc3d03",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "What trade date do you hold for it?"
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_fields": [
+          "trade_date"
+         ]
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.status",
+       "sentAt": "2026-11-19T14:02:07.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:F_cfQXlM2mhdbJakWDWQGx… (simulated)",
+       "nonce": "eb8ab6cdf4ada94d",
+       "timestamp": "2026-11-19T14:02:07.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 7,
+   "at": "2026-11-19T14:02:07.000Z",
+   "wallMs": 1167
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Gateway accepted settlement.status",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.status schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.status approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 3 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "2 fields within allowlist"
+    }
+   ],
+   "flags": [
+    "accepted"
+   ],
+   "taskState": "input-required",
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_dc3d03",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_dc3d03",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "What trade date do you hold for it?"
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_fields": [
+          "trade_date"
+         ]
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.status",
+       "sentAt": "2026-11-19T14:02:07.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:F_cfQXlM2mhdbJakWDWQGx… (simulated)",
+       "nonce": "eb8ab6cdf4ada94d",
+       "timestamp": "2026-11-19T14:02:07.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 8,
+   "at": "2026-11-19T14:02:11.000Z",
+   "wallMs": 1600
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Aggregation monitor: within policy",
+   "checks": [
+    {
+     "id": "aggregation",
+     "label": "Request pattern",
+     "ok": true,
+     "detail": "fields asked so far: fund, trade_date"
+    }
+   ],
+   "flags": [],
+   "seq": 9,
+   "at": "2026-11-19T14:02:11.000Z",
+   "wallMs": 1600
+  },
+  {
+   "kind": "message",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-settlement-agent",
+    "name": "BNY Settlement Ops Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "To Goldman: answer 2",
+   "detail": "Settle date 2026-11-19. Trade dates are not shared.",
+   "flags": [
+    "outbound"
+   ],
+   "taskState": "input-required",
+   "seq": 10,
+   "at": "2026-11-19T14:02:11.000Z",
+   "wallMs": 1600
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Outbound filter: 2 approved field(s)",
+   "checks": [
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "dtc_reference, requested_action"
+    },
+    {
+     "id": "labels",
+     "label": "Data labels",
+     "ok": true,
+     "detail": "every field public or internal"
+    },
+    {
+     "id": "disclosure",
+     "label": "Disclosure scan",
+     "ok": true,
+     "detail": "no internal or client data in text"
+    },
+    {
+     "id": "terms",
+     "label": "Usage terms",
+     "ok": true,
+     "detail": "purpose: this case only · retain 30 days · no model training"
+    },
+    {
+     "id": "aggregation",
+     "label": "Request pattern",
+     "ok": true,
+     "detail": "fields asked so far: fund, trade_date"
+    }
+   ],
+   "flags": [],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_98d0d9",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer bny…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_98d0d9",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "agent",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Settle date 2026-11-19. Trade dates are not shared."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_action": "none"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "bny-gateway",
+       "to": "gs-outreach",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:11.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:uVrOur2WpKNZnpmWpBhCBy… (simulated)",
+       "nonce": "730cefa7f885473d",
+       "timestamp": "2026-11-19T14:02:11.000Z",
+       "agentInstanceId": "bny-gateway#1",
+       "usageTerms": {
+        "purpose": "case task_e5a54b only",
+        "retainDays": 30,
+        "noTraining": true
+       }
+      }
+     }
+    }
+   },
+   "taskState": "input-required",
+   "seq": 11,
+   "at": "2026-11-19T14:02:14.000Z",
+   "wallMs": 1964
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY (via network)",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "BNY: answer 2",
+   "shared": {
+    "from": "BNY",
+    "fields": {
+     "dtc_reference": "DTC-DO-20261119-000318",
+     "requested_action": "none"
+    },
+    "text": "Settle date 2026-11-19. Trade dates are not shared."
+   },
+   "taskState": "input-required",
+   "seq": 12,
+   "at": "2026-11-19T14:02:14.000Z",
+   "wallMs": 1964
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Question 3 to BNY",
+   "detail": "How large is the receiving account's NVDA holding today?",
+   "flags": [
+    "outbound"
+   ],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_c74f7e",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_c74f7e",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "How large is the receiving account's NVDA holding today?"
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_fields": [
+          "holding_size"
+         ]
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.status",
+       "sentAt": "2026-11-19T14:02:14.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:p44JH5bB89MwmRyVzr1CLL… (simulated)",
+       "nonce": "6b752c6a72949939",
+       "timestamp": "2026-11-19T14:02:14.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 13,
+   "at": "2026-11-19T14:02:14.000Z",
+   "wallMs": 1965
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Gateway accepted settlement.status",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.status schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.status approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 5 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "2 fields within allowlist"
+    }
+   ],
+   "flags": [
+    "accepted"
+   ],
+   "taskState": "input-required",
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_c74f7e",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_c74f7e",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "How large is the receiving account's NVDA holding today?"
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "requested_fields": [
+          "holding_size"
+         ]
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.status",
+       "sentAt": "2026-11-19T14:02:14.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:p44JH5bB89MwmRyVzr1CLL… (simulated)",
+       "nonce": "6b752c6a72949939",
+       "timestamp": "2026-11-19T14:02:14.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 14,
+   "at": "2026-11-19T14:02:18.000Z",
+   "wallMs": 2574
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Aggregation monitor: unusual combination",
+   "checks": [
+    {
+     "id": "aggregation",
+     "label": "Request pattern",
+     "ok": false,
+     "detail": "fund + trade date + holding size requested across 3 turns: together they identify the client's position"
+    }
+   ],
+   "flags": [
+    "blocked"
+   ],
+   "seq": 15,
+   "at": "2026-11-19T14:02:18.000Z",
+   "wallMs": 2574
+  },
+  {
+   "kind": "escalation",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-ops-lead",
+    "name": "Priya Sharma",
+    "firm": "bny",
+    "type": "HUMAN"
+   },
+   "title": "ESCALATED (data-aggregation): handed to Priya Sharma",
+   "escalation": {
+    "reason": "data-aggregation",
+    "summary": "Goldman's agent asked for fund, trade_date, holding_size over 3 turns. Each was within policy; together they could identify the client's holding. Answers stopped; the BNY analyst decides what happens next.",
+    "findings": []
+   },
+   "seq": 16,
+   "at": "2026-11-19T14:02:18.000Z",
+   "wallMs": 2575
+  },
+  {
+   "kind": "escalation",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-ops-approver",
+    "name": "Michael Torres",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "ESCALATED (data-aggregation): handed to Michael Torres",
+   "escalation": {
+    "reason": "data-aggregation",
+    "summary": "The custodian handed the case to its operations team.",
+    "findings": []
+   },
+   "seq": 17,
+   "at": "2026-11-19T14:02:18.000Z",
+   "wallMs": 2575
+  },
+  {
+   "kind": "notification",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "desk": "bny",
+   "actor": {
+    "id": "bny-orchestrator",
+    "name": "Settlement Fails Orchestrator",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "ESCALATED (data-aggregation): the case needs a person",
+   "detail": "Goldman's agent asked for fund, trade_date, holding_size over 3 turns. Each was within policy; together they could identify the client's holding. Answers stopped; the BNY analyst decides what happens next.",
+   "notification": {
+    "seat": "bny",
+    "level": "action",
+    "channel": "teams",
+    "from": "Settlement Fails Orchestrator"
+   },
+   "seq": 18,
+   "at": "2026-11-19T14:02:18.000Z",
+   "wallMs": 2575
+  },
+  {
+   "kind": "escalation",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "ESCALATED (data-aggregation)",
+   "escalation": {
+    "reason": "data-aggregation",
+    "summary": "Goldman's agent asked for fund, trade_date, holding_size over 3 turns. Each was within policy; together they could identify the client's holding. Answers stopped; the BNY analyst decides what happens next.",
+    "findings": []
+   },
+   "seq": 19,
+   "at": "2026-11-19T14:02:18.000Z",
+   "wallMs": 2575
+  },
+  {
+   "kind": "message",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-settlement-agent",
+    "name": "BNY Settlement Ops Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "To Goldman: handed to operations",
+   "detail": "This inquiry has been handed to BNY settlement operations, who will contact your fails desk directly.",
+   "flags": [
+    "outbound"
+   ],
+   "taskState": "failed",
+   "seq": 20,
+   "at": "2026-11-19T14:02:18.000Z",
+   "wallMs": 2575
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Outbound filter: 1 approved field(s)",
+   "checks": [
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "requested_action"
+    },
+    {
+     "id": "labels",
+     "label": "Data labels",
+     "ok": true,
+     "detail": "every field public or internal"
+    },
+    {
+     "id": "disclosure",
+     "label": "Disclosure scan",
+     "ok": true,
+     "detail": "no internal or client data in text"
+    },
+    {
+     "id": "terms",
+     "label": "Usage terms",
+     "ok": true,
+     "detail": "purpose: this case only · retain 30 days · no model training"
+    }
+   ],
+   "flags": [],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_717df8",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer bny…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_717df8",
+      "taskId": "task_e5a54b",
+      "contextId": "ctx_r_8c13a98a",
+      "role": "agent",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "This inquiry has been handed to BNY settlement operations, who will contact your fails desk directly."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "requested_action": "await_bny_operations"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "bny-gateway",
+       "to": "gs-outreach",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:18.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:e9Rz0ATO7eduV_Q9pm6cJA… (simulated)",
+       "nonce": "71df8ad203d50df3",
+       "timestamp": "2026-11-19T14:02:18.000Z",
+       "agentInstanceId": "bny-gateway#1",
+       "usageTerms": {
+        "purpose": "case task_e5a54b only",
+        "retainDays": 30,
+        "noTraining": true
+       }
+      }
+     }
+    }
+   },
+   "taskState": "failed",
+   "seq": 21,
+   "at": "2026-11-19T14:02:21.000Z",
+   "wallMs": 3116
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY (via network)",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "BNY: handed to operations",
+   "shared": {
+    "from": "BNY",
+    "fields": {
+     "requested_action": "await_bny_operations"
+    },
+    "text": "This inquiry has been handed to BNY settlement operations, who will contact your fails desk directly."
+   },
+   "taskState": "failed",
+   "seq": 22,
+   "at": "2026-11-19T14:02:21.000Z",
+   "wallMs": 3116
+  }
+ ],
+ "audit": [
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool findOpenDkFails",
+   "dataAccessed": [
+    "goldman/fails#GS-FAIL-20261119-0091"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 1,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getFail",
+   "dataAccessed": [
+    "goldman/fails#GS-FAIL-20261119-0091"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 2,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getDelivery",
+   "dataAccessed": [
+    "goldman/deliveries#DEL-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 3,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getTrade",
+   "dataAccessed": [
+    "goldman/trade_blotter#GS-EQ-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 4,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getAllocationConfirm",
+   "dataAccessed": [
+    "goldman/allocations_confirms#AL-20261118-448213-2"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 5,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getDtcEvents",
+   "dataAccessed": [
+    "dtc/settlement_activity#DTC-DO-20261119-000318/INSTRUCTED",
+    "dtc/settlement_activity#DTC-DO-20261119-000318/DK"
+   ],
+   "fieldsShared": [],
+   "decision": "2 row(s)",
+   "approver": "",
+   "seq": 6,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getInventory",
+   "dataAccessed": [
+    "goldman/inventory#US67066G1040@DTC-0005"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 7,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "inbound settlement.status from gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "requested_fields"
+   ],
+   "decision": "accepted",
+   "approver": "",
+   "seq": 8,
+   "at": "2026-11-19T14:02:04.000Z",
+   "afterSeq": 2
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "outbound reply to gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "requested_action"
+   ],
+   "decision": "passed; usage terms attached (this case, 30 days, no training)",
+   "approver": "",
+   "seq": 9,
+   "at": "2026-11-19T14:02:07.000Z",
+   "afterSeq": 5
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "inbound settlement.status from gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "requested_fields"
+   ],
+   "decision": "accepted",
+   "approver": "",
+   "seq": 10,
+   "at": "2026-11-19T14:02:11.000Z",
+   "afterSeq": 8
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "outbound reply to gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "requested_action"
+   ],
+   "decision": "passed; usage terms attached (this case, 30 days, no training)",
+   "approver": "",
+   "seq": 11,
+   "at": "2026-11-19T14:02:14.000Z",
+   "afterSeq": 11
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "inbound settlement.status from gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "requested_fields"
+   ],
+   "decision": "accepted",
+   "approver": "",
+   "seq": 12,
+   "at": "2026-11-19T14:02:18.000Z",
+   "afterSeq": 14
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "aggregation monitor",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "flagged fund + trade_date + holding_size; answers stopped",
+   "approver": "",
+   "seq": 13,
+   "at": "2026-11-19T14:02:18.000Z",
+   "afterSeq": 15
+  },
+  {
+   "actor": "Settlement Fails Orchestrator",
+   "actorType": "AGENT",
+   "firm": "bny",
+   "action": "notify Priya Sharma (teams)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "ESCALATED (data-aggregation): the case needs a person",
+   "approver": "",
+   "seq": 14,
+   "at": "2026-11-19T14:02:18.000Z",
+   "afterSeq": 18
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "escalate to human",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "ESCALATED (data-aggregation): Goldman's agent asked for fund, trade_date, holding_size over 3 turns. Each was within policy; together they could identify the client's holding. Answers stopped; the BNY analyst decides what happens next.",
+   "approver": "",
+   "seq": 15,
+   "at": "2026-11-19T14:02:18.000Z",
+   "afterSeq": 19
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "outbound reply to gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "requested_action"
+   ],
+   "decision": "passed; usage terms attached (this case, 30 days, no training)",
+   "approver": "",
+   "seq": 16,
+   "at": "2026-11-19T14:02:21.000Z",
+   "afterSeq": 21
+  }
+ ],
+ "toolCalls": 7
+}

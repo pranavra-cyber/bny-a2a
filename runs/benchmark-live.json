@@ -1,0 +1,175 @@
+{
+ "createdAt": "2026-11-18T05:01:57.783Z",
+ "mode": "live",
+ "model": "gpt-6.1-terra",
+ "dkAt": "2026-11-19T13:16:02.000Z",
+ "rows": [
+  {
+   "mode": "manual",
+   "label": "Manual baseline",
+   "description": "Today's phone/email chase. Assumed from interviews and the Nov 18-19 ops chat; not measured.",
+   "metrics": {
+    "minutesToResolution": {
+     "value": 324,
+     "basis": "assumed",
+     "note": "DK 08:16 → settled ~13:40: client reply ~10:30, GS fails desk found and told ~11:30, late-instruction exception needed"
+    },
+    "turns": {
+     "value": 11,
+     "basis": "assumed",
+     "note": "emails and calls across BNY, AllianzGI and Goldman"
+    },
+    "toolCalls": {
+     "value": 0,
+     "basis": "assumed",
+     "note": "manual screen lookups"
+    },
+    "humanApprovals": {
+     "value": 2,
+     "basis": "assumed"
+    },
+    "escalations": {
+     "value": 1,
+     "basis": "assumed",
+     "note": "flagged to team lead"
+    },
+    "fieldsShared": {
+     "value": 9,
+     "basis": "assumed",
+     "note": "free-text email typically includes client, fund and instruction details"
+    },
+    "tokens": {
+     "value": 0,
+     "basis": "assumed"
+    },
+    "costUsd": {
+     "value": 0,
+     "basis": "assumed"
+    }
+   },
+   "fieldsSharedList": [
+    "dtc_reference",
+    "isin",
+    "quantity",
+    "settle_date",
+    "instruction_id",
+    "participant",
+    "client name",
+    "fund",
+    "account"
+   ]
+  },
+  {
+   "mode": "single",
+   "label": "Single agent with tools",
+   "description": "One BNY agent with every BNY tool but no channel to Goldman: it drafts emails to the client and the counterparty and waits for replies.",
+   "metrics": {
+    "minutesToResolution": {
+     "value": 244,
+     "basis": "assumed",
+     "note": "agent ready ~09:10; client reply ~10:30; finding and briefing the right GS contact ~60 min; redelivery; settles ~12:20"
+    },
+    "turns": {
+     "value": 6,
+     "basis": "assumed",
+     "note": "client email and reply, counterparty email, follow-up, fix time, redelivery notice"
+    },
+    "toolCalls": {
+     "value": 7,
+     "basis": "measured"
+    },
+    "humanApprovals": {
+     "value": 2,
+     "basis": "assumed",
+     "note": "BNY client service + GS ops"
+    },
+    "escalations": {
+     "value": 0,
+     "basis": "measured"
+    },
+    "fieldsShared": {
+     "value": 2,
+     "basis": "measured",
+     "note": "fields detected in the drafted email"
+    },
+    "tokens": {
+     "value": 2437,
+     "basis": "measured"
+    },
+    "costUsd": {
+     "value": 0.006765,
+     "basis": "measured"
+    }
+   },
+   "fieldsSharedList": [
+    "dtc_reference",
+    "quantity"
+   ],
+   "detail": "The delivery was automatically DK'd for a quantity mismatch: Goldman delivered 10,000 shares against BNY's 8,000-share instruction. The amounts also differ. The records do not establish which side is correct; the latest allocation, open repair items, and client inquiry log were not provided."
+  },
+  {
+   "mode": "a2a",
+   "label": "A2A (this design)",
+   "description": "Full multi-agent run r_b125489b (live, gpt-6.1-terra).",
+   "metrics": {
+    "minutesToResolution": {
+     "value": 181,
+     "basis": "scripted",
+     "note": "DK 08:16 → settled 11:17:00 ET; human review times are scripted assumptions"
+    },
+    "turns": {
+     "value": 5,
+     "basis": "measured",
+     "note": "cross-firm messages through the gateway"
+    },
+    "toolCalls": {
+     "value": 17,
+     "basis": "measured"
+    },
+    "humanApprovals": {
+     "value": 2,
+     "basis": "measured"
+    },
+    "escalations": {
+     "value": 0,
+     "basis": "measured"
+    },
+    "fieldsShared": {
+     "value": 7,
+     "basis": "measured",
+     "note": "distinct fields BNY sent across the boundary"
+    },
+    "tokens": {
+     "value": 11059,
+     "basis": "measured",
+     "note": "API usage fields"
+    },
+    "costUsd": {
+     "value": 0.018454250000000002,
+     "basis": "measured"
+    }
+   },
+   "fieldsSharedList": [
+    "dtc_reference",
+    "instruction_status",
+    "requested_action",
+    "isin",
+    "settle_date",
+    "expected_fix_time",
+    "quantity_instructed"
+   ]
+  }
+ ],
+ "emails": [
+  {
+   "to": "AllianzGI Global Equity Fund",
+   "subject": "Action requested: DK on AGI-ORD-26-322-0773",
+   "body": "Please check your latest allocation and instruction for AGI-ORD-26-322-0773 and re-instruct as appropriate. BNY's instruction is for 8,000 shares and USD 1,490,080; the delivery was for 10,000 shares and USD 1,862,600 and was DK'd. Please confirm the correct quantity and settlement amount. We cannot determine from the available records which side is correct."
+  },
+  {
+   "to": "Goldman Sachs & Co. LLC fails desk",
+   "subject": "DK on DTC-DO-20261119-000318",
+   "body": "Your delivery under DTC reference DTC-DO-20261119-000318 was automatically DK'd for a quantity mismatch. It was for 10,000 shares and USD 1,862,600; BNY's instruction is for 8,000 shares and USD 1,490,080. We have asked the client to check and re-instruct as appropriate. The correct terms are not yet verified."
+  }
+ ]
+}

@@ -7,10 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "data:check": "tsx --conditions=react-server scripts/data-check.ts"
+    "data:check": "tsx --conditions=react-server scripts/data-check.ts",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "record": "tsx --conditions=react-server scripts/record.ts",
+    "predev": "tsx --conditions=react-server scripts/check-setup.ts"
   },
   "dependencies": {
     "next": "16.2.4",
+    "openai": "^7.50.0",
     "papaparse": "^5.7.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -19,7 +24,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24.19.2",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -27,6 +32,7 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.1.0"
   }
 }

@@ -38,10 +38,9 @@ DOCS = [  # (folder, title, firm, md file)
  ("BNY/Procedures", "Repair Queue Runbook", "bny", "repair_queue_runbook.md"),
  ("BNY/Procedures", "AllianzGI Service Level Summary", "bny", "allianzgi_service_level_summary.md"),
  ("BNY/Correspondence", "Ops Team Chat Export - Nov 18-19", "bny", "ops_team_chat_export_nov_18_19.md"),
- ("BNY/Correspondence", "Email - AllianzGI amendment acknowledgement", "bny", "email_allianzgi_amendment_acknowledgement.md"),
  ("Goldman Sachs/Procedures", "Fails Desk Procedures", "goldman", "fails_desk_procedures.md"),
  ("Goldman Sachs/Correspondence", "Fails Desk Email Thread - NVDA DK", "goldman", "fails_desk_email_thread_nvda_dk.md"),
- ("Allianz Global Investors", "Email - Allocation amendment to BNY 2026-11-18", "allianzgi", "email_allocation_amendment_to_bny_2026_11_18.md"),
+ ("Allianz Global Investors", "OMS Log - Allocation amendment 2026-11-18", "allianzgi", "oms_log_allocation_amendment_2026_11_18.md"),
 ]
 
 # column dictionary: table -> col -> (type/format, description incl. allowed values)

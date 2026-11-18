@@ -1,0 +1,819 @@
+{
+ "version": 1,
+ "runId": "r_a9406915",
+ "scenario": "fp7",
+ "recordedMode": "live",
+ "model": "gpt-6.1-terra",
+ "recordedAt": "2026-11-18T03:57:24.156Z",
+ "summary": {
+  "id": "r_a9406915",
+  "scenario": "fp7",
+  "mode": "live",
+  "model": "gpt-6.1-terra",
+  "status": "rejected",
+  "statusReason": "replayed and tampered messages blocked",
+  "startedAt": "2026-11-18T03:57:22.831Z",
+  "clock": "2026-11-19T14:02:12.000Z",
+  "scenarioStart": "2026-11-19T14:02:00.000Z",
+  "cutoff": "2026-11-19T16:30:00.000Z",
+  "budget": {
+   "limitUsd": 0.2,
+   "spentUsd": 0,
+   "tokensIn": 0,
+   "tokensOut": 0,
+   "calls": 0,
+   "exhausted": false
+  },
+  "turns": 3,
+  "negotiationMinutes": 0.2,
+  "pendingApprovals": [],
+  "guided": false,
+  "copilotBusy": false,
+  "turn": null,
+  "guideStage": 0
+ },
+ "events": [
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Sent to BNY: DK inquiry (original)",
+   "detail": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive.",
+   "flags": [
+    "outbound"
+   ],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_7bf8c9",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_7bf8c9",
+      "taskId": "pending",
+      "contextId": "ctx_r_a9406915",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 10000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "confirm_quantity": 10000,
+         "confirm_status": "AFFIRMED",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:00.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:t9DyoS0yTYb7bsgmuZWEEn… (simulated)",
+       "nonce": "e8711d21618f7079",
+       "timestamp": "2026-11-19T14:02:00.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 1,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 4
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Gateway accepted settlement.dk-inquiry",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.dk-inquiry schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.dk-inquiry approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 1 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "11 fields within allowlist"
+    }
+   ],
+   "flags": [
+    "accepted"
+   ],
+   "taskState": "submitted",
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_7bf8c9",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_7bf8c9",
+      "taskId": "task_2f6dcf",
+      "contextId": "ctx_r_a9406915",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 10000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "confirm_quantity": 10000,
+         "confirm_status": "AFFIRMED",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:00.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:t9DyoS0yTYb7bsgmuZWEEn… (simulated)",
+       "nonce": "e8711d21618f7079",
+       "timestamp": "2026-11-19T14:02:00.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 2,
+   "at": "2026-11-19T14:02:04.000Z",
+   "wallMs": 627
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-settlement-agent",
+    "name": "BNY Settlement Ops Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Original inquiry accepted and opened as a case",
+   "detail": "The signed original passes every check.",
+   "seq": 3,
+   "at": "2026-11-19T14:02:04.000Z",
+   "wallMs": 627
+  },
+  {
+   "kind": "step",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "gs-settlement-ops",
+    "name": "Attacker replaying captured traffic",
+    "firm": "network",
+    "type": "AGENT"
+   },
+   "title": "A copy of the same signed message is sent again",
+   "detail": "Same message id, nonce and signature, captured off the wire.",
+   "seq": 4,
+   "at": "2026-11-19T14:02:04.000Z",
+   "wallMs": 627
+  },
+  {
+   "kind": "message",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "gs-settlement-ops",
+    "name": "Attacker replaying captured traffic",
+    "firm": "network",
+    "type": "AGENT"
+   },
+   "title": "Replayed copy",
+   "detail": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive.",
+   "flags": [
+    "outbound"
+   ],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_575d91",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_575d91",
+      "taskId": "task_2f6dcf",
+      "contextId": "ctx_r_a9406915",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 10000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "confirm_quantity": 10000,
+         "confirm_status": "AFFIRMED",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:04.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:5CL2UMhRclUlH6gP0-O2iz… (simulated)",
+       "nonce": "eedd0c70a221b9a4",
+       "timestamp": "2026-11-19T14:02:04.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 5,
+   "at": "2026-11-19T14:02:04.000Z",
+   "wallMs": 627
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Gateway rejected: nonce reused",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": false,
+     "detail": "nonce reused: this exact message was already received"
+    }
+   ],
+   "flags": [
+    "rejected"
+   ],
+   "taskState": "rejected",
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_575d91",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_575d91",
+      "taskId": "task_2f6dcf",
+      "contextId": "ctx_r_a9406915",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 10000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "confirm_quantity": 10000,
+         "confirm_status": "AFFIRMED",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:04.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:5CL2UMhRclUlH6gP0-O2iz… (simulated)",
+       "nonce": "eedd0c70a221b9a4",
+       "timestamp": "2026-11-19T14:02:04.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 6,
+   "at": "2026-11-19T14:02:08.000Z",
+   "wallMs": 938
+  },
+  {
+   "kind": "step",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "gs-settlement-ops",
+    "name": "Attacker replaying captured traffic",
+    "firm": "network",
+    "type": "AGENT"
+   },
+   "title": "A second copy is changed to 100,000 shares",
+   "detail": "quantity_delivered edited from 10,000 to 100,000; the signature was not redone.",
+   "seq": 7,
+   "at": "2026-11-19T14:02:08.000Z",
+   "wallMs": 938
+  },
+  {
+   "kind": "message",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "gs-settlement-ops",
+    "name": "Attacker replaying captured traffic",
+    "firm": "network",
+    "type": "AGENT"
+   },
+   "title": "Tampered copy",
+   "detail": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive.",
+   "flags": [
+    "outbound"
+   ],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_d0febb",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_d0febb",
+      "taskId": "task_2f6dcf",
+      "contextId": "ctx_r_a9406915",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 100000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "confirm_quantity": 10000,
+         "confirm_status": "AFFIRMED",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:08.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:3nXDdr79oxzN1iB9pplPvC… (simulated)",
+       "nonce": "7a942799a7809172",
+       "timestamp": "2026-11-19T14:02:08.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 8,
+   "at": "2026-11-19T14:02:08.000Z",
+   "wallMs": 938
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Gateway rejected: signature mismatch",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": false,
+     "detail": "signature mismatch: the message was changed after signing"
+    }
+   ],
+   "flags": [
+    "rejected"
+   ],
+   "taskState": "rejected",
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_d0febb",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_d0febb",
+      "taskId": "task_2f6dcf",
+      "contextId": "ctx_r_a9406915",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Our delivery DTC-DO-20261119-000318 of 10,000 NVDA was DK'd. Please tell us what you are instructed to receive."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 100000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "confirm_quantity": 10000,
+         "confirm_status": "AFFIRMED",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:08.000Z",
+       "sourceRecords": [],
+       "signature": "ed25519:3nXDdr79oxzN1iB9pplPvC… (simulated)",
+       "nonce": "7a942799a7809172",
+       "timestamp": "2026-11-19T14:02:08.000Z",
+       "agentInstanceId": "gs-outreach#1"
+      }
+     }
+    }
+   },
+   "seq": 9,
+   "at": "2026-11-19T14:02:12.000Z",
+   "wallMs": 1324
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Blocked: nonce reused, and signature mismatch",
+   "detail": "Neither copy reached the Settlement Ops Agent. Only the original is in the case.",
+   "flags": [
+    "blocked"
+   ],
+   "seq": 10,
+   "at": "2026-11-19T14:02:12.000Z",
+   "wallMs": 1324
+  },
+  {
+   "kind": "status",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Replayed and tampered copies rejected",
+   "seq": 11,
+   "at": "2026-11-19T14:02:12.000Z",
+   "wallMs": 1324
+  }
+ ],
+ "audit": [
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool findOpenDkFails",
+   "dataAccessed": [
+    "goldman/fails#GS-FAIL-20261119-0091"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 1,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getFail",
+   "dataAccessed": [
+    "goldman/fails#GS-FAIL-20261119-0091"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 2,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getDelivery",
+   "dataAccessed": [
+    "goldman/deliveries#DEL-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 3,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getTrade",
+   "dataAccessed": [
+    "goldman/trade_blotter#GS-EQ-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 4,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getAllocationConfirm",
+   "dataAccessed": [
+    "goldman/allocations_confirms#AL-20261118-448213-2"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 5,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getDtcEvents",
+   "dataAccessed": [
+    "dtc/settlement_activity#DTC-DO-20261119-000318/INSTRUCTED",
+    "dtc/settlement_activity#DTC-DO-20261119-000318/DK"
+   ],
+   "fieldsShared": [],
+   "decision": "2 row(s)",
+   "approver": "",
+   "seq": 6,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getInventory",
+   "dataAccessed": [
+    "goldman/inventory#US67066G1040@DTC-0005"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 7,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 0
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "inbound settlement.dk-inquiry from gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "counterparty_trade_ref",
+    "counterparty_fail_ref",
+    "isin",
+    "quantity_delivered",
+    "settle_date",
+    "deliverer_participant",
+    "dk_reason",
+    "confirm_quantity",
+    "confirm_status",
+    "requested_action"
+   ],
+   "decision": "accepted",
+   "approver": "",
+   "seq": 8,
+   "at": "2026-11-19T14:02:04.000Z",
+   "afterSeq": 2
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "inbound settlement.dk-inquiry from gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "rejected: nonce reused",
+   "approver": "",
+   "seq": 9,
+   "at": "2026-11-19T14:02:08.000Z",
+   "afterSeq": 6
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "inbound settlement.dk-inquiry from gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "rejected: signature mismatch",
+   "approver": "",
+   "seq": 10,
+   "at": "2026-11-19T14:02:12.000Z",
+   "afterSeq": 9
+  }
+ ],
+ "toolCalls": 7
+}

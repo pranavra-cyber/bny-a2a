@@ -11,7 +11,7 @@ import { z } from "zod";
 
 export type Firm = "bny" | "goldman" | "dtc" | "allianzgi";
 
-export const DATA_DIR = path.join(process.cwd(), "data");
+export const DATA_DIR = path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
 
 export class DataSetupError extends Error {
   constructor(

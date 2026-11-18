@@ -11,8 +11,8 @@ import { loadGoldman } from "../lib/data/goldman";
 
 const EXPECTED_COUNTS: Record<string, Record<string, number>> = {
   bny: {
-    settlement_instructions: 2259,
-    repair_queue: 144,
+    settlement_instructions: 2258,
+    repair_queue: 143,
     fails_exceptions: 90,
     positions: 1671,
     cash_ledger: 2143,
@@ -124,21 +124,10 @@ golden(
     orig.status === "SENT_TO_DTC",
 );
 
-const amend = instr("BNYI-20261118-5529944");
 golden(
-  "BNYI-20261118-5529944: 10,000, cpty participant blank, IN_REPAIR, amends 5527301",
-  amend?.quantity === 10000 &&
-    amend.cpty_dtc_participant === null &&
-    amend.status === "IN_REPAIR" &&
-    amend.amends_instruction_id === "BNYI-20261118-5527301",
-);
-
-const rq = bny.repair_queue.find((r) => r.repair_id === "RQ-20261118-0412");
-golden(
-  "RQ-20261118-0412: MISSING_CPTY_PARTICIPANT, cutoff 2026-11-19 14:30 ET, unassigned",
-  rq?.repair_reason === "MISSING_CPTY_PARTICIPANT" &&
-    rq.cutoff_ts_et.utc.toISOString() === "2026-11-19T19:30:00.000Z" &&
-    rq.assigned_to === null,
+  "No amendment from the client at BNY: 5527301 is the only instruction for AGI-ORD-26-322-0773",
+  bny.settlement_instructions.filter((r) => r.client_ref === "AGI-ORD-26-322-0773").length === 1 &&
+    !bny.settlement_instructions.some((r) => r.amends_instruction_id === "BNYI-20261118-5527301"),
 );
 
 const ssi = (id: string) => bny.ssi_counterparties.find((r) => r.ssi_id === id);

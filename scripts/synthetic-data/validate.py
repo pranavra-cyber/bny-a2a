@@ -22,7 +22,7 @@ print('gs fail orphan',sum(r['delivery_id'] not in dl for r in T[('goldman','fai
 dtcref={r['dtc_reference'] for r in T[('dtc','settlement_activity')]}
 print('deliv dtc orphan',sum(r['dtc_reference'] not in dtcref for r in T[('goldman','deliveries')]))
 print('bny fail dtc orphan',sum(bool(r['dtc_reference']) and r['dtc_reference'] not in dtcref for r in T[('bny','fails_exceptions')]))
-G=['BNYI-20261118-5527301','BNYI-20261118-5529944','RQ-20261118-0412','SSI-GS-US-EQ-0005','DTC-DO-20261119-000318','GS-FAIL-20261119-0091','GS-EQ-20261118-448213','CTM-77104562','AGI-ORD-26-322-0773','4471-AGI-GLEQ']
+G=['BNYI-20261118-5527301','SSI-GS-US-EQ-0005','DTC-DO-20261119-000318','GS-FAIL-20261119-0091','GS-EQ-20261118-448213','CTM-77104562','AGI-ORD-26-322-0773','4471-AGI-GLEQ']
 for g in G:
     hits=[k for k,rows in T.items() if any(g in v for r in rows for v in r.values())]
     print(g,hits)

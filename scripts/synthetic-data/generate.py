@@ -396,18 +396,12 @@ agi_orders.append(dict(agi_order_id="AGI-ORD-26-322-0773", created_ts_cet=cet(at
 agi_allocs.append(dict(allocation_id="ALC-26-322-0773-1", agi_order_id="AGI-ORD-26-322-0773", fund_code="AGI-GLEQ", quantity=8000, version=1, amended_ts_cet="",
     custodian="BNY", sent_to_custodian_ts_cet="18.11.2026 21:10", status="SUPERSEDED"))
 agi_allocs.append(dict(allocation_id="ALC-26-322-0773-2", agi_order_id="AGI-ORD-26-322-0773", fund_code="AGI-GLEQ", quantity=10000, version=2, amended_ts_cet="18.11.2026 23:40",
-    custodian="BNY", sent_to_custodian_ts_cet="19.11.2026 00:05", status="SENT"))
+    custodian="BNY", sent_to_custodian_ts_cet="", status="NOT_SENT"))
 instr.append(dict(instruction_id="BNYI-20261118-5527301", received_ts_et="2026-11-18 15:10:04", source_channel="SWIFT_MT541", client_account_id="4471-AGI-GLEQ",
     client_ref="AGI-ORD-26-322-0773", direction="RVP", isin="US67066G1040", quantity=8000, price=186.25, settlement_amount=1490080.00, currency="USD",
     trade_date=str(T), settle_date=str(S), counterparty_name="Goldman Sachs & Co. LLC", cpty_dtc_participant="0005", settlement_location="DTC",
     amends_instruction_id="", status="SENT_TO_DTC", status_ts_et="2026-11-18 15:14:22"))
-instr.append(dict(instruction_id="BNYI-20261118-5529944", received_ts_et="2026-11-18 18:05:37", source_channel="SWIFT_MT541", client_account_id="4471-AGI-GLEQ",
-    client_ref="AGI-ORD-26-322-0773", direction="RVP", isin="US67066G1040", quantity=10000, price=186.25, settlement_amount=1862600.00, currency="USD",
-    trade_date=str(T), settle_date=str(S), counterparty_name="Goldman Sachs & Co. LLC", cpty_dtc_participant="", settlement_location="DTC",
-    amends_instruction_id="BNYI-20261118-5527301", status="IN_REPAIR", status_ts_et="2026-11-18 18:06:02"))
-repair.append(dict(repair_id="RQ-20261118-0412", instruction_id="BNYI-20261118-5529944", opened_ts_et="2026-11-18 18:06:02", repair_reason="MISSING_CPTY_PARTICIPANT",
-    routed_to="HUMAN", priority_score=88.4, cutoff_ts_et="2026-11-19 14:30:00", trade_value_usd=1862600.00, assigned_to="", resolution="", resolved_ts_et="", verified_by="",
-    comments="amend of 5527301; 97A/95P counterparty field empty on inbound MT541"))
+# The client amended to 10,000 at its broker, but its amended instruction to BNY was never released (NOT_SENT).
 dtc_all.append(dict(dtc_reference="DTC-DO-20261119-000318", event_ts_et="2026-11-19T08:15:09-05:00", deliverer_participant="0005", receiver_participant="0901",
     isin="US67066G1040", quantity=10000, settlement_amount=1862600.00, transaction_type="DVP", event="INSTRUCTED", reason_code=""))
 dtc_all.append(dict(dtc_all[-1], event_ts_et="2026-11-19T08:16:02-05:00", event="DK", reason_code="QTY_MISMATCH"))

@@ -27,8 +27,8 @@ export const allocationSchema = z.object({
   version: int(),
   amended_ts_cet: nullable(agiTs()),
   custodian: text(),
-  sent_to_custodian_ts_cet: agiTs(),
-  status: z.enum(["SENT", "SUPERSEDED"]),
+  sent_to_custodian_ts_cet: nullable(agiTs()),
+  status: z.enum(["SENT", "SUPERSEDED", "NOT_SENT"]),
 });
 
 export const fundSchema = z.object({

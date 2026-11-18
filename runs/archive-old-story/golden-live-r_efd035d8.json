@@ -1,0 +1,4076 @@
+{
+ "version": 1,
+ "runId": "r_efd035d8",
+ "scenario": "golden",
+ "recordedMode": "live",
+ "model": "gpt-6.1-terra",
+ "recordedAt": "2026-11-04T19:40:15.171Z",
+ "summary": {
+  "id": "r_efd035d8",
+  "scenario": "golden",
+  "mode": "live",
+  "model": "gpt-6.1-terra",
+  "status": "settled",
+  "startedAt": "2026-11-04T19:35:37.646Z",
+  "clock": "2026-11-19T15:21:00.000Z",
+  "scenarioStart": "2026-11-19T14:02:00.000Z",
+  "cutoff": "2026-11-19T19:30:00.000Z",
+  "budget": {
+   "limitUsd": 0.2,
+   "spentUsd": 0.021384849999999997,
+   "tokensIn": 11151,
+   "tokensOut": 2715,
+   "calls": 12,
+   "exhausted": false
+  },
+  "turns": 3,
+  "negotiationMinutes": 3.9999999999999996,
+  "pendingApprovals": [],
+  "guided": true,
+  "copilotBusy": false
+ },
+ "events": [
+  {
+   "kind": "checkpoint",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Good morning. I'm the Goldman fails-desk copilot. I can see Goldman's fails, deliveries and confirms, and I can reach other firms' agents through BNY's closed network. What would you like to work on?",
+   "checkpoint": {
+    "id": "request",
+    "seat": "goldman",
+    "prompt": "Good morning. I'm the Goldman fails-desk copilot. I can see Goldman's fails, deliveries and confirms, and I can reach other firms' agents through BNY's closed network. What would you like to work on?",
+    "actions": [
+     {
+      "id": "investigate",
+      "label": "Look for DK'd deliveries",
+      "kind": "primary",
+      "keywords": [
+       "fail",
+       "dk",
+       "deliver",
+       "settle",
+       "reject",
+       "nvda",
+       "break",
+       "chase",
+       "investigat",
+       "check",
+       "exception",
+       "cutoff",
+       "counterpart",
+       "attention"
+      ]
+     }
+    ],
+    "suggestions": [
+     "Check this morning's DK'd deliveries and find out why the receiver rejected ours",
+     "Chase the counterparty on our open NVDA settlement fail before cutoff",
+     "Which open fails need attention first today?"
+    ]
+   },
+   "seq": 1,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 1
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-user",
+    "name": "You (Goldman fails desk)",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "Can you check why our NVDA delivery got DKd this morning and chase the receiver?",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 2,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 1
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #1",
+   "detail": "404 in / 33 out tokens · $0.00057",
+   "modelCall": {
+    "agent": "GS Ops Copilot",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 404,
+    "tokensOut": 33,
+    "costUsd": 0.000569,
+    "runningUsd": 0.000569
+   },
+   "seq": 3,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 1248
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "I’ll investigate the DK’d NVDA delivery and chase the receiver.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 4,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 1249
+  },
+  {
+   "kind": "step",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-fails-monitor",
+    "name": "GS Fails Monitor",
+    "firm": "goldman",
+    "type": "RULE"
+   },
+   "title": "DK detected on DEL-20261118-448213",
+   "detail": "Fail GS-FAIL-20261119-0091 (DK_BY_RECEIVER) is open and unassigned. Exposure $1,862,600.",
+   "records": [
+    {
+     "firm": "goldman",
+     "table": "goldman/fails",
+     "id": "GS-FAIL-20261119-0091",
+     "row": {
+      "gs_fail_id": "GS-FAIL-20261119-0091",
+      "delivery_id": "DEL-20261118-448213",
+      "counterparty_custodian": "The Bank of New York Mellon",
+      "fail_reason": "DK_BY_RECEIVER",
+      "opened_ts_utc": "2026-11-19T13:17:00Z",
+      "age_days": "0",
+      "exposure_usd": "1862600",
+      "owner": "",
+      "next_action": "contact receiving custodian",
+      "status": "OPEN"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/deliveries",
+     "id": "DEL-20261118-448213",
+     "row": {
+      "delivery_id": "DEL-20261118-448213",
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "from_participant": "0005",
+      "to_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "instructed_ts_utc": "2026-11-19T13:15:09Z",
+      "status": "DK",
+      "status_ts_utc": "2026-11-19T13:16:02Z",
+      "dk_reason": "QTY_MISMATCH"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/trade_blotter",
+     "id": "GS-EQ-20261118-448213",
+     "row": {
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "exec_ts_utc": "2026-11-18T19:52:31Z",
+      "client_name": "Allianz Global Investors GmbH",
+      "side": "SELL",
+      "client_side": "BUY",
+      "ticker": "NVDA",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "gross_amount": "1862500",
+      "commission": "100",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "desk": "High Touch",
+      "trader_id": "T4417",
+      "status": "BOOKED"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/allocations_confirms",
+     "id": "AL-20261118-448213-2",
+     "row": {
+      "alloc_id": "AL-20261118-448213-2",
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "client_name": "Allianz Global Investors GmbH",
+      "client_account_ref": "AGI-ORD-26-322-0773",
+      "quantity": "10000",
+      "custodian_name": "The Bank of New York Mellon",
+      "custodian_dtc_participant": "0901",
+      "ctm_confirm_id": "CTM-77104562",
+      "affirmed": "Y",
+      "affirmed_ts_utc": "2026-11-18T22:52:10Z",
+      "version": "2",
+      "status": "AFFIRMED"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000318/INSTRUCTED",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "event_ts_et": "2026-11-19T08:15:09-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "INSTRUCTED",
+      "reason_code": ""
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000318/DK",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "event_ts_et": "2026-11-19T08:16:02-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "DK",
+      "reason_code": "QTY_MISMATCH"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/inventory",
+     "id": "US67066G1040@DTC-0005",
+     "row": {
+      "as_of_date": "2026-11-19",
+      "isin": "US67066G1040",
+      "box_location": "DTC-0005",
+      "quantity_available": "412500",
+      "quantity_pledged": "33267",
+      "quantity_on_loan": "56522"
+     }
+    }
+   ],
+   "refs": {
+    "failId": "GS-FAIL-20261119-0091"
+   },
+   "seq": 5,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 1316
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-fails-monitor",
+    "name": "GS Fails Monitor",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #2",
+   "detail": "899 in / 316 out tokens · $0.00248",
+   "modelCall": {
+    "agent": "GS Fails Monitor",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 899,
+    "tokensOut": 316,
+    "costUsd": 0.002479,
+    "runningUsd": 0.003048
+   },
+   "seq": 6,
+   "at": "2026-11-19T14:02:00.000Z",
+   "wallMs": 6893
+  },
+  {
+   "kind": "step",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-fails-monitor",
+    "name": "GS Fails Monitor",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Fail summarized and handed to Outreach",
+   "detail": "Open NVDA delivery fail: receiver DK cited a quantity mismatch, though the trade, affirmed allocation, and delivery each show 10,000 shares. The underlying mismatch cannot be verified from the provided records.",
+   "records": [
+    {
+     "firm": "goldman",
+     "table": "goldman/fails",
+     "id": "GS-FAIL-20261119-0091",
+     "row": {
+      "gs_fail_id": "GS-FAIL-20261119-0091",
+      "delivery_id": "DEL-20261118-448213",
+      "counterparty_custodian": "The Bank of New York Mellon",
+      "fail_reason": "DK_BY_RECEIVER",
+      "opened_ts_utc": "2026-11-19T13:17:00Z",
+      "age_days": "0",
+      "exposure_usd": "1862600",
+      "owner": "",
+      "next_action": "contact receiving custodian",
+      "status": "OPEN"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/deliveries",
+     "id": "DEL-20261118-448213",
+     "row": {
+      "delivery_id": "DEL-20261118-448213",
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "from_participant": "0005",
+      "to_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "instructed_ts_utc": "2026-11-19T13:15:09Z",
+      "status": "DK",
+      "status_ts_utc": "2026-11-19T13:16:02Z",
+      "dk_reason": "QTY_MISMATCH"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/trade_blotter",
+     "id": "GS-EQ-20261118-448213",
+     "row": {
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "exec_ts_utc": "2026-11-18T19:52:31Z",
+      "client_name": "Allianz Global Investors GmbH",
+      "side": "SELL",
+      "client_side": "BUY",
+      "ticker": "NVDA",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "gross_amount": "1862500",
+      "commission": "100",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "desk": "High Touch",
+      "trader_id": "T4417",
+      "status": "BOOKED"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/allocations_confirms",
+     "id": "AL-20261118-448213-2",
+     "row": {
+      "alloc_id": "AL-20261118-448213-2",
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "client_name": "Allianz Global Investors GmbH",
+      "client_account_ref": "AGI-ORD-26-322-0773",
+      "quantity": "10000",
+      "custodian_name": "The Bank of New York Mellon",
+      "custodian_dtc_participant": "0901",
+      "ctm_confirm_id": "CTM-77104562",
+      "affirmed": "Y",
+      "affirmed_ts_utc": "2026-11-18T22:52:10Z",
+      "version": "2",
+      "status": "AFFIRMED"
+     }
+    }
+   ],
+   "seq": 7,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 6897
+  },
+  {
+   "kind": "checkpoint",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Fail GS-FAIL-20261119-0091 needs attention: 10,000 NVDA delivered to DTC participant 0901 as DTC-DO-20261119-000318 was DK'd (QTY_MISMATCH). It is unassigned with $1,862,600 exposure. The receiver rejected it, so the answer sits with them. Shall I look them up in the network registry?",
+   "checkpoint": {
+    "id": "discover",
+    "seat": "goldman",
+    "prompt": "Fail GS-FAIL-20261119-0091 needs attention: 10,000 NVDA delivered to DTC participant 0901 as DTC-DO-20261119-000318 was DK'd (QTY_MISMATCH). It is unassigned with $1,862,600 exposure. The receiver rejected it, so the answer sits with them. Shall I look them up in the network registry?",
+    "actions": [
+     {
+      "id": "discover",
+      "label": "Find the receiver's agent",
+      "kind": "primary",
+      "keywords": [
+       "find",
+       "look",
+       "registry",
+       "discover",
+       "agent",
+       "who",
+       "receiver",
+       "lookup"
+      ]
+     }
+    ],
+    "questions": [
+     "Why do you think it was DK'd?",
+     "What happens if this misses cutoff?"
+    ]
+   },
+   "seq": 8,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 6898
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-user",
+    "name": "You (Goldman fails desk)",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "Why do you think it was DKd?",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 9,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 8070
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #3",
+   "detail": "574 in / 66 out tokens · $0.00090",
+   "modelCall": {
+    "agent": "GS Ops Copilot",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 574,
+    "tokensOut": 66,
+    "costUsd": 0.000904,
+    "runningUsd": 0.003952
+   },
+   "seq": 10,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 9688
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "The receiver cited a quantity mismatch, but the trade, affirmed allocation, and delivery each show 10,000 shares. The activity does not establish the underlying mismatch. Next, I can look up the receiver’s agent in the network registry.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 11,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 9689
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-user",
+    "name": "You (Goldman fails desk)",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "ok find their agent",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 12,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 9758
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #4",
+   "detail": "644 in / 31 out tokens · $0.00080",
+   "modelCall": {
+    "agent": "GS Ops Copilot",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 644,
+    "tokensOut": 31,
+    "costUsd": 0.000799,
+    "runningUsd": 0.004751
+   },
+   "seq": 13,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 11133
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "I’ll look up the receiver’s agent in the network registry.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 14,
+   "at": "2026-11-19T14:02:20.000Z",
+   "wallMs": 11133
+  },
+  {
+   "kind": "step",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "RULE"
+   },
+   "title": "Discovered BNY Intake Gateway for participant 0901",
+   "detail": "Agent Card lists skills: settlement.dk-inquiry, settlement.status, settlement.redelivery-notice. A card describes capabilities; it grants no permission.",
+   "seq": 15,
+   "at": "2026-11-19T14:02:25.000Z",
+   "wallMs": 11134
+  },
+  {
+   "kind": "checkpoint",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Participant 0901 is served by BNY Intake Gateway (BNY (synthetic)). Its Agent Card lists settlement.dk-inquiry, settlement.status, settlement.redelivery-notice. The card says what it can do; it grants nothing, and the gateway checks our identity on every message. Shall I draft a DK inquiry? Only these fields go with it: dtc_reference, counterparty_trade_ref, counterparty_fail_ref, isin, quantity_delivered, settle_date, deliverer_participant, dk_reason, requested_action.",
+   "checkpoint": {
+    "id": "draft",
+    "seat": "goldman",
+    "prompt": "Participant 0901 is served by BNY Intake Gateway (BNY (synthetic)). Its Agent Card lists settlement.dk-inquiry, settlement.status, settlement.redelivery-notice. The card says what it can do; it grants nothing, and the gateway checks our identity on every message. Shall I draft a DK inquiry? Only these fields go with it: dtc_reference, counterparty_trade_ref, counterparty_fail_ref, isin, quantity_delivered, settle_date, deliverer_participant, dk_reason, requested_action.",
+    "actions": [
+     {
+      "id": "draft",
+      "label": "Draft the inquiry",
+      "kind": "primary",
+      "keywords": [
+       "draft",
+       "write",
+       "compose",
+       "prepare",
+       "message",
+       "inquiry",
+       "ask them"
+      ]
+     }
+    ],
+    "questions": [
+     "What will BNY be able to see about us?",
+     "Why not just email their ops team?"
+    ]
+   },
+   "seq": 16,
+   "at": "2026-11-19T14:02:25.000Z",
+   "wallMs": 11134
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-user",
+    "name": "You (Goldman fails desk)",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "Draft the inquiry",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 17,
+   "at": "2026-11-19T14:02:25.000Z",
+   "wallMs": 11181
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #5",
+   "detail": "1072 in / 294 out tokens · $0.00153",
+   "modelCall": {
+    "agent": "GS Counterparty Outreach Agent",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 1072,
+    "tokensOut": 294,
+    "costUsd": 0.00152645,
+    "runningUsd": 0.00627745
+   },
+   "seq": 18,
+   "at": "2026-11-19T14:02:25.000Z",
+   "wallMs": 15392
+  },
+  {
+   "kind": "step",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Request drafted for BNY",
+   "detail": "Please explain the quantity-mismatch DK on the attached delivery, confirm the quantity you expect, and advise whether we should redeliver before cutoff. Please also confirm the applicable cutoff time.",
+   "records": [
+    {
+     "firm": "goldman",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000318/DK",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "event_ts_et": "2026-11-19T08:16:02-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "DK",
+      "reason_code": "QTY_MISMATCH"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/trade_blotter",
+     "id": "GS-EQ-20261118-448213",
+     "row": {
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "exec_ts_utc": "2026-11-18T19:52:31Z",
+      "client_name": "Allianz Global Investors GmbH",
+      "side": "SELL",
+      "client_side": "BUY",
+      "ticker": "NVDA",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "gross_amount": "1862500",
+      "commission": "100",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "desk": "High Touch",
+      "trader_id": "T4417",
+      "status": "BOOKED"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/allocations_confirms",
+     "id": "AL-20261118-448213-2",
+     "row": {
+      "alloc_id": "AL-20261118-448213-2",
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "client_name": "Allianz Global Investors GmbH",
+      "client_account_ref": "AGI-ORD-26-322-0773",
+      "quantity": "10000",
+      "custodian_name": "The Bank of New York Mellon",
+      "custodian_dtc_participant": "0901",
+      "ctm_confirm_id": "CTM-77104562",
+      "affirmed": "Y",
+      "affirmed_ts_utc": "2026-11-18T22:52:10Z",
+      "version": "2",
+      "status": "AFFIRMED"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/deliveries",
+     "id": "DEL-20261118-448213",
+     "row": {
+      "delivery_id": "DEL-20261118-448213",
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "from_participant": "0005",
+      "to_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "instructed_ts_utc": "2026-11-19T13:15:09Z",
+      "status": "DK",
+      "status_ts_utc": "2026-11-19T13:16:02Z",
+      "dk_reason": "QTY_MISMATCH"
+     }
+    }
+   ],
+   "flags": [],
+   "seq": 19,
+   "at": "2026-11-19T14:02:55.000Z",
+   "wallMs": 15398
+  },
+  {
+   "kind": "checkpoint",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "The draft is above. It goes to the BNY Intake Gateway with 9 structured fields; client names and allocation ids stay with us. Send it?",
+   "checkpoint": {
+    "id": "send",
+    "seat": "goldman",
+    "prompt": "The draft is above. It goes to the BNY Intake Gateway with 9 structured fields; client names and allocation ids stay with us. Send it?",
+    "actions": [
+     {
+      "id": "send",
+      "label": "Send to BNY",
+      "kind": "primary",
+      "keywords": [
+       "send",
+       "submit",
+       "transmit",
+       "ship"
+      ]
+     },
+     {
+      "id": "cancel",
+      "label": "Don't send",
+      "kind": "cancel",
+      "keywords": [
+       "hold off",
+       "don't send"
+      ]
+     }
+    ],
+    "questions": [
+     "Which of our records does this message cite?"
+    ]
+   },
+   "seq": 20,
+   "at": "2026-11-19T14:02:55.000Z",
+   "wallMs": 15398
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-user",
+    "name": "You (Goldman fails desk)",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "looks good, send it",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 21,
+   "at": "2026-11-19T14:02:55.000Z",
+   "wallMs": 15443
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #6",
+   "detail": "775 in / 27 out tokens · $0.00091",
+   "modelCall": {
+    "agent": "GS Ops Copilot",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 775,
+    "tokensOut": 27,
+    "costUsd": 0.00091,
+    "runningUsd": 0.007187450000000001
+   },
+   "seq": 22,
+   "at": "2026-11-19T14:02:55.000Z",
+   "wallMs": 16734
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "I’ll send the inquiry to BNY.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 23,
+   "at": "2026-11-19T14:02:55.000Z",
+   "wallMs": 16735
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Sent to BNY: settlement.dk-inquiry",
+   "detail": "Please explain the quantity-mismatch DK on the attached delivery, confirm the quantity you expect, and advise whether we should redeliver before cutoff. Please also confirm the applicable cutoff time.",
+   "flags": [
+    "outbound"
+   ],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_f894f9",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_f894f9",
+      "taskId": "task_731197",
+      "contextId": "ctx_r_efd035d8",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Please explain the quantity-mismatch DK on the attached delivery, confirm the quantity you expect, and advise whether we should redeliver before cutoff. Please also confirm the applicable cutoff time."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 10000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:55.000Z",
+       "sourceRecords": [
+        {
+         "firm": "goldman",
+         "table": "dtc/settlement_activity",
+         "id": "DTC-DO-20261119-000318/DK",
+         "fields": [
+          {
+           "name": "quantity",
+           "value": "10000"
+          },
+          {
+           "name": "event",
+           "value": "DK"
+          },
+          {
+           "name": "reason_code",
+           "value": "QTY_MISMATCH"
+          }
+         ]
+        },
+        {
+         "firm": "goldman",
+         "table": "trade_blotter",
+         "id": "GS-EQ-20261118-448213",
+         "fields": [
+          {
+           "name": "quantity",
+           "value": "10000"
+          }
+         ]
+        },
+        {
+         "firm": "goldman",
+         "table": "allocations_confirms",
+         "id": "AL-20261118-448213-2",
+         "fields": [
+          {
+           "name": "quantity",
+           "value": "10000"
+          },
+          {
+           "name": "status",
+           "value": "AFFIRMED"
+          }
+         ]
+        },
+        {
+         "firm": "goldman",
+         "table": "deliveries",
+         "id": "DEL-20261118-448213",
+         "fields": [
+          {
+           "name": "dtc_reference",
+           "value": "DTC-DO-20261119-000318"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   },
+   "seq": 24,
+   "at": "2026-11-19T14:02:55.000Z",
+   "wallMs": 16736
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Gateway accepted settlement.dk-inquiry",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.dk-inquiry approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 1 of 6"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "9 fields within allowlist"
+    }
+   ],
+   "flags": [
+    "accepted"
+   ],
+   "taskState": "submitted",
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_f894f9",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer eyJzdWIiOiJncy1vdX…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_f894f9",
+      "taskId": "task_731197",
+      "contextId": "ctx_r_efd035d8",
+      "role": "user",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Please explain the quantity-mismatch DK on the attached delivery, confirm the quantity you expect, and advise whether we should redeliver before cutoff. Please also confirm the applicable cutoff time."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "counterparty_trade_ref": "GS-EQ-20261118-448213",
+         "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+         "isin": "US67066G1040",
+         "quantity_delivered": 10000,
+         "settle_date": "2026-11-19",
+         "deliverer_participant": "0005",
+         "dk_reason": "QTY_MISMATCH",
+         "requested_action": "explain_dk_and_confirm_redelivery"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "gs-outreach",
+       "to": "bny-gateway",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:55.000Z",
+       "sourceRecords": [
+        {
+         "firm": "goldman",
+         "table": "dtc/settlement_activity",
+         "id": "DTC-DO-20261119-000318/DK",
+         "fields": [
+          {
+           "name": "quantity",
+           "value": "10000"
+          },
+          {
+           "name": "event",
+           "value": "DK"
+          },
+          {
+           "name": "reason_code",
+           "value": "QTY_MISMATCH"
+          }
+         ]
+        },
+        {
+         "firm": "goldman",
+         "table": "trade_blotter",
+         "id": "GS-EQ-20261118-448213",
+         "fields": [
+          {
+           "name": "quantity",
+           "value": "10000"
+          }
+         ]
+        },
+        {
+         "firm": "goldman",
+         "table": "allocations_confirms",
+         "id": "AL-20261118-448213-2",
+         "fields": [
+          {
+           "name": "quantity",
+           "value": "10000"
+          },
+          {
+           "name": "status",
+           "value": "AFFIRMED"
+          }
+         ]
+        },
+        {
+         "firm": "goldman",
+         "table": "deliveries",
+         "id": "DEL-20261118-448213",
+         "fields": [
+          {
+           "name": "dtc_reference",
+           "value": "DTC-DO-20261119-000318"
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   },
+   "seq": 25,
+   "at": "2026-11-19T14:02:59.000Z",
+   "wallMs": 17359
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Incoming counterparty request: DK inquiry",
+   "detail": "Opened case from gateway delivery.",
+   "shared": {
+    "from": "Goldman Sachs",
+    "fields": {
+     "dtc_reference": "DTC-DO-20261119-000318",
+     "counterparty_trade_ref": "GS-EQ-20261118-448213",
+     "counterparty_fail_ref": "GS-FAIL-20261119-0091",
+     "isin": "US67066G1040",
+     "quantity_delivered": 10000,
+     "settle_date": "2026-11-19",
+     "deliverer_participant": "0005",
+     "dk_reason": "QTY_MISMATCH",
+     "requested_action": "explain_dk_and_confirm_redelivery"
+    },
+    "text": "Please explain the quantity-mismatch DK on the attached delivery, confirm the quantity you expect, and advise whether we should redeliver before cutoff. Please also confirm the applicable cutoff time."
+   },
+   "flags": [],
+   "seq": 26,
+   "at": "2026-11-19T14:02:59.000Z",
+   "wallMs": 17359
+  },
+  {
+   "kind": "message",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Reply to Goldman: investigating",
+   "detail": "Request received. BNY is investigating.",
+   "flags": [
+    "outbound"
+   ],
+   "taskState": "working",
+   "seq": 27,
+   "at": "2026-11-19T14:02:59.000Z",
+   "wallMs": 17360
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Outbound filter: 2 approved field(s)",
+   "checks": [
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "dtc_reference, instruction_status"
+    },
+    {
+     "id": "disclosure",
+     "label": "Disclosure scan",
+     "ok": true,
+     "detail": "no internal or client data in text"
+    }
+   ],
+   "flags": [],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_769c29",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer bny…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_769c29",
+      "taskId": "task_731197",
+      "contextId": "ctx_r_efd035d8",
+      "role": "agent",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "Request received. BNY is investigating."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "instruction_status": "UNDER_REVIEW"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "bny-gateway",
+       "to": "gs-outreach",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:02:59.000Z",
+       "sourceRecords": []
+      }
+     }
+    }
+   },
+   "taskState": "working",
+   "seq": 28,
+   "at": "2026-11-19T14:03:02.000Z",
+   "wallMs": 17741
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY (via network)",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "BNY: investigating",
+   "shared": {
+    "from": "BNY",
+    "fields": {
+     "dtc_reference": "DTC-DO-20261119-000318",
+     "instruction_status": "UNDER_REVIEW"
+    },
+    "text": "Request received. BNY is investigating."
+   },
+   "taskState": "working",
+   "seq": 29,
+   "at": "2026-11-19T14:03:02.000Z",
+   "wallMs": 17741
+  },
+  {
+   "kind": "checkpoint",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-copilot",
+    "name": "BNY Ops Copilot",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "A counterparty inquiry arrived from Goldman Sachs' Outreach Agent. The gateway verified it (registry identity, signed token, KYC, allowed skill). It asks why delivery DTC-DO-20261119-000318 of 10,000 US67066G1040 was DK'd. I see only BNY's records and the 9 fields delivered. Shall I investigate?",
+   "checkpoint": {
+    "id": "investigate",
+    "seat": "bny",
+    "prompt": "A counterparty inquiry arrived from Goldman Sachs' Outreach Agent. The gateway verified it (registry identity, signed token, KYC, allowed skill). It asks why delivery DTC-DO-20261119-000318 of 10,000 US67066G1040 was DK'd. I see only BNY's records and the 9 fields delivered. Shall I investigate?",
+    "actions": [
+     {
+      "id": "investigate",
+      "label": "Investigate our records",
+      "kind": "primary",
+      "keywords": [
+       "investigat",
+       "look",
+       "check",
+       "find",
+       "search",
+       "records",
+       "dig"
+      ]
+     }
+    ],
+    "questions": [
+     "What exactly did Goldman send us?",
+     "Could this message be a spoof?"
+    ]
+   },
+   "seq": 30,
+   "at": "2026-11-19T14:03:02.000Z",
+   "wallMs": 17741
+  },
+  {
+   "kind": "chat",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-user",
+    "name": "You (BNY settlements)",
+    "firm": "bny",
+    "type": "HUMAN"
+   },
+   "title": "yes investigate",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 31,
+   "at": "2026-11-19T14:03:02.000Z",
+   "wallMs": 17845
+  },
+  {
+   "kind": "model-call",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-copilot",
+    "name": "BNY Ops Copilot",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Model call #7",
+   "detail": "620 in / 27 out tokens · $0.00076",
+   "modelCall": {
+    "agent": "BNY Ops Copilot",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 620,
+    "tokensOut": 27,
+    "costUsd": 0.000755,
+    "runningUsd": 0.00794245
+   },
+   "seq": 32,
+   "at": "2026-11-19T14:03:02.000Z",
+   "wallMs": 19597
+  },
+  {
+   "kind": "chat",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-copilot",
+    "name": "BNY Ops Copilot",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "I’ll investigate BNY’s records.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 33,
+   "at": "2026-11-19T14:03:02.000Z",
+   "wallMs": 19597
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Records found for DTC-DO-20261119-000318",
+   "detail": "Live instruction BNYI-20261118-5527301 (8,000, SENT_TO_DTC); amendment BNYI-20261118-5529944 (10,000, IN_REPAIR); repair item RQ-20261118-0412.",
+   "records": [
+    {
+     "firm": "bny",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000318/INSTRUCTED",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "event_ts_et": "2026-11-19T08:15:09-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "INSTRUCTED",
+      "reason_code": ""
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000318/DK",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "event_ts_et": "2026-11-19T08:16:02-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "DK",
+      "reason_code": "QTY_MISMATCH"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/fails_exceptions",
+     "id": "EXC-20261119-0907",
+     "row": {
+      "exception_id": "EXC-20261119-0907",
+      "instruction_id": "BNYI-20261118-5527301",
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "detected_ts_et": "2026-11-19 08:16:30",
+      "fail_reason": "DK_QTY_MISMATCH",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "days_outstanding": "0",
+      "status": "OPEN",
+      "owner": "",
+      "resolution_notes": "delivered 10,000 vs instructed 8,000; auto-DK"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/settlement_instructions",
+     "id": "BNYI-20261118-5527301",
+     "row": {
+      "instruction_id": "BNYI-20261118-5527301",
+      "received_ts_et": "2026-11-18 15:10:04",
+      "source_channel": "SWIFT_MT541",
+      "client_account_id": "4471-AGI-GLEQ",
+      "client_ref": "AGI-ORD-26-322-0773",
+      "direction": "RVP",
+      "isin": "US67066G1040",
+      "quantity": "8000",
+      "price": "186.25",
+      "settlement_amount": "1490080",
+      "currency": "USD",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "cpty_dtc_participant": "0005",
+      "settlement_location": "DTC",
+      "amends_instruction_id": "",
+      "status": "SENT_TO_DTC",
+      "status_ts_et": "2026-11-18 15:14:22"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/settlement_instructions",
+     "id": "BNYI-20261118-5529944",
+     "row": {
+      "instruction_id": "BNYI-20261118-5529944",
+      "received_ts_et": "2026-11-18 18:05:37",
+      "source_channel": "SWIFT_MT541",
+      "client_account_id": "4471-AGI-GLEQ",
+      "client_ref": "AGI-ORD-26-322-0773",
+      "direction": "RVP",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "settlement_amount": "1862600",
+      "currency": "USD",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "cpty_dtc_participant": "",
+      "settlement_location": "DTC",
+      "amends_instruction_id": "BNYI-20261118-5527301",
+      "status": "IN_REPAIR",
+      "status_ts_et": "2026-11-18 18:06:02"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/repair_queue",
+     "id": "RQ-20261118-0412",
+     "row": {
+      "repair_id": "RQ-20261118-0412",
+      "instruction_id": "BNYI-20261118-5529944",
+      "opened_ts_et": "2026-11-18 18:06:02",
+      "repair_reason": "MISSING_CPTY_PARTICIPANT",
+      "routed_to": "HUMAN",
+      "priority_score": "88.4",
+      "cutoff_ts_et": "2026-11-19 14:30:00",
+      "trade_value_usd": "1862600",
+      "assigned_to": "",
+      "resolution": "",
+      "resolved_ts_et": "",
+      "verified_by": "",
+      "comments": "amend of 5527301; 97A/95P counterparty field empty on inbound MT541"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/client_accounts",
+     "id": "4471-AGI-GLEQ",
+     "row": {
+      "account_id": "4471-AGI-GLEQ",
+      "client_legal_name": "Allianz Global Investors GmbH",
+      "client_short_code": "AGI",
+      "fund_name": "AllianzGI Global Equity Fund (synthetic)",
+      "account_type": "CUSTODY",
+      "base_currency": "EUR",
+      "client_tier": "1",
+      "relationship_manager": "R. Okafor",
+      "service_executive": "K. Brennan",
+      "status": "OPEN",
+      "opened_date": "2026-04-01"
+     }
+    }
+   ],
+   "refs": {
+    "repairId": "RQ-20261118-0412"
+   },
+   "seq": 34,
+   "at": "2026-11-19T14:03:42.000Z",
+   "wallMs": 19660
+  },
+  {
+   "kind": "model-call",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Model call #8",
+   "detail": "1337 in / 621 out tokens · $0.00444",
+   "modelCall": {
+    "agent": "BNY Case Agent",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 1337,
+    "tokensOut": 621,
+    "costUsd": 0.004442,
+    "runningUsd": 0.01238445
+   },
+   "seq": 35,
+   "at": "2026-11-19T14:03:42.000Z",
+   "wallMs": 27790
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Case opened · urgency 88/100",
+   "detail": "The 10,000-share delivery was DK'd against an 8,000-share instruction. Do not redeliver pending repair; the operative quantity and applicable cutoff cannot be confirmed from the records.\nThe 10,000-share amendment is in repair because its counterparty participant is missing; the original 8,000-share instruction was sent to DTC.\nUrgency: Approximately 5 hours 26 minutes remain to the repair-queue cutoff; the trade value is $1,862,600 and the client is tier 1.",
+   "records": [
+    {
+     "firm": "bny",
+     "table": "bny/fails_exceptions",
+     "id": "EXC-20261119-0907",
+     "row": {
+      "exception_id": "EXC-20261119-0907",
+      "instruction_id": "BNYI-20261118-5527301",
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "detected_ts_et": "2026-11-19 08:16:30",
+      "fail_reason": "DK_QTY_MISMATCH",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "days_outstanding": "0",
+      "status": "OPEN",
+      "owner": "",
+      "resolution_notes": "delivered 10,000 vs instructed 8,000; auto-DK"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/settlement_instructions",
+     "id": "BNYI-20261118-5529944",
+     "row": {
+      "instruction_id": "BNYI-20261118-5529944",
+      "received_ts_et": "2026-11-18 18:05:37",
+      "source_channel": "SWIFT_MT541",
+      "client_account_id": "4471-AGI-GLEQ",
+      "client_ref": "AGI-ORD-26-322-0773",
+      "direction": "RVP",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "settlement_amount": "1862600",
+      "currency": "USD",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "cpty_dtc_participant": "",
+      "settlement_location": "DTC",
+      "amends_instruction_id": "BNYI-20261118-5527301",
+      "status": "IN_REPAIR",
+      "status_ts_et": "2026-11-18 18:06:02"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/repair_queue",
+     "id": "RQ-20261118-0412",
+     "row": {
+      "repair_id": "RQ-20261118-0412",
+      "instruction_id": "BNYI-20261118-5529944",
+      "opened_ts_et": "2026-11-18 18:06:02",
+      "repair_reason": "MISSING_CPTY_PARTICIPANT",
+      "routed_to": "HUMAN",
+      "priority_score": "88.4",
+      "cutoff_ts_et": "2026-11-19 14:30:00",
+      "trade_value_usd": "1862600",
+      "assigned_to": "",
+      "resolution": "",
+      "resolved_ts_et": "",
+      "verified_by": "",
+      "comments": "amend of 5527301; 97A/95P counterparty field empty on inbound MT541"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/client_accounts",
+     "id": "4471-AGI-GLEQ",
+     "row": {
+      "account_id": "4471-AGI-GLEQ",
+      "client_legal_name": "Allianz Global Investors GmbH",
+      "client_short_code": "AGI",
+      "fund_name": "AllianzGI Global Equity Fund (synthetic)",
+      "account_type": "CUSTODY",
+      "base_currency": "EUR",
+      "client_tier": "1",
+      "relationship_manager": "R. Okafor",
+      "service_executive": "K. Brennan",
+      "status": "OPEN",
+      "opened_date": "2026-04-01"
+     }
+    }
+   ],
+   "refs": {
+    "repairId": "RQ-20261118-0412"
+   },
+   "seq": 36,
+   "at": "2026-11-19T14:04:27.000Z",
+   "wallMs": 27794
+  },
+  {
+   "kind": "checkpoint",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-copilot",
+    "name": "BNY Ops Copilot",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "The 10,000-share amendment is in repair because its counterparty participant is missing; the original 8,000-share instruction was sent to DTC. Urgency 88/100. The Instruction Repair Agent can propose a fix from our SSI records; it cannot release anything. Ask it for a proposal?",
+   "checkpoint": {
+    "id": "repair",
+    "seat": "bny",
+    "prompt": "The 10,000-share amendment is in repair because its counterparty participant is missing; the original 8,000-share instruction was sent to DTC. Urgency 88/100. The Instruction Repair Agent can propose a fix from our SSI records; it cannot release anything. Ask it for a proposal?",
+    "actions": [
+     {
+      "id": "propose",
+      "label": "Propose a repair",
+      "kind": "primary",
+      "keywords": [
+       "propose",
+       "repair",
+       "fix",
+       "correct",
+       "suggest",
+       "amend"
+      ]
+     }
+    ],
+    "questions": [
+     "Why did the amendment get stuck?",
+     "How close are we to cutoff?"
+    ]
+   },
+   "seq": 37,
+   "at": "2026-11-19T14:04:27.000Z",
+   "wallMs": 27794
+  },
+  {
+   "kind": "chat",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-user",
+    "name": "You (BNY settlements)",
+    "firm": "bny",
+    "type": "HUMAN"
+   },
+   "title": "Propose a repair",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 38,
+   "at": "2026-11-19T14:04:27.000Z",
+   "wallMs": 28120
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-repair",
+    "name": "BNY Instruction Repair Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Repair context gathered",
+   "detail": "3 SSI record(s) on file for Goldman Sachs & Co. LLC; runbook and client notice attached.",
+   "records": [
+    {
+     "firm": "bny",
+     "table": "bny/ssi_counterparties",
+     "id": "SSI-GS-US-EQ-0005",
+     "row": {
+      "ssi_id": "SSI-GS-US-EQ-0005",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "counterparty_lei": "5493VQMLGW286LLGYZ19",
+      "market": "US",
+      "asset_class": "EQUITY",
+      "depository": "DTC",
+      "dtc_participant": "0005",
+      "agent_bic": "SYNGSUS33XXX",
+      "effective_date": "2024-06-01",
+      "end_date": "",
+      "verified_by": "L. Park",
+      "verification_date": "2026-02-14",
+      "status": "ACTIVE"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/ssi_counterparties",
+     "id": "SSI-GS-US-FI-0005",
+     "row": {
+      "ssi_id": "SSI-GS-US-FI-0005",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "counterparty_lei": "5493VQMLGW286LLGYZ19",
+      "market": "US",
+      "asset_class": "FIXED_INCOME",
+      "depository": "DTC",
+      "dtc_participant": "0005",
+      "agent_bic": "SYNGSUS33XXX",
+      "effective_date": "2024-06-01",
+      "end_date": "",
+      "verified_by": "G. Adeyemi",
+      "verification_date": "2026-02-14",
+      "status": "ACTIVE"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/ssi_counterparties",
+     "id": "SSI-GS-US-EQ-7108",
+     "row": {
+      "ssi_id": "SSI-GS-US-EQ-7108",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "counterparty_lei": "5493VQMLGW286LLGYZ19",
+      "market": "US",
+      "asset_class": "EQUITY",
+      "depository": "DTC",
+      "dtc_participant": "7108",
+      "agent_bic": "SYNGSUS33XXX",
+      "effective_date": "2019-03-01",
+      "end_date": "2024-05-31",
+      "verified_by": "L. Park",
+      "verification_date": "2019-02-20",
+      "status": "SUPERSEDED"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/securities_master",
+     "id": "BNYS000001",
+     "row": {
+      "bny_sec_id": "BNYS000001",
+      "isin": "US67066G1040",
+      "cusip": "67066G104",
+      "ticker": "NVDA",
+      "issuer_name": "NVIDIA Corp",
+      "asset_class": "EQUITY",
+      "currency": "USD",
+      "primary_exchange": "NASDAQ",
+      "settlement_cycle": "T+1",
+      "settlement_location": "DTC",
+      "ref_price": "186.25",
+      "id_source": "public",
+      "status": "ACTIVE"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/securities_master",
+     "id": "BNYS000146",
+     "row": {
+      "bny_sec_id": "BNYS000146",
+      "isin": "US67066G1040",
+      "cusip": "67066G104",
+      "ticker": "NVDA",
+      "issuer_name": "NVIDIA Corp (legacy record, pre-split)",
+      "asset_class": "EQUITY",
+      "currency": "USD",
+      "primary_exchange": "NASDAQ",
+      "settlement_cycle": "T+2",
+      "settlement_location": "DTC",
+      "ref_price": "",
+      "id_source": "public",
+      "status": "INACTIVE"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/docs",
+     "id": "repair_queue_runbook",
+     "row": {
+      "excerpt": "| MISSING_CPTY_PARTICIPANT | Counterparty DTC participant number blank | Human | Confirm with SSI database **and** with the counterparty or client; never infer from name alone |\n\n## 5. Known traps\n\n- **Superseded SSIs.** The SSI table keeps old records with `status = SUPERSEDED`. Goldman Sachs has one (participant 7108, ended 2024-05-31). Use only `ACTIVE` records.\n- **Amendments that arrive after hours.** An amendment received after 18:00 ET sits in the queue overnight while the original instruction stays live at DTC. Check for this before the 08:00 depository cycle.\n- **Same security, same day, different client.** Do not match a counterparty delivery to another client's instruction just because the ISIN and quantity look right."
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/docs",
+     "id": "email_allianzgi_amendment_acknowledgement",
+     "row": {
+      "excerpt": "**From:** M. Hoffmann <m.hoffmann@example-agi.test>\n**To:** Settlement Ops <us.settlements@example-bny.test>\n**Date:** Wed, 18 Nov 2026 23:38 CET\n**Subject:** Allocation amendment AGI-ORD-26-322-0773 - NVDA\n\nDear BNY,\n\nPlease note an amendment to today's allocation on order AGI-ORD-26-322-0773 (NVDA, US67066G1040, broker Goldman Sachs). Fund AGI-GLEQ quantity changes from 8,000 to 10,000 following the PM's top-up. The amended allocation will follow through our OMS shortly.\n\nKind regards,\nM. Hoffmann\nTrade Support, Allianz Global Investors (synthetic)\n"
+     }
+    }
+   ],
+   "seq": 39,
+   "at": "2026-11-19T14:04:27.000Z",
+   "wallMs": 28121
+  },
+  {
+   "kind": "model-call",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-repair",
+    "name": "BNY Instruction Repair Agent",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Model call #9",
+   "detail": "2451 in / 839 out tokens · $0.00432",
+   "modelCall": {
+    "agent": "BNY Instruction Repair Agent",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 2451,
+    "tokensOut": 839,
+    "costUsd": 0.004320399999999999,
+    "runningUsd": 0.01670485
+   },
+   "seq": 40,
+   "at": "2026-11-19T14:04:27.000Z",
+   "wallMs": 38473
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-repair",
+    "name": "BNY Instruction Repair Agent",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Repair proposed: cpty_dtc_participant → 0005",
+   "detail": "The amended instruction is held because its counterparty participant is blank. The original 8,000-share instruction remains live and the 10,000-share delivery was DK’d.\nThe active, verified equity SSI agrees with gateway-verified counterparty confirmation and the DTC deliverer. Human approval is required; this proposal does not release the instruction or resolve the DK.\nRisk: MEDIUM. The Repair Agent cannot release.",
+   "records": [
+    {
+     "firm": "bny",
+     "table": "bny/settlement_instructions",
+     "id": "BNYI-20261118-5529944",
+     "row": {
+      "instruction_id": "BNYI-20261118-5529944",
+      "received_ts_et": "2026-11-18 18:05:37",
+      "source_channel": "SWIFT_MT541",
+      "client_account_id": "4471-AGI-GLEQ",
+      "client_ref": "AGI-ORD-26-322-0773",
+      "direction": "RVP",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "settlement_amount": "1862600",
+      "currency": "USD",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "cpty_dtc_participant": "",
+      "settlement_location": "DTC",
+      "amends_instruction_id": "BNYI-20261118-5527301",
+      "status": "IN_REPAIR",
+      "status_ts_et": "2026-11-18 18:06:02"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/ssi_counterparties",
+     "id": "SSI-GS-US-EQ-0005",
+     "row": {
+      "ssi_id": "SSI-GS-US-EQ-0005",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "counterparty_lei": "5493VQMLGW286LLGYZ19",
+      "market": "US",
+      "asset_class": "EQUITY",
+      "depository": "DTC",
+      "dtc_participant": "0005",
+      "agent_bic": "SYNGSUS33XXX",
+      "effective_date": "2024-06-01",
+      "end_date": "",
+      "verified_by": "L. Park",
+      "verification_date": "2026-02-14",
+      "status": "ACTIVE"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/securities_master",
+     "id": "BNYS000001",
+     "row": {
+      "bny_sec_id": "BNYS000001",
+      "isin": "US67066G1040",
+      "cusip": "67066G104",
+      "ticker": "NVDA",
+      "issuer_name": "NVIDIA Corp",
+      "asset_class": "EQUITY",
+      "currency": "USD",
+      "primary_exchange": "NASDAQ",
+      "settlement_cycle": "T+1",
+      "settlement_location": "DTC",
+      "ref_price": "186.25",
+      "id_source": "public",
+      "status": "ACTIVE"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000318/INSTRUCTED",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "event_ts_et": "2026-11-19T08:15:09-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "INSTRUCTED",
+      "reason_code": ""
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/docs",
+     "id": "email_allianzgi_amendment_acknowledgement",
+     "row": {
+      "excerpt": "# Email - AllianzGI amendment acknowledgement\n\n*Synthetic data for an illustrative prototype. No real accounts, people or events.*\n\n---\n\n**From:** J. Rivera <j.rivera@example-bny.test>\n**To:** trade.support@example-agi.test\n**Cc:** agi.service@example-bny.test\n**Date:** Thu, 19 Nov 2026 08:39 ET\n**Subject:** RE: Allocation amendment AGI-ORD-26-322-0773 - NVDA\n\nHi team,\n\nWe received your amended allocation overnight (18:05 ET / 00:05 CET) for AGI-ORD-26-322-0773, NVDA, fund AGI-GLEQ: 10,000 shares instead of 8,000, counterparty Goldman Sachs.\n\nThe amendment came in without the counterparty's DT"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/fails_exceptions",
+     "id": "EXC-20261119-0907",
+     "row": {
+      "exception_id": "EXC-20261119-0907",
+      "instruction_id": "BNYI-20261118-5527301",
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "detected_ts_et": "2026-11-19 08:16:30",
+      "fail_reason": "DK_QTY_MISMATCH",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "days_outstanding": "0",
+      "status": "OPEN",
+      "owner": "",
+      "resolution_notes": "delivered 10,000 vs instructed 8,000; auto-DK"
+     }
+    },
+    {
+     "firm": "bny",
+     "table": "bny/settlement_instructions",
+     "id": "BNYI-20261118-5527301",
+     "row": {
+      "instruction_id": "BNYI-20261118-5527301",
+      "received_ts_et": "2026-11-18 15:10:04",
+      "source_channel": "SWIFT_MT541",
+      "client_account_id": "4471-AGI-GLEQ",
+      "client_ref": "AGI-ORD-26-322-0773",
+      "direction": "RVP",
+      "isin": "US67066G1040",
+      "quantity": "8000",
+      "price": "186.25",
+      "settlement_amount": "1490080",
+      "currency": "USD",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "cpty_dtc_participant": "0005",
+      "settlement_location": "DTC",
+      "amends_instruction_id": "",
+      "status": "SENT_TO_DTC",
+      "status_ts_et": "2026-11-18 15:14:22"
+     }
+    }
+   ],
+   "refs": {
+    "repairId": "RQ-20261118-0412"
+   },
+   "seq": 41,
+   "at": "2026-11-19T14:05:57.000Z",
+   "wallMs": 38481
+  },
+  {
+   "kind": "approval-request",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-analyst",
+    "name": "BNY Settlements Analyst",
+    "firm": "bny",
+    "type": "HUMAN"
+   },
+   "title": "Approve repaired instruction",
+   "approval": {
+    "kind": "bny-repair",
+    "firm": "bny",
+    "title": "Release BNYI-20261118-5529944 for 10,000",
+    "summary": "The active, verified equity SSI agrees with gateway-verified counterparty confirmation and the DTC deliverer. Human approval is required; this proposal does not release the instruction or resolve the DK.",
+    "riskClass": "MEDIUM",
+    "diff": [
+     {
+      "field": "cpty_dtc_participant",
+      "before": "(blank)",
+      "after": "0005"
+     },
+     {
+      "field": "status",
+      "before": "IN_REPAIR",
+      "after": "SENT_TO_DTC"
+     },
+     {
+      "field": "BNYI-20261118-5527301 (qty 8,000)",
+      "before": "SENT_TO_DTC",
+      "after": "CANCELLED (replaced)"
+     }
+    ],
+    "evidence": [
+     {
+      "firm": "bny",
+      "table": "dtc/settlement_activity",
+      "id": "DTC-DO-20261119-000318/INSTRUCTED",
+      "row": {
+       "dtc_reference": "DTC-DO-20261119-000318",
+       "event_ts_et": "2026-11-19T08:15:09-05:00",
+       "deliverer_participant": "0005",
+       "receiver_participant": "0901",
+       "isin": "US67066G1040",
+       "quantity": "10000",
+       "settlement_amount": "1862600",
+       "transaction_type": "DVP",
+       "event": "INSTRUCTED",
+       "reason_code": ""
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "dtc/settlement_activity",
+      "id": "DTC-DO-20261119-000318/DK",
+      "row": {
+       "dtc_reference": "DTC-DO-20261119-000318",
+       "event_ts_et": "2026-11-19T08:16:02-05:00",
+       "deliverer_participant": "0005",
+       "receiver_participant": "0901",
+       "isin": "US67066G1040",
+       "quantity": "10000",
+       "settlement_amount": "1862600",
+       "transaction_type": "DVP",
+       "event": "DK",
+       "reason_code": "QTY_MISMATCH"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/fails_exceptions",
+      "id": "EXC-20261119-0907",
+      "row": {
+       "exception_id": "EXC-20261119-0907",
+       "instruction_id": "BNYI-20261118-5527301",
+       "dtc_reference": "DTC-DO-20261119-000318",
+       "detected_ts_et": "2026-11-19 08:16:30",
+       "fail_reason": "DK_QTY_MISMATCH",
+       "counterparty_name": "Goldman Sachs & Co. LLC",
+       "days_outstanding": "0",
+       "status": "OPEN",
+       "owner": "",
+       "resolution_notes": "delivered 10,000 vs instructed 8,000; auto-DK"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/settlement_instructions",
+      "id": "BNYI-20261118-5527301",
+      "row": {
+       "instruction_id": "BNYI-20261118-5527301",
+       "received_ts_et": "2026-11-18 15:10:04",
+       "source_channel": "SWIFT_MT541",
+       "client_account_id": "4471-AGI-GLEQ",
+       "client_ref": "AGI-ORD-26-322-0773",
+       "direction": "RVP",
+       "isin": "US67066G1040",
+       "quantity": "8000",
+       "price": "186.25",
+       "settlement_amount": "1490080",
+       "currency": "USD",
+       "trade_date": "2026-11-18",
+       "settle_date": "2026-11-19",
+       "counterparty_name": "Goldman Sachs & Co. LLC",
+       "cpty_dtc_participant": "0005",
+       "settlement_location": "DTC",
+       "amends_instruction_id": "",
+       "status": "SENT_TO_DTC",
+       "status_ts_et": "2026-11-18 15:14:22"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/settlement_instructions",
+      "id": "BNYI-20261118-5529944",
+      "row": {
+       "instruction_id": "BNYI-20261118-5529944",
+       "received_ts_et": "2026-11-18 18:05:37",
+       "source_channel": "SWIFT_MT541",
+       "client_account_id": "4471-AGI-GLEQ",
+       "client_ref": "AGI-ORD-26-322-0773",
+       "direction": "RVP",
+       "isin": "US67066G1040",
+       "quantity": "10000",
+       "price": "186.25",
+       "settlement_amount": "1862600",
+       "currency": "USD",
+       "trade_date": "2026-11-18",
+       "settle_date": "2026-11-19",
+       "counterparty_name": "Goldman Sachs & Co. LLC",
+       "cpty_dtc_participant": "",
+       "settlement_location": "DTC",
+       "amends_instruction_id": "BNYI-20261118-5527301",
+       "status": "IN_REPAIR",
+       "status_ts_et": "2026-11-18 18:06:02"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/repair_queue",
+      "id": "RQ-20261118-0412",
+      "row": {
+       "repair_id": "RQ-20261118-0412",
+       "instruction_id": "BNYI-20261118-5529944",
+       "opened_ts_et": "2026-11-18 18:06:02",
+       "repair_reason": "MISSING_CPTY_PARTICIPANT",
+       "routed_to": "HUMAN",
+       "priority_score": "88.4",
+       "cutoff_ts_et": "2026-11-19 14:30:00",
+       "trade_value_usd": "1862600",
+       "assigned_to": "",
+       "resolution": "",
+       "resolved_ts_et": "",
+       "verified_by": "",
+       "comments": "amend of 5527301; 97A/95P counterparty field empty on inbound MT541"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/ssi_counterparties",
+      "id": "SSI-GS-US-EQ-0005",
+      "row": {
+       "ssi_id": "SSI-GS-US-EQ-0005",
+       "counterparty_name": "Goldman Sachs & Co. LLC",
+       "counterparty_lei": "5493VQMLGW286LLGYZ19",
+       "market": "US",
+       "asset_class": "EQUITY",
+       "depository": "DTC",
+       "dtc_participant": "0005",
+       "agent_bic": "SYNGSUS33XXX",
+       "effective_date": "2024-06-01",
+       "end_date": "",
+       "verified_by": "L. Park",
+       "verification_date": "2026-02-14",
+       "status": "ACTIVE"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/ssi_counterparties",
+      "id": "SSI-GS-US-FI-0005",
+      "row": {
+       "ssi_id": "SSI-GS-US-FI-0005",
+       "counterparty_name": "Goldman Sachs & Co. LLC",
+       "counterparty_lei": "5493VQMLGW286LLGYZ19",
+       "market": "US",
+       "asset_class": "FIXED_INCOME",
+       "depository": "DTC",
+       "dtc_participant": "0005",
+       "agent_bic": "SYNGSUS33XXX",
+       "effective_date": "2024-06-01",
+       "end_date": "",
+       "verified_by": "G. Adeyemi",
+       "verification_date": "2026-02-14",
+       "status": "ACTIVE"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/ssi_counterparties",
+      "id": "SSI-GS-US-EQ-7108",
+      "row": {
+       "ssi_id": "SSI-GS-US-EQ-7108",
+       "counterparty_name": "Goldman Sachs & Co. LLC",
+       "counterparty_lei": "5493VQMLGW286LLGYZ19",
+       "market": "US",
+       "asset_class": "EQUITY",
+       "depository": "DTC",
+       "dtc_participant": "7108",
+       "agent_bic": "SYNGSUS33XXX",
+       "effective_date": "2019-03-01",
+       "end_date": "2024-05-31",
+       "verified_by": "L. Park",
+       "verification_date": "2019-02-20",
+       "status": "SUPERSEDED"
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/docs",
+      "id": "repair_queue_runbook",
+      "row": {
+       "excerpt": "| MISSING_CPTY_PARTICIPANT | Counterparty DTC participant number blank | Human | Confirm with SSI database **and** with the counterparty or client; never infer from name alone |\n\n## 5. Known traps\n\n- **Superseded SSIs.** The SSI table keeps old records with `status = SUPERSEDED`. Goldman Sachs has one (participant 7108, ended 2024-05-31). Use only `ACTIVE` records.\n- **Amendments that arrive after hours.** An amendment received after 18:00 ET sits in the queue overnight while the original instruction stays live at DTC. Check for this before the 08:00 depository cycle.\n- **Same security, same day, different client.** Do not match a counterparty delivery to another client's instruction just because the ISIN and quantity look right."
+      }
+     },
+     {
+      "firm": "bny",
+      "table": "bny/docs",
+      "id": "email_allianzgi_amendment_acknowledgement",
+      "row": {
+       "excerpt": "# Email - AllianzGI amendment acknowledgement\n\n*Synthetic data for an illustrative prototype. No real accounts, people or events.*\n\n---\n\n**From:** J. Rivera <j.rivera@example-bny.test>\n**To:** trade.support@example-agi.test\n**Cc:** agi.service@example-bny.test\n**Date:** Thu, 19 Nov 2026 08:39 ET\n**Subject:** RE: Allocation amendment AGI-ORD-26-322-0773 - NVDA\n\nHi team,\n\nWe received your amended allocation overnight (18:05 ET / 00:05 CET) for AGI-ORD-26-322-0773, NVDA, fund AGI-GLEQ: 10,000 shares instead of 8,000, counterparty Goldman Sachs.\n\nThe amendment came in without the counterparty's DT"
+      }
+     }
+    ]
+   },
+   "refs": {
+    "repairId": "RQ-20261118-0412"
+   },
+   "seq": 42,
+   "at": "2026-11-19T14:05:57.000Z",
+   "wallMs": 38481
+  },
+  {
+   "kind": "approval",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-analyst",
+    "name": "J. Rivera",
+    "firm": "bny",
+    "type": "HUMAN"
+   },
+   "title": "Repair approved by J. Rivera",
+   "decision": {
+    "kind": "bny-repair",
+    "outcome": "approved",
+    "by": "J. Rivera"
+   },
+   "seq": 43,
+   "at": "2026-11-19T14:41:00.000Z",
+   "wallMs": 177239
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-settlement-system",
+    "name": "BNY Settlement System (mock)",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Released BNYI-20261118-5529944 to DTC (10,000)",
+   "detail": "BNYI-20261118-5527301 cancelled and replaced. Receive instruction at DTC is now 10,000.",
+   "records": [
+    {
+     "firm": "bny",
+     "table": "bny/settlement_instructions",
+     "id": "BNYI-20261118-5529944",
+     "row": {
+      "instruction_id": "BNYI-20261118-5529944",
+      "received_ts_et": "2026-11-18 18:05:37",
+      "source_channel": "SWIFT_MT541",
+      "client_account_id": "4471-AGI-GLEQ",
+      "client_ref": "AGI-ORD-26-322-0773",
+      "direction": "RVP",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "settlement_amount": "1862600",
+      "currency": "USD",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "counterparty_name": "Goldman Sachs & Co. LLC",
+      "cpty_dtc_participant": "0005",
+      "settlement_location": "DTC",
+      "amends_instruction_id": "BNYI-20261118-5527301",
+      "status": "SENT_TO_DTC",
+      "status_ts_et": "2026-11-19T14:42:00.000Z"
+     }
+    }
+   ],
+   "seq": 44,
+   "at": "2026-11-19T14:42:00.000Z",
+   "wallMs": 177239
+  },
+  {
+   "kind": "checkpoint",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-copilot",
+    "name": "BNY Ops Copilot",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "BNYI-20261118-5529944 is released to DTC for 10,000. Next, ask Goldman to redeliver. The outbound filter lets only these fields leave BNY: dtc_reference, isin, quantity_instructed, settle_date, instruction_status, requested_action. Send the reply?",
+   "checkpoint": {
+    "id": "reply",
+    "seat": "bny",
+    "prompt": "BNYI-20261118-5529944 is released to DTC for 10,000. Next, ask Goldman to redeliver. The outbound filter lets only these fields leave BNY: dtc_reference, isin, quantity_instructed, settle_date, instruction_status, requested_action. Send the reply?",
+    "actions": [
+     {
+      "id": "reply",
+      "label": "Reply to Goldman",
+      "kind": "primary",
+      "keywords": [
+       "reply",
+       "send",
+       "tell",
+       "respond",
+       "notify",
+       "answer",
+       "goldman"
+      ]
+     }
+    ],
+    "questions": [
+     "What will Goldman see from us?"
+    ]
+   },
+   "seq": 45,
+   "at": "2026-11-19T14:42:00.000Z",
+   "wallMs": 177239
+  },
+  {
+   "kind": "chat",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-user",
+    "name": "You (BNY settlements)",
+    "firm": "bny",
+    "type": "HUMAN"
+   },
+   "title": "Reply to Goldman",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 46,
+   "at": "2026-11-19T14:42:00.000Z",
+   "wallMs": 177273
+  },
+  {
+   "kind": "model-call",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Model call #10",
+   "detail": "278 in / 78 out tokens · $0.00067",
+   "modelCall": {
+    "agent": "BNY Case Agent",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 278,
+    "tokensOut": 78,
+    "costUsd": 0.000668,
+    "runningUsd": 0.01737285
+   },
+   "seq": 47,
+   "at": "2026-11-19T14:42:00.000Z",
+   "wallMs": 179743
+  },
+  {
+   "kind": "message",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Reply to Goldman: instruction updated, please redeliver",
+   "detail": "The receive instruction for ISIN US67066G1040 is released to DTC for 10,000 units, with settlement on 2026-11-19; please redeliver the full quantity under reference DTC-DO-20261119-000318. The other requested information cannot be shared.",
+   "flags": [
+    "outbound"
+   ],
+   "taskState": "input-required",
+   "seq": 48,
+   "at": "2026-11-19T14:43:00.000Z",
+   "wallMs": 179743
+  },
+  {
+   "kind": "gateway",
+   "lane": "network",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY Intake Gateway",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Outbound filter: 6 approved field(s)",
+   "checks": [
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "dtc_reference, isin, quantity_instructed, settle_date, instruction_status, requested_action"
+    },
+    {
+     "id": "disclosure",
+     "label": "Disclosure scan",
+     "ok": true,
+     "detail": "no internal or client data in text"
+    }
+   ],
+   "flags": [],
+   "envelope": {
+    "jsonrpc": "2.0",
+    "id": "msg_da76b8",
+    "method": "message/send",
+    "headers": {
+     "authorization": "Bearer bny…"
+    },
+    "params": {
+     "message": {
+      "messageId": "msg_da76b8",
+      "taskId": "task_731197",
+      "contextId": "ctx_r_efd035d8",
+      "role": "agent",
+      "parts": [
+       {
+        "kind": "text",
+        "text": "The receive instruction for ISIN US67066G1040 is released to DTC for 10,000 units, with settlement on 2026-11-19; please redeliver the full quantity under reference DTC-DO-20261119-000318. The other requested information cannot be shared."
+       },
+       {
+        "kind": "data",
+        "data": {
+         "dtc_reference": "DTC-DO-20261119-000318",
+         "isin": "US67066G1040",
+         "quantity_instructed": 10000,
+         "settle_date": "2026-11-19",
+         "instruction_status": "RELEASED_TO_DTC",
+         "requested_action": "redeliver"
+        }
+       }
+      ],
+      "metadata": {
+       "from": "bny-gateway",
+       "to": "gs-outreach",
+       "skill": "settlement.dk-inquiry",
+       "sentAt": "2026-11-19T14:43:00.000Z",
+       "sourceRecords": []
+      }
+     }
+    }
+   },
+   "taskState": "input-required",
+   "seq": 49,
+   "at": "2026-11-19T14:43:03.000Z",
+   "wallMs": 180300
+  },
+  {
+   "kind": "message",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "bny-gateway",
+    "name": "BNY (via network)",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "BNY: instruction updated, please redeliver",
+   "shared": {
+    "from": "BNY",
+    "fields": {
+     "dtc_reference": "DTC-DO-20261119-000318",
+     "isin": "US67066G1040",
+     "quantity_instructed": 10000,
+     "settle_date": "2026-11-19",
+     "instruction_status": "RELEASED_TO_DTC",
+     "requested_action": "redeliver"
+    },
+    "text": "The receive instruction for ISIN US67066G1040 is released to DTC for 10,000 units, with settlement on 2026-11-19; please redeliver the full quantity under reference DTC-DO-20261119-000318. The other requested information cannot be shared."
+   },
+   "taskState": "input-required",
+   "seq": 50,
+   "at": "2026-11-19T14:43:03.000Z",
+   "wallMs": 180300
+  },
+  {
+   "kind": "checkpoint",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "BNY replied through the gateway: \"The receive instruction for ISIN US67066G1040 is released to DTC for 10,000 units, with settlement on 2026-11-19; please redeliver the full quantity under reference DTC-DO-20261119-000318. The other requested information cannot be shared.\" They now instruct 10,000 (RELEASED_TO_DTC). Shall I check that we can redeliver before cutoff?",
+   "checkpoint": {
+    "id": "review",
+    "seat": "goldman",
+    "prompt": "BNY replied through the gateway: \"The receive instruction for ISIN US67066G1040 is released to DTC for 10,000 units, with settlement on 2026-11-19; please redeliver the full quantity under reference DTC-DO-20261119-000318. The other requested information cannot be shared.\" They now instruct 10,000 (RELEASED_TO_DTC). Shall I check that we can redeliver before cutoff?",
+    "actions": [
+     {
+      "id": "assess",
+      "label": "Check we can redeliver",
+      "kind": "primary",
+      "keywords": [
+       "check",
+       "assess",
+       "redeliver",
+       "box",
+       "inventory",
+       "verify",
+       "can we"
+      ]
+     }
+    ],
+    "questions": [
+     "What did BNY change on their side?",
+     "Can we trust this reply?"
+    ]
+   },
+   "seq": 51,
+   "at": "2026-11-19T14:43:03.000Z",
+   "wallMs": 180300
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-user",
+    "name": "You (Goldman fails desk)",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "go ahead",
+   "chat": {
+    "role": "user"
+   },
+   "seq": 52,
+   "at": "2026-11-19T14:43:03.000Z",
+   "wallMs": 180471
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #11",
+   "detail": "1024 in / 31 out tokens · $0.00118",
+   "modelCall": {
+    "agent": "GS Ops Copilot",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 1024,
+    "tokensOut": 31,
+    "costUsd": 0.001179,
+    "runningUsd": 0.018551849999999998
+   },
+   "seq": 53,
+   "at": "2026-11-19T14:43:03.000Z",
+   "wallMs": 182189
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "I’ll check whether we can redeliver before cutoff.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 54,
+   "at": "2026-11-19T14:43:03.000Z",
+   "wallMs": 182189
+  },
+  {
+   "kind": "model-call",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Model call #12",
+   "detail": "1073 in / 352 out tokens · $0.00283",
+   "modelCall": {
+    "agent": "GS Counterparty Outreach Agent",
+    "model": "gpt-6.1-terra",
+    "tokensIn": 1073,
+    "tokensOut": 352,
+    "costUsd": 0.002833,
+    "runningUsd": 0.021384849999999997
+   },
+   "seq": 55,
+   "at": "2026-11-19T14:43:03.000Z",
+   "wallMs": 187309
+  },
+  {
+   "kind": "step",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Proposes redelivery to GS ops",
+   "detail": "Recommend redelivery of 10,000 shares; the instructed quantity matches the trade and shares are available.",
+   "records": [
+    {
+     "firm": "goldman",
+     "table": "goldman/deliveries",
+     "id": "DEL-20261118-448213",
+     "row": {
+      "delivery_id": "DEL-20261118-448213",
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "from_participant": "0005",
+      "to_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "instructed_ts_utc": "2026-11-19T13:15:09Z",
+      "status": "DK",
+      "status_ts_utc": "2026-11-19T13:16:02Z",
+      "dk_reason": "QTY_MISMATCH"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/trade_blotter",
+     "id": "GS-EQ-20261118-448213",
+     "row": {
+      "gs_trade_ref": "GS-EQ-20261118-448213",
+      "exec_ts_utc": "2026-11-18T19:52:31Z",
+      "client_name": "Allianz Global Investors GmbH",
+      "side": "SELL",
+      "client_side": "BUY",
+      "ticker": "NVDA",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "price": "186.25",
+      "gross_amount": "1862500",
+      "commission": "100",
+      "trade_date": "2026-11-18",
+      "settle_date": "2026-11-19",
+      "desk": "High Touch",
+      "trader_id": "T4417",
+      "status": "BOOKED"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "goldman/inventory",
+     "id": "US67066G1040@DTC-0005",
+     "row": {
+      "as_of_date": "2026-11-19",
+      "isin": "US67066G1040",
+      "box_location": "DTC-0005",
+      "quantity_available": "412500",
+      "quantity_pledged": "33267",
+      "quantity_on_loan": "56522"
+     }
+    },
+    {
+     "firm": "goldman",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000318/DK",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "event_ts_et": "2026-11-19T08:16:02-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "DK",
+      "reason_code": "QTY_MISMATCH"
+     }
+    }
+   ],
+   "flags": [],
+   "seq": 56,
+   "at": "2026-11-19T14:44:00.000Z",
+   "wallMs": 187314
+  },
+  {
+   "kind": "approval-request",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-ops-approver",
+    "name": "GS Ops Approver",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "Approve redelivery",
+   "approval": {
+    "kind": "gs-redelivery",
+    "firm": "goldman",
+    "title": "Redeliver 10,000 NVDA to participant 0901",
+    "summary": "Recommend redelivery of 10,000 shares; the instructed quantity matches the trade and shares are available.",
+    "evidence": [
+     {
+      "firm": "goldman",
+      "table": "goldman/fails",
+      "id": "GS-FAIL-20261119-0091",
+      "row": {
+       "gs_fail_id": "GS-FAIL-20261119-0091",
+       "delivery_id": "DEL-20261118-448213",
+       "counterparty_custodian": "The Bank of New York Mellon",
+       "fail_reason": "DK_BY_RECEIVER",
+       "opened_ts_utc": "2026-11-19T13:17:00Z",
+       "age_days": "0",
+       "exposure_usd": "1862600",
+       "owner": "",
+       "next_action": "contact receiving custodian",
+       "status": "OPEN"
+      }
+     },
+     {
+      "firm": "goldman",
+      "table": "goldman/deliveries",
+      "id": "DEL-20261118-448213",
+      "row": {
+       "delivery_id": "DEL-20261118-448213",
+       "gs_trade_ref": "GS-EQ-20261118-448213",
+       "dtc_reference": "DTC-DO-20261119-000318",
+       "from_participant": "0005",
+       "to_participant": "0901",
+       "isin": "US67066G1040",
+       "quantity": "10000",
+       "settlement_amount": "1862600",
+       "instructed_ts_utc": "2026-11-19T13:15:09Z",
+       "status": "DK",
+       "status_ts_utc": "2026-11-19T13:16:02Z",
+       "dk_reason": "QTY_MISMATCH"
+      }
+     },
+     {
+      "firm": "goldman",
+      "table": "goldman/allocations_confirms",
+      "id": "AL-20261118-448213-2",
+      "row": {
+       "alloc_id": "AL-20261118-448213-2",
+       "gs_trade_ref": "GS-EQ-20261118-448213",
+       "client_name": "Allianz Global Investors GmbH",
+       "client_account_ref": "AGI-ORD-26-322-0773",
+       "quantity": "10000",
+       "custodian_name": "The Bank of New York Mellon",
+       "custodian_dtc_participant": "0901",
+       "ctm_confirm_id": "CTM-77104562",
+       "affirmed": "Y",
+       "affirmed_ts_utc": "2026-11-18T22:52:10Z",
+       "version": "2",
+       "status": "AFFIRMED"
+      }
+     },
+     {
+      "firm": "goldman",
+      "table": "goldman/inventory",
+      "id": "US67066G1040@DTC-0005",
+      "row": {
+       "as_of_date": "2026-11-19",
+       "isin": "US67066G1040",
+       "box_location": "DTC-0005",
+       "quantity_available": "412500",
+       "quantity_pledged": "33267",
+       "quantity_on_loan": "56522"
+      }
+     }
+    ],
+    "shared": {
+     "from": "BNY",
+     "fields": {
+      "dtc_reference": "DTC-DO-20261119-000318",
+      "isin": "US67066G1040",
+      "quantity_instructed": 10000,
+      "settle_date": "2026-11-19",
+      "instruction_status": "RELEASED_TO_DTC",
+      "requested_action": "redeliver"
+     }
+    }
+   },
+   "refs": {
+    "failId": "GS-FAIL-20261119-0091"
+   },
+   "seq": 57,
+   "at": "2026-11-19T14:44:00.000Z",
+   "wallMs": 187314
+  },
+  {
+   "kind": "approval",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-ops-approver",
+    "name": "GS lead",
+    "firm": "goldman",
+    "type": "HUMAN"
+   },
+   "title": "Redelivery approved by GS lead",
+   "decision": {
+    "kind": "gs-redelivery",
+    "outcome": "approved",
+    "by": "GS lead"
+   },
+   "seq": 58,
+   "at": "2026-11-19T15:18:00.000Z",
+   "wallMs": 276960
+  },
+  {
+   "kind": "step",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "RULE"
+   },
+   "title": "Redelivered 10,000 as DTC-DO-20261119-000319",
+   "records": [
+    {
+     "firm": "goldman",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000319/INSTRUCTED",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000319",
+      "event_ts_et": "2026-11-19T10:20:00-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "INSTRUCTED",
+      "reason_code": ""
+     }
+    }
+   ],
+   "refs": {
+    "failId": "GS-FAIL-20261119-0091"
+   },
+   "seq": 59,
+   "at": "2026-11-19T15:20:00.000Z",
+   "wallMs": 276961
+  },
+  {
+   "kind": "step",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "dtc",
+    "name": "DTC (mock depository)",
+    "firm": "dtc",
+    "type": "RULE"
+   },
+   "title": "DTC: DTC-DO-20261119-000319 instructed 0005 → 0901",
+   "detail": "10,000 US67066G1040, $1,862,600",
+   "seq": 60,
+   "at": "2026-11-19T15:20:00.000Z",
+   "wallMs": 276961
+  },
+  {
+   "kind": "status",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "dtc",
+    "name": "DTC (mock depository)",
+    "firm": "dtc",
+    "type": "RULE"
+   },
+   "title": "DTC: DTC-DO-20261119-000319 SETTLED",
+   "records": [
+    {
+     "firm": "goldman",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000319/SETTLED",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000319",
+      "event_ts_et": "2026-11-19T10:21:00-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "SETTLED",
+      "reason_code": ""
+     }
+    }
+   ],
+   "refs": {
+    "failId": "GS-FAIL-20261119-0091"
+   },
+   "seq": 61,
+   "at": "2026-11-19T15:21:00.000Z",
+   "wallMs": 277524
+  },
+  {
+   "kind": "status",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "dtc",
+    "name": "DTC (mock depository)",
+    "firm": "dtc",
+    "type": "RULE"
+   },
+   "title": "DTC: DTC-DO-20261119-000319 SETTLED",
+   "records": [
+    {
+     "firm": "bny",
+     "table": "dtc/settlement_activity",
+     "id": "DTC-DO-20261119-000319/SETTLED",
+     "row": {
+      "dtc_reference": "DTC-DO-20261119-000319",
+      "event_ts_et": "2026-11-19T10:21:00-05:00",
+      "deliverer_participant": "0005",
+      "receiver_participant": "0901",
+      "isin": "US67066G1040",
+      "quantity": "10000",
+      "settlement_amount": "1862600",
+      "transaction_type": "DVP",
+      "event": "SETTLED",
+      "reason_code": ""
+     }
+    }
+   ],
+   "refs": {
+    "repairId": "RQ-20261118-0412"
+   },
+   "seq": 62,
+   "at": "2026-11-19T15:21:00.000Z",
+   "wallMs": 277524
+  },
+  {
+   "kind": "status",
+   "lane": "network",
+   "audience": [],
+   "actor": {
+    "id": "dtc",
+    "name": "DTC (mock depository)",
+    "firm": "dtc",
+    "type": "RULE"
+   },
+   "title": "DTC: DTC-DO-20261119-000319 SETTLED at 10:21:00 ET",
+   "seq": 63,
+   "at": "2026-11-19T15:21:00.000Z",
+   "wallMs": 277524
+  },
+  {
+   "kind": "step",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-outreach",
+    "name": "GS Counterparty Outreach Agent",
+    "firm": "goldman",
+    "type": "RULE"
+   },
+   "title": "Fail GS-FAIL-20261119-0091 closed",
+   "taskState": "completed",
+   "refs": {
+    "failId": "GS-FAIL-20261119-0091"
+   },
+   "seq": 64,
+   "at": "2026-11-19T15:21:00.000Z",
+   "wallMs": 277524
+  },
+  {
+   "kind": "step",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-case",
+    "name": "BNY Case Agent",
+    "firm": "bny",
+    "type": "RULE"
+   },
+   "title": "Case closed; exception EXC-20261119-0907 resolved",
+   "taskState": "completed",
+   "refs": {
+    "repairId": "RQ-20261118-0412"
+   },
+   "seq": 65,
+   "at": "2026-11-19T15:21:00.000Z",
+   "wallMs": 277524
+  },
+  {
+   "kind": "chat",
+   "lane": "goldman",
+   "audience": [
+    "goldman"
+   ],
+   "actor": {
+    "id": "gs-copilot",
+    "name": "GS Ops Copilot",
+    "firm": "goldman",
+    "type": "AGENT"
+   },
+   "title": "Done. DTC-DO-20261119-000319 settled at DTC at 10:21:00 ET ET for 10,000, and fail GS-FAIL-20261119-0091 is closed.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 66,
+   "at": "2026-11-19T15:21:00.000Z",
+   "wallMs": 277524
+  },
+  {
+   "kind": "chat",
+   "lane": "bny",
+   "audience": [
+    "bny"
+   ],
+   "actor": {
+    "id": "bny-copilot",
+    "name": "BNY Ops Copilot",
+    "firm": "bny",
+    "type": "AGENT"
+   },
+   "title": "Done. DTC-DO-20261119-000319 settled against BNYI-20261118-5529944 and exception EXC-20261119-0907 is resolved.",
+   "chat": {
+    "role": "assistant"
+   },
+   "seq": 67,
+   "at": "2026-11-19T15:21:00.000Z",
+   "wallMs": 277524
+  }
+ ],
+ "audit": [
+  {
+   "actor": "GS Ops Copilot",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (copilot_intent)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 500; worst case $0.00308",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 404,
+   "tokensOut": 33,
+   "costUsd": 0.000569,
+   "runningCostUsd": 0.000569,
+   "seq": 1,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 3
+  },
+  {
+   "actor": "You (Goldman fails desk)",
+   "actorType": "HUMAN",
+   "firm": "goldman",
+   "action": "chat: request",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Look for DK'd deliveries (\"Can you check why our NVDA delivery got DKd this morning and chase the receiver?\")",
+   "approver": "You (Goldman fails desk)",
+   "seq": 2,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool findOpenDkFails",
+   "dataAccessed": [
+    "goldman/fails#GS-FAIL-20261119-0091"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 3,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getFail",
+   "dataAccessed": [
+    "goldman/fails#GS-FAIL-20261119-0091"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 4,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getDelivery",
+   "dataAccessed": [
+    "goldman/deliveries#DEL-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 5,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getTrade",
+   "dataAccessed": [
+    "goldman/trade_blotter#GS-EQ-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 6,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getAllocationConfirm",
+   "dataAccessed": [
+    "goldman/allocations_confirms#AL-20261118-448213-2"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 7,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getDtcEvents",
+   "dataAccessed": [
+    "dtc/settlement_activity#DTC-DO-20261119-000318/INSTRUCTED",
+    "dtc/settlement_activity#DTC-DO-20261119-000318/DK"
+   ],
+   "fieldsShared": [],
+   "decision": "2 row(s)",
+   "approver": "",
+   "seq": 8,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "tool getInventory",
+   "dataAccessed": [
+    "goldman/inventory#US67066G1040@DTC-0005"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 9,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 4
+  },
+  {
+   "actor": "GS Fails Monitor",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (gs_fail_summary)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 800; worst case $0.00505",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 899,
+   "tokensOut": 316,
+   "costUsd": 0.002479,
+   "runningCostUsd": 0.003048,
+   "seq": 10,
+   "at": "2026-11-19T14:02:00.000Z",
+   "afterSeq": 6
+  },
+  {
+   "actor": "Grounding validator",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "validate GS Fails Monitor findings",
+   "dataAccessed": [
+    "goldman/fails#GS-FAIL-20261119-0091",
+    "goldman/deliveries#DEL-20261118-448213",
+    "goldman/trade_blotter#GS-EQ-20261118-448213",
+    "goldman/allocations_confirms#AL-20261118-448213-2"
+   ],
+   "fieldsShared": [],
+   "decision": "2 finding(s) grounded",
+   "approver": "",
+   "seq": 11,
+   "at": "2026-11-19T14:02:20.000Z",
+   "afterSeq": 6
+  },
+  {
+   "actor": "GS Ops Copilot",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (copilot_intent)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 500; worst case $0.00329",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 574,
+   "tokensOut": 66,
+   "costUsd": 0.000904,
+   "runningCostUsd": 0.003952,
+   "seq": 12,
+   "at": "2026-11-19T14:02:20.000Z",
+   "afterSeq": 10
+  },
+  {
+   "actor": "GS Ops Copilot",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (copilot_intent)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 500; worst case $0.00340",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 644,
+   "tokensOut": 31,
+   "costUsd": 0.000799,
+   "runningCostUsd": 0.004751,
+   "seq": 13,
+   "at": "2026-11-19T14:02:20.000Z",
+   "afterSeq": 13
+  },
+  {
+   "actor": "You (Goldman fails desk)",
+   "actorType": "HUMAN",
+   "firm": "goldman",
+   "action": "chat: discover",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Find the receiver's agent (\"ok find their agent\")",
+   "approver": "You (Goldman fails desk)",
+   "seq": 14,
+   "at": "2026-11-19T14:02:20.000Z",
+   "afterSeq": 14
+  },
+  {
+   "actor": "You (Goldman fails desk)",
+   "actorType": "HUMAN",
+   "firm": "goldman",
+   "action": "chat: draft",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Draft the inquiry (\"Draft the inquiry\")",
+   "approver": "You (Goldman fails desk)",
+   "seq": 15,
+   "at": "2026-11-19T14:02:25.000Z",
+   "afterSeq": 17
+  },
+  {
+   "actor": "GS Counterparty Outreach Agent",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (gs_outreach_request)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 2000; worst case $0.01128",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 1072,
+   "tokensOut": 294,
+   "costUsd": 0.00152645,
+   "runningCostUsd": 0.00627745,
+   "seq": 16,
+   "at": "2026-11-19T14:02:25.000Z",
+   "afterSeq": 18
+  },
+  {
+   "actor": "Grounding validator",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "validate GS Counterparty Outreach Agent findings",
+   "dataAccessed": [
+    "dtc/settlement_activity#DTC-DO-20261119-000318/DK",
+    "goldman/trade_blotter#GS-EQ-20261118-448213",
+    "goldman/allocations_confirms#AL-20261118-448213-2",
+    "goldman/deliveries#DEL-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "3 finding(s) grounded",
+   "approver": "",
+   "seq": 17,
+   "at": "2026-11-19T14:02:55.000Z",
+   "afterSeq": 18
+  },
+  {
+   "actor": "GS Ops Copilot",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (copilot_intent)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 500; worst case $0.00362",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 775,
+   "tokensOut": 27,
+   "costUsd": 0.00091,
+   "runningCostUsd": 0.007187450000000001,
+   "seq": 18,
+   "at": "2026-11-19T14:02:55.000Z",
+   "afterSeq": 22
+  },
+  {
+   "actor": "You (Goldman fails desk)",
+   "actorType": "HUMAN",
+   "firm": "goldman",
+   "action": "chat: send",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Send to BNY (\"looks good, send it\")",
+   "approver": "You (Goldman fails desk)",
+   "seq": 19,
+   "at": "2026-11-19T14:02:55.000Z",
+   "afterSeq": 23
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "inbound settlement.dk-inquiry from gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "counterparty_trade_ref",
+    "counterparty_fail_ref",
+    "isin",
+    "quantity_delivered",
+    "settle_date",
+    "deliverer_participant",
+    "dk_reason",
+    "requested_action"
+   ],
+   "decision": "accepted",
+   "approver": "",
+   "seq": 20,
+   "at": "2026-11-19T14:02:59.000Z",
+   "afterSeq": 25
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "outbound reply to gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "instruction_status"
+   ],
+   "decision": "passed",
+   "approver": "",
+   "seq": 21,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 28
+  },
+  {
+   "actor": "BNY Ops Copilot",
+   "actorType": "AGENT",
+   "firm": "bny",
+   "action": "model call (copilot_intent)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 500; worst case $0.00336",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 620,
+   "tokensOut": 27,
+   "costUsd": 0.000755,
+   "runningCostUsd": 0.00794245,
+   "seq": 22,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 32
+  },
+  {
+   "actor": "You (BNY settlements)",
+   "actorType": "HUMAN",
+   "firm": "bny",
+   "action": "chat: investigate",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Investigate our records (\"yes investigate\")",
+   "approver": "You (BNY settlements)",
+   "seq": 23,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 33
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool getDtcEvents",
+   "dataAccessed": [
+    "dtc/settlement_activity#DTC-DO-20261119-000318/INSTRUCTED",
+    "dtc/settlement_activity#DTC-DO-20261119-000318/DK"
+   ],
+   "fieldsShared": [],
+   "decision": "2 row(s)",
+   "approver": "",
+   "seq": 24,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 33
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool getException",
+   "dataAccessed": [
+    "bny/fails_exceptions#EXC-20261119-0907"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 25,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 33
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool getInstruction",
+   "dataAccessed": [
+    "bny/settlement_instructions#BNYI-20261118-5527301"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 26,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 33
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool findAmendments",
+   "dataAccessed": [
+    "bny/settlement_instructions#BNYI-20261118-5529944"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 27,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 33
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool getRepairItem",
+   "dataAccessed": [
+    "bny/repair_queue#RQ-20261118-0412"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 28,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 33
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool getClientAccount",
+   "dataAccessed": [
+    "bny/client_accounts#4471-AGI-GLEQ"
+   ],
+   "fieldsShared": [],
+   "decision": "1 row(s)",
+   "approver": "",
+   "seq": 29,
+   "at": "2026-11-19T14:03:02.000Z",
+   "afterSeq": 33
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "AGENT",
+   "firm": "bny",
+   "action": "model call (bny_case_triage)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 2000; worst case $0.01163",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 1337,
+   "tokensOut": 621,
+   "costUsd": 0.004442,
+   "runningCostUsd": 0.01238445,
+   "seq": 30,
+   "at": "2026-11-19T14:03:42.000Z",
+   "afterSeq": 35
+  },
+  {
+   "actor": "Grounding validator",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "validate BNY Case Agent findings",
+   "dataAccessed": [
+    "bny/fails_exceptions#EXC-20261119-0907",
+    "bny/settlement_instructions#BNYI-20261118-5529944",
+    "bny/repair_queue#RQ-20261118-0412",
+    "bny/client_accounts#4471-AGI-GLEQ"
+   ],
+   "fieldsShared": [],
+   "decision": "4 finding(s) grounded",
+   "approver": "",
+   "seq": 31,
+   "at": "2026-11-19T14:04:27.000Z",
+   "afterSeq": 35
+  },
+  {
+   "actor": "You (BNY settlements)",
+   "actorType": "HUMAN",
+   "firm": "bny",
+   "action": "chat: repair",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Propose a repair (\"Propose a repair\")",
+   "approver": "You (BNY settlements)",
+   "seq": 32,
+   "at": "2026-11-19T14:04:27.000Z",
+   "afterSeq": 38
+  },
+  {
+   "actor": "BNY Instruction Repair Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool getSsiCandidates",
+   "dataAccessed": [
+    "bny/ssi_counterparties#SSI-GS-US-EQ-0005",
+    "bny/ssi_counterparties#SSI-GS-US-FI-0005",
+    "bny/ssi_counterparties#SSI-GS-US-EQ-7108"
+   ],
+   "fieldsShared": [],
+   "decision": "3 row(s)",
+   "approver": "",
+   "seq": 33,
+   "at": "2026-11-19T14:04:27.000Z",
+   "afterSeq": 38
+  },
+  {
+   "actor": "BNY Instruction Repair Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool getSecurity",
+   "dataAccessed": [
+    "bny/securities_master#BNYS000001",
+    "bny/securities_master#BNYS000146"
+   ],
+   "fieldsShared": [],
+   "decision": "2 row(s)",
+   "approver": "",
+   "seq": 34,
+   "at": "2026-11-19T14:04:27.000Z",
+   "afterSeq": 38
+  },
+  {
+   "actor": "BNY Instruction Repair Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool readRunbook",
+   "dataAccessed": [
+    "bny/docs#repair_queue_runbook"
+   ],
+   "fieldsShared": [],
+   "decision": "read",
+   "approver": "",
+   "seq": 35,
+   "at": "2026-11-19T14:04:27.000Z",
+   "afterSeq": 38
+  },
+  {
+   "actor": "BNY Instruction Repair Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "tool readClientEmail",
+   "dataAccessed": [
+    "bny/docs#email_allianzgi_amendment_acknowledgement"
+   ],
+   "fieldsShared": [],
+   "decision": "read",
+   "approver": "",
+   "seq": 36,
+   "at": "2026-11-19T14:04:27.000Z",
+   "afterSeq": 38
+  },
+  {
+   "actor": "BNY Instruction Repair Agent",
+   "actorType": "AGENT",
+   "firm": "bny",
+   "action": "model call (bny_repair_proposal)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 2000; worst case $0.01302",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 2451,
+   "tokensOut": 839,
+   "costUsd": 0.004320399999999999,
+   "runningCostUsd": 0.01670485,
+   "seq": 37,
+   "at": "2026-11-19T14:04:27.000Z",
+   "afterSeq": 40
+  },
+  {
+   "actor": "Grounding validator",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "validate BNY Instruction Repair Agent findings",
+   "dataAccessed": [
+    "bny/settlement_instructions#BNYI-20261118-5529944",
+    "bny/ssi_counterparties#SSI-GS-US-EQ-0005",
+    "bny/securities_master#BNYS000001",
+    "dtc/settlement_activity#DTC-DO-20261119-000318/INSTRUCTED",
+    "bny/docs#email_allianzgi_amendment_acknowledgement",
+    "bny/fails_exceptions#EXC-20261119-0907",
+    "bny/settlement_instructions#BNYI-20261118-5527301"
+   ],
+   "fieldsShared": [],
+   "decision": "4 finding(s) grounded",
+   "approver": "",
+   "seq": 38,
+   "at": "2026-11-19T14:05:57.000Z",
+   "afterSeq": 40
+  },
+  {
+   "actor": "BNY Instruction Repair Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "check repair proposal",
+   "dataAccessed": [
+    "bny/settlement_instructions#BNYI-20261118-5529944",
+    "bny/ssi_counterparties#SSI-GS-US-EQ-0005",
+    "bny/securities_master#BNYS000001",
+    "dtc/settlement_activity#DTC-DO-20261119-000318/INSTRUCTED",
+    "bny/docs#email_allianzgi_amendment_acknowledgement",
+    "bny/fails_exceptions#EXC-20261119-0907",
+    "bny/settlement_instructions#BNYI-20261118-5527301"
+   ],
+   "fieldsShared": [],
+   "decision": "passed",
+   "approver": "",
+   "seq": 39,
+   "at": "2026-11-19T14:05:57.000Z",
+   "afterSeq": 40
+  },
+  {
+   "actor": "BNY Settlements Analyst",
+   "actorType": "HUMAN",
+   "firm": "bny",
+   "action": "review repair",
+   "dataAccessed": [
+    "bny/settlement_instructions#BNYI-20261118-5529944"
+   ],
+   "fieldsShared": [],
+   "decision": "approved",
+   "approver": "J. Rivera",
+   "seq": 40,
+   "at": "2026-11-19T14:41:00.000Z",
+   "afterSeq": 42
+  },
+  {
+   "actor": "BNY Settlement System (mock)",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "release instruction",
+   "dataAccessed": [
+    "bny/settlement_instructions#BNYI-20261118-5529944",
+    "bny/settlement_instructions#BNYI-20261118-5527301"
+   ],
+   "fieldsShared": [],
+   "decision": "released BNYI-20261118-5529944 (qty 10000, cpty 0005); cancelled BNYI-20261118-5527301",
+   "approver": "J. Rivera",
+   "seq": 41,
+   "at": "2026-11-19T14:42:00.000Z",
+   "afterSeq": 43
+  },
+  {
+   "actor": "You (BNY settlements)",
+   "actorType": "HUMAN",
+   "firm": "bny",
+   "action": "chat: reply",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Reply to Goldman (\"Reply to Goldman\")",
+   "approver": "You (BNY settlements)",
+   "seq": 42,
+   "at": "2026-11-19T14:42:00.000Z",
+   "afterSeq": 46
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "AGENT",
+   "firm": "bny",
+   "action": "model call (bny_case_reply)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 800; worst case $0.00440",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 278,
+   "tokensOut": 78,
+   "costUsd": 0.000668,
+   "runningCostUsd": 0.01737285,
+   "seq": 43,
+   "at": "2026-11-19T14:42:00.000Z",
+   "afterSeq": 47
+  },
+  {
+   "actor": "BNY Intake Gateway",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "outbound reply to gs-outreach",
+   "dataAccessed": [],
+   "fieldsShared": [
+    "dtc_reference",
+    "isin",
+    "quantity_instructed",
+    "settle_date",
+    "instruction_status",
+    "requested_action"
+   ],
+   "decision": "passed",
+   "approver": "",
+   "seq": 44,
+   "at": "2026-11-19T14:43:03.000Z",
+   "afterSeq": 49
+  },
+  {
+   "actor": "GS Ops Copilot",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (copilot_intent)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 500; worst case $0.00394",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 1024,
+   "tokensOut": 31,
+   "costUsd": 0.001179,
+   "runningCostUsd": 0.018551849999999998,
+   "seq": 45,
+   "at": "2026-11-19T14:43:03.000Z",
+   "afterSeq": 53
+  },
+  {
+   "actor": "You (Goldman fails desk)",
+   "actorType": "HUMAN",
+   "firm": "goldman",
+   "action": "chat: review",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "Check we can redeliver (\"go ahead\")",
+   "approver": "You (Goldman fails desk)",
+   "seq": 46,
+   "at": "2026-11-19T14:43:03.000Z",
+   "afterSeq": 54
+  },
+  {
+   "actor": "GS Counterparty Outreach Agent",
+   "actorType": "AGENT",
+   "firm": "goldman",
+   "action": "model call (gs_outreach_interpret)",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "max_output_tokens 1200; worst case $0.00729",
+   "approver": "",
+   "model": "gpt-6.1-terra",
+   "tokensIn": 1073,
+   "tokensOut": 352,
+   "costUsd": 0.002833,
+   "runningCostUsd": 0.021384849999999997,
+   "seq": 47,
+   "at": "2026-11-19T14:43:03.000Z",
+   "afterSeq": 55
+  },
+  {
+   "actor": "Grounding validator",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "validate GS Counterparty Outreach Agent findings",
+   "dataAccessed": [
+    "goldman/deliveries#DEL-20261118-448213",
+    "goldman/trade_blotter#GS-EQ-20261118-448213",
+    "goldman/inventory#US67066G1040@DTC-0005",
+    "dtc/settlement_activity#DTC-DO-20261119-000318/DK"
+   ],
+   "fieldsShared": [],
+   "decision": "3 finding(s) grounded",
+   "approver": "",
+   "seq": 48,
+   "at": "2026-11-19T14:44:00.000Z",
+   "afterSeq": 55
+  },
+  {
+   "actor": "GS Ops Approver",
+   "actorType": "HUMAN",
+   "firm": "goldman",
+   "action": "review redelivery",
+   "dataAccessed": [
+    "goldman/deliveries#DEL-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "approved",
+   "approver": "GS lead",
+   "seq": 49,
+   "at": "2026-11-19T15:18:00.000Z",
+   "afterSeq": 57
+  },
+  {
+   "actor": "GS Counterparty Outreach Agent",
+   "actorType": "RULE",
+   "firm": "goldman",
+   "action": "redeliver",
+   "dataAccessed": [
+    "goldman/deliveries#DEL-20261118-448213"
+   ],
+   "fieldsShared": [],
+   "decision": "DTC-DO-20261119-000319 for 10000",
+   "approver": "",
+   "seq": 50,
+   "at": "2026-11-19T15:20:00.000Z",
+   "afterSeq": 58
+  },
+  {
+   "actor": "DTC (mock depository)",
+   "actorType": "RULE",
+   "firm": "dtc",
+   "action": "match delivery",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "SETTLED",
+   "approver": "",
+   "seq": 51,
+   "at": "2026-11-19T15:21:00.000Z",
+   "afterSeq": 63
+  },
+  {
+   "actor": "BNY Case Agent",
+   "actorType": "RULE",
+   "firm": "bny",
+   "action": "close case",
+   "dataAccessed": [],
+   "fieldsShared": [],
+   "decision": "settled",
+   "approver": "",
+   "seq": 52,
+   "at": "2026-11-19T15:21:00.000Z",
+   "afterSeq": 65
+  }
+ ],
+ "toolCalls": 18
+}

@@ -1,26 +1,84 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Short laptop screens: the overview tightens so it stays on one screen. */
+@custom-variant short (@media (max-height: 820px));
+
+@theme {
+  --color-navy: #00243e;
+  --color-navy-2: #0b3a5c;
+  --color-teal: #2b9cae;
+  --color-teal-soft: #e3f3f6;
+  --color-canvas: #f3f8fe;
+  --color-line: #c2cdd7;
+  --color-ink: #193952;
+  --color-muted: #5a7389;
+  --color-ok: #1f7a4d;
+  --color-ok-soft: #e4f4ec;
+  --color-warn: #a86400;
+  --color-warn-soft: #fdf1dc;
+  --color-bad: #b42318;
+  --color-bad-soft: #fde8e6;
+  /* Goldman's side has its own look, apart from BNY's navy and teal. */
+  --color-gs: #3f6a99;
+  --color-gs-dark: #14273a;
+  --color-gs-sky: #7399c6;
+  --color-gs-soft: #e8f0f8;
+  --font-sans: var(--font-flex), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Prototype layer (overview, persona dock): motion that guides the eye. */
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.dock-in {
+  animation: dock-in 180ms ease-out;
+}
+.snack {
+  animation: dock-in 180ms ease-out;
+}
+
+/* A soft halo that pulses around the entry-point button. */
+@keyframes halo {
+  0% {
+    box-shadow: 0 0 0 0 rgb(43 156 174 / 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgb(43 156 174 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(43 156 174 / 0);
+  }
+}
+.halo {
+  animation: halo 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-in,
+  .snack,
+  .halo {
+    animation: none;
+  }
 }
