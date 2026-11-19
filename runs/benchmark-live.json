@@ -1,5 +1,5 @@
 {
- "createdAt": "2026-11-18T05:01:57.783Z",
+ "createdAt": "2026-11-18T22:00:35.019Z",
  "mode": "live",
  "model": "gpt-6.1-terra",
  "dkAt": "2026-11-19T13:16:02.000Z",
@@ -88,29 +88,30 @@
      "basis": "measured"
     },
     "fieldsShared": {
-     "value": 2,
+     "value": 3,
      "basis": "measured",
      "note": "fields detected in the drafted email"
     },
     "tokens": {
-     "value": 2437,
+     "value": 2641,
      "basis": "measured"
     },
     "costUsd": {
-     "value": 0.006765,
+     "value": 0.0065006000000000005,
      "basis": "measured"
     }
    },
    "fieldsSharedList": [
     "dtc_reference",
+    "isin",
     "quantity"
    ],
-   "detail": "The delivery was automatically DK'd for a quantity mismatch: Goldman delivered 10,000 shares against BNY's 8,000-share instruction. The amounts also differ. The records do not establish which side is correct; the latest allocation, open repair items, and client inquiry log were not provided."
+   "detail": "The delivery was automatically DK’d for a quantity mismatch: 10,000 delivered versus 8,000 instructed. The amounts also differ by USD 372,520. The records do not establish which side is correct: no allocation, repair item or inquiry log is provided. Confirm with the client before asserting a correction to the counterparty."
   },
   {
    "mode": "a2a",
    "label": "A2A (this design)",
-   "description": "Full multi-agent run r_b125489b (live, gpt-6.1-terra).",
+   "description": "Full multi-agent run r_995c8bc4 (live, gpt-6.1-terra).",
    "metrics": {
     "minutesToResolution": {
      "value": 181,
@@ -135,17 +136,17 @@
      "basis": "measured"
     },
     "fieldsShared": {
-     "value": 7,
+     "value": 9,
      "basis": "measured",
      "note": "distinct fields BNY sent across the boundary"
     },
     "tokens": {
-     "value": 11059,
+     "value": 11558,
      "basis": "measured",
      "note": "API usage fields"
     },
     "costUsd": {
-     "value": 0.018454250000000002,
+     "value": 0.01832525,
      "basis": "measured"
     }
    },
@@ -155,21 +156,23 @@
     "requested_action",
     "isin",
     "settle_date",
+    "resolution",
     "expected_fix_time",
+    "settle_by",
     "quantity_instructed"
    ]
   }
  ],
  "emails": [
   {
-   "to": "AllianzGI Global Equity Fund",
-   "subject": "Action requested: DK on AGI-ORD-26-322-0773",
-   "body": "Please check your latest allocation and instruction for AGI-ORD-26-322-0773 and re-instruct as appropriate. BNY's instruction is for 8,000 shares and USD 1,490,080; the delivery was for 10,000 shares and USD 1,862,600 and was DK'd. Please confirm the correct quantity and settlement amount. We cannot determine from the available records which side is correct."
+   "to": "AllianzGI Global Equity Fund (synthetic) — client contact not provided",
+   "subject": "Please check and re-instruct: AGI-ORD-26-322-0773",
+   "body": "Hello,\n\nThe delivery for ISIN US67066G1040 was DK’d: Goldman Sachs delivered 10,000 shares for USD 1,862,600, while your instruction was for 8,000 shares and USD 1,490,080.\n\nPlease check your latest allocation and any repair or inquiry, confirm the correct quantity and amount, and re-instruct if needed. The settlement date is November 19, 2026; same-day instructions are due by 11:30 ET.\n\nThank you."
   },
   {
-   "to": "Goldman Sachs & Co. LLC fails desk",
-   "subject": "DK on DTC-DO-20261119-000318",
-   "body": "Your delivery under DTC reference DTC-DO-20261119-000318 was automatically DK'd for a quantity mismatch. It was for 10,000 shares and USD 1,862,600; BNY's instruction is for 8,000 shares and USD 1,490,080. We have asked the client to check and re-instruct as appropriate. The correct terms are not yet verified."
+   "to": "Goldman Sachs & Co. LLC fails desk — address not provided",
+   "subject": "DK under review: DTC-DO-20261119-000318",
+   "body": "Hello,\n\nYour delivery of 10,000 shares of ISIN US67066G1040 for USD 1,862,600 was DK’d against our instruction for 8,000 shares and USD 1,490,080. We are checking the correct terms with our client and will update you once confirmed.\n\nDTC reference: DTC-DO-20261119-000318.\n\nThank you."
   }
  ]
 }

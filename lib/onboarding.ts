@@ -66,7 +66,10 @@ export function applicationFor(fixes: Problem[] = []): Application {
 
 const plainSkill = (id: string) => PERMISSIONS.find((p) => p.id === id)?.label ?? id;
 
-export function runCheck(app: Application, stage: OnboardingStage, approvedSkills: string[] = []): CheckResult {
+/** Goldman's agent BIC, from BNY's active SSI. */
+export const agentBicFor = () => scopeFor("bny").read("bny/ssi_counterparties").find((x) => x.counterparty_name === "Goldman Sachs & Co. LLC" && x.status === "ACTIVE")?.agent_bic ?? "";
+
+export function runCheck(app: Application, stage: OnboardingStage, approvedSkills: string[] = [], passHours = 24): CheckResult {
   const bny = scopeFor("bny");
   const copy = ONBOARDING_STAGES.find((s) => s.id === stage)!;
   const base = { stage, what: copy.what, why: copy.why };
@@ -176,7 +179,7 @@ export function runCheck(app: Application, stage: OnboardingStage, approvedSkill
     }
     case "pass": {
       const granted = approvedSkills.filter((s) => app.requestedSkills.includes(s));
-      const token = issueToken({ sub: app.agentId, clientId: `${app.agentId}-01`, firm: "goldman", scopes: granted }, 24 * 3600);
+      const token = issueToken({ sub: app.agentId, clientId: `${app.agentId}-01`, firm: "goldman", scopes: granted }, passHours * 3600);
       const v = verifyToken(token);
       const expires = v.ok ? new Date(v.claims.exp * 1000).toISOString().slice(0, 16).replace("T", " ") : "";
       return {

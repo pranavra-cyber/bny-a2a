@@ -65,7 +65,7 @@ export function ApprovalCard({ e, runId, view, decided, onDone }: { e: RunEvent;
   const by = DEFAULT_APPROVER[a.kind];
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [channels, setChannels] = useState<string[]>(a.message?.channels ?? []);
+  const channels = a.message?.channels ?? [];
   const reject = useConfirm();
   const act = async (outcome: string) => {
     setBusy(true);
@@ -113,25 +113,13 @@ export function ApprovalCard({ e, runId, view, decided, onDone }: { e: RunEvent;
         )}
         {!decided && (
           <>
-            {a.message && (
-              <fieldset className="mt-4 flex flex-wrap items-center gap-4 text-sm">
-                <legend className="sr-only">Send by</legend>
-                <span className="text-xs text-muted">Send by</span>
-                {(["teams", "email"] as const).map((c) => (
-                  <label key={c} className="flex items-center gap-1.5">
-                    <input type="checkbox" checked={channels.includes(c)} onChange={(x) => setChannels(x.target.checked ? [...channels, c] : channels.filter((y) => y !== c))} className="accent-teal" />
-                    {c === "teams" ? "Microsoft Teams" : "Email"}
-                  </label>
-                ))}
-              </fieldset>
-            )}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <button
-                disabled={busy || (a.message !== undefined && channels.length === 0)}
+                disabled={busy}
                 onClick={() => act("approved")}
                 className="rounded-md bg-ok px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
               >
-                {APPROVE_LABEL[a.kind]}
+                {a.message ? `Send email to ${a.message.to.replace(/\s*<.*>$/, "")}` : APPROVE_LABEL[a.kind]}
               </button>
               <button
                 disabled={busy}
@@ -142,7 +130,6 @@ export function ApprovalCard({ e, runId, view, decided, onDone }: { e: RunEvent;
               </button>
               <span className="text-xs text-muted">as {by}</span>
               {busy && <span className="text-xs text-muted">Recording your decision…</span>}
-              {a.message && channels.length === 0 && <span className="text-xs text-bad">Pick at least one channel.</span>}
             </div>
             {err && (
               <p role="alert" className="mt-2 text-sm text-bad">

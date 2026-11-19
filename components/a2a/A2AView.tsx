@@ -44,8 +44,8 @@ export function A2AView() {
     >
       {!runId ? (
         <div className="p-8 text-sm text-muted">
-          No case yet. <Link href="/eliza/case" className="font-medium text-teal hover:underline">Start the live case</Link> or run a safety test from the{" "}
-          <Link href="/eliza/audit" className="font-medium text-teal hover:underline">audit view</Link>.
+          No case yet. <Link href="/eliza/case" className="font-medium text-teal hover:underline">Start the live case</Link>, or try to break in from the{" "}
+          <Link href="/attack" className="font-medium text-teal hover:underline">attack console</Link>.
         </div>
       ) : (
         <>
@@ -74,7 +74,7 @@ function SecurityView({ s, events, trace, onOpen }: { s: RunSummary | null; even
   const obtained = events.filter((e) => e.kind === "approval" && e.decision?.outcome === "approved").length;
   const corrected = events.some((e) => e.title.startsWith("Client's corrected instruction received"));
   return (
-    <div className="pb-24">
+    <div className="flex min-h-full flex-col">
       <section className="flex flex-wrap items-end justify-between gap-6 border-b border-line bg-white px-6 py-5">
         <div className="min-w-0">
           <p className="text-xs text-muted">Now</p>
@@ -124,8 +124,8 @@ function SecurityView({ s, events, trace, onOpen }: { s: RunSummary | null; even
         </p>
       </section>
 
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="space-y-3 px-6 py-5">
+      <div className="grid flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="space-y-3 px-6 pt-5 pb-24">
           <div className="flex justify-between text-xs font-semibold tracking-wide text-muted uppercase">
             <span>Goldman Sachs · Outreach Agent <span className="text-ok normal-case">✓ verified</span></span>
             <span>BNY · Settlement Ops Agent <span className="text-ok normal-case">✓ verified</span></span>
@@ -171,7 +171,7 @@ function SecurityView({ s, events, trace, onOpen }: { s: RunSummary | null; even
           })}
         </section>
 
-        <aside className="space-y-6 border-l border-line bg-white px-5 py-5 text-sm">
+        <aside className="space-y-6 border-l border-line bg-white px-5 pt-5 pb-24 text-sm">
           <div>
             <h3 className="text-xs font-semibold tracking-wide text-muted uppercase">What crossed the boundary</h3>
             <ul className="mt-2 space-y-1.5">

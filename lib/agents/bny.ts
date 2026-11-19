@@ -132,6 +132,7 @@ export function draftReply(run: Run, approvedFields: Record<string, unknown>, si
     system:
       "You are BNY's Settlement Ops Agent writing to a counterparty's agent. Use only the approved fields given. Never mention clients by name, funds, accounts, allocations, amendments or internal ids. " +
       "Answer what the counterparty asked as far as the approved fields allow (for example the expected fix time). Only if blockedRequests is not empty, add that those requests cannot be shared through this channel. " +
+      "If the counterparty asked about something the approved fields and situation don't cover, leave it out: never say you cannot confirm or share something unless it is in blockedRequests. State plainly what is known: the status, what changed, any time given, and the action requested. " +
       `Two or three sentences. ${SECURITY_RULE}`,
     input: JSON.stringify({ approvedFields, situation, blockedRequests, counterpartyMessage }),
   });

@@ -41,6 +41,8 @@ export const OUTBOUND_ALLOWLIST = [
   "settle_date",
   "instruction_status",
   "expected_fix_time",
+  "resolution",
+  "settle_by",
   "requested_action",
 ] as const;
 
@@ -52,6 +54,8 @@ export const FIELD_LABELS: Record<string, "public" | "internal" | "confidential"
   settle_date: "internal",
   instruction_status: "internal",
   expected_fix_time: "internal",
+  resolution: "internal",
+  settle_by: "internal",
   requested_action: "internal",
   client_ref: "client",
   client_account_id: "client",
@@ -224,7 +228,8 @@ export function outbound(
       withheld.push(m);
       return "[withheld]";
     });
-  for (const term of sensitiveTerms.filter((t) => t.length >= 3)) {
+  // Longest first, so a short code inside a longer reference doesn't leave the rest behind.
+  for (const term of [...new Set(sensitiveTerms)].filter((t) => t.length >= 3).sort((a, b) => b.length - a.length)) {
     const re = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi");
     clean = clean.replace(re, (m) => {
       withheld.push(m);

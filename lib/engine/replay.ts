@@ -26,7 +26,9 @@ export async function replayRun(run: Run, rec: Recording): Promise<void> {
   };
 
   for (const ev of rec.events) {
-    if (!run.fast) await new Promise((r) => setTimeout(r, Math.min(1200, Math.max(250, ev.wallMs - prevWall))));
+    // The client's email reply comes from outside the network: hold it back a few seconds, as in a live run.
+    const pause = ev.actor.id === "agi-trade-ops" ? 5000 : Math.min(1200, Math.max(250, ev.wallMs - prevWall));
+    if (!run.fast) await new Promise((r) => setTimeout(r, pause));
     prevWall = ev.wallMs;
     run.clock.set(ev.at);
     run.turns = Math.max(run.turns, ev.kind === "gateway" ? run.turns + 1 : run.turns);

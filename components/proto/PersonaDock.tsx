@@ -1,26 +1,20 @@
 "use client";
 // The prototype's own control, not part of the product: who you are, your task,
-// and a way to switch people. It opens with context when you become someone new
-// or when the case moves to someone else, then tucks itself away.
+// and a way to switch people. It opens by itself once, the first time you become
+// someone, then tucks itself away. When the case moves to someone else, a small
+// hint appears beside it instead.
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { SEATS } from "@/lib/engine/guide";
 import { FINAL } from "@/lib/engine/status";
-import type { RunMode } from "@/lib/engine/types";
 import { type Persona, PERSONAS, personaForSeat } from "@/lib/personas";
 import { useProto } from "./Proto";
-
-const MODES: { m: RunMode; label: string; hint: string }[] = [
-  { m: "replay", label: "Replay", hint: "Plays saved agent output. No API calls." },
-  { m: "live", label: "Live", hint: "Calls the model (capped at $0.20 per case)." },
-  { m: "mock", label: "Mock", hint: "Scripted agents, no API calls." },
-];
 
 const OPEN_MS = 6000;
 
 export function PersonaDock() {
-  const { persona, setPersona, summary, introKey, mode, setMode, cfg, runId, setRunId } = useProto();
+  const { persona, setPersona, summary, introKey, mode, runId, setRunId, setDockOpen } = useProto();
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const [moved, setMoved] = useState<Persona | null>(null);
@@ -49,14 +43,12 @@ export function PersonaDock() {
     const was = lastTurn.current;
     lastTurn.current = turn;
     if (was === undefined || !turn || turn === was || turn === persona.seat) return;
-    const t = setTimeout(() => {
-      setMoved(personaForSeat(turn));
-      peek(12000);
-    }, 600);
+    const t = setTimeout(() => setMoved(personaForSeat(turn)), 600);
     return () => clearTimeout(t);
   }, [turn, persona.seat]);
 
   const expanded = open || pinned;
+  useEffect(() => setDockOpen(expanded), [expanded, setDockOpen]);
   const waitingOn = turn ? personaForSeat(turn) : null;
 
   return (
@@ -74,17 +66,6 @@ export function PersonaDock() {
               Close
             </button>
           </header>
-
-          {moved && moved.id !== persona.id && (
-            <div className="border-b border-white/10 bg-teal/20 px-4 py-3">
-              <p className="text-sm">
-                The case moved to <span className="font-semibold">{moved.name}</span> ({moved.firm === "BNY" ? `BNY ${moved.role}` : moved.firm}).
-              </p>
-              <button onClick={() => setPersona(moved.id)} className="mt-2 rounded-md bg-teal px-3 py-1.5 text-sm font-semibold text-white hover:bg-white hover:text-navy">
-                Switch to {moved.name.split(" ")[0]} →
-              </button>
-            </div>
-          )}
 
           <div className="px-4 py-3">
             <div className="flex items-center gap-3">
@@ -128,36 +109,39 @@ export function PersonaDock() {
             </ul>
           </div>
 
-          <div className="space-y-2 border-t border-white/10 px-4 py-3 text-xs">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-white/60">Agents</span>
-              <div className="inline-flex rounded-md bg-white/10 p-0.5">
-                {MODES.map((x) => (
-                  <button
-                    key={x.m}
-                    onClick={() => setMode(x.m)}
-                    disabled={x.m === "live" && cfg.liveProblems.length > 0}
-                    title={x.m === "live" && cfg.liveProblems.length ? cfg.liveProblems.join("\n") : x.hint}
-                    className={`rounded px-2.5 py-1 font-medium disabled:opacity-40 ${mode === x.m ? "bg-teal text-white" : "text-white/80 hover:text-white"}`}
-                  >
-                    {x.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="text-white/50">{MODES.find((x) => x.m === mode)?.hint} Applies to the next case you start.</p>
+          <div className="space-y-1.5 border-t border-white/10 px-4 py-3 text-xs">
+            {runId && (
+              <p className="text-white/60">
+                Case running in <span className="font-semibold text-white">{mode === "live" ? "Live" : "Replay"}</span> mode:{" "}
+                {mode === "live" ? "the model examines the data and decides each step." : "a recorded live run plays back; questions still go to the model when a key is set."}
+              </p>
+            )}
             <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1">
               <Link href="/" className="font-medium text-teal hover:underline">
                 Prototype overview
               </Link>
               {runId && (
-                <Link href="/eliza/case?new=1" onClick={() => setRunId(null)} className="font-medium text-teal hover:underline">
+                <Link href="/eliza/case?new=1" onClick={() => (setRunId(null), setPersona("torres", false))} className="font-medium text-teal hover:underline">
                   Restart the case
                 </Link>
               )}
             </div>
           </div>
         </section>
+      )}
+
+      {moved && moved.id !== persona.id && !expanded && (
+        <div className="dock-in flex items-center gap-2 rounded-full bg-navy py-1 pr-1 pl-3 text-xs text-white shadow-xl ring-1 ring-white/10">
+          <span>
+            The case moved to <span className="font-semibold">{moved.name}</span>
+          </span>
+          <button onClick={() => (setMoved(null), setPersona(moved.id))} className="rounded-full bg-teal px-3 py-1 font-semibold hover:bg-white hover:text-navy">
+            Switch →
+          </button>
+          <button onClick={() => setMoved(null)} aria-label="Dismiss" className="px-1.5 text-white/60 hover:text-white">
+            ×
+          </button>
+        </div>
       )}
 
       <button

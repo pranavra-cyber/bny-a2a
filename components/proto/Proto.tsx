@@ -1,14 +1,16 @@
 "use client";
 // Prototype state that is not part of the product: who you are playing, which case
 // run is open, the run mode, and transient confirmations. Remembered in this
-// browser so switching people or sections picks up where you left off.
+// browser so switching people or sections picks up where you left off. Also hosts
+// the operating-system-style notifications (Teams, Outlook) that slide in from the
+// bottom right: they come from outside the product, so they aren't part of its UI.
 import { useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { DemoConfig } from "@/lib/demoConfig";
 import type { RunMode, RunSummary } from "@/lib/engine/types";
 import { type Persona, type PersonaId, personaById, PERSONAS } from "@/lib/personas";
 
-const store = {
+export const store = {
   get(k: string) {
     try {
       return localStorage.getItem(k);
@@ -22,9 +24,28 @@ const store = {
       else localStorage.setItem(k, v);
     } catch {}
   },
+  list(k: string): string[] {
+    try {
+      const v = JSON.parse(localStorage.getItem(k) ?? "[]");
+      return Array.isArray(v) ? v : [];
+    } catch {
+      return [];
+    }
+  },
 };
 
 type Snack = { id: number; text: string };
+
+/** A notification from another app on the person's computer. */
+export type Toast = {
+  /** Shown once per key, ever (until the case restarts). */
+  key: string;
+  app: "teams" | "outlook";
+  from: string;
+  title: string;
+  body?: string;
+  href?: string;
+};
 
 type Ctx = {
   cfg: DemoConfig;
@@ -36,8 +57,11 @@ type Ctx = {
   mode: RunMode;
   setMode: (m: RunMode) => void;
   snack: (text: string) => void;
-  /** Bumped when the persona changes, so the dock can introduce the new person. */
+  toast: (t: Toast, delayMs?: number) => void;
+  /** Bumped when you become someone for the first time, so the dock can introduce them. */
   introKey: number;
+  dockOpen: boolean;
+  setDockOpen: (open: boolean) => void;
 };
 
 const ProtoCtx = createContext<Ctx | null>(null);
@@ -49,53 +73,69 @@ export const useProto = () => {
 };
 
 /** With nothing remembered, a deep link picks the person who owns that section. */
-const fromPath = (path: string): PersonaId | null => (path.startsWith("/eliza/audit") ? "nguyen" : path.startsWith("/eliza/case") ? "torres" : null);
+const fromPath = (path: string): PersonaId | null =>
+  path.startsWith("/eliza/audit") ? "nguyen" : path.startsWith("/eliza/case") ? "torres" : path.startsWith("/attack") ? "hacker" : null;
+
+const INTRODUCED = "a2a.introducedTo";
+const TOASTED = "a2a.toasted";
 
 export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: React.ReactNode }) {
   const router = useRouter();
   const [personaId, setPersonaId] = useState<PersonaId>("chen");
   const [runId, setRun] = useState<string | null>(null);
-  const [mode, setModeState] = useState<RunMode>(cfg.defaultMode === "live" && cfg.liveProblems.length ? "replay" : cfg.defaultMode);
+  const [mode, setModeState] = useState<RunMode>(cfg.liveProblems.length ? "replay" : cfg.defaultMode === "mock" ? "replay" : cfg.defaultMode);
   const [summary, setSummary] = useState<RunSummary | null>(null);
   const [snacks, setSnacks] = useState<Snack[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const [introKey, setIntroKey] = useState(0);
+  const [dockOpen, setDockOpen] = useState(false);
+  const queued = useRef<Toast[]>([]);
+
+  /** The first time you become someone, the dock introduces them. Never again after that. */
+  const introduce = useCallback((id: PersonaId) => {
+    const seen = store.list(INTRODUCED);
+    if (seen.includes(id)) return;
+    store.set(INTRODUCED, JSON.stringify([...seen, id]));
+    setIntroKey((k) => k + 1);
+  }, []);
 
   // Restore after mount (localStorage is not available during server render).
   useEffect(() => {
     const p = personaById(new URLSearchParams(window.location.search).get("as")) ?? personaById(store.get("a2a.persona")) ?? personaById(fromPath(window.location.pathname));
-    // The live case is remembered here; a ?run= link (a safety test) never replaces it.
+    // The live case is remembered here; a ?run= link never replaces it.
     const r = store.get("a2a.run");
     const m = store.get("a2a.mode") as RunMode | null;
     const t = setTimeout(() => {
       if (p) {
         setPersonaId(p.id);
         store.set("a2a.persona", p.id);
+        // The overview isn't a workspace: introduce people where they land.
+        if (window.location.pathname !== "/") introduce(p.id);
       }
       if (r) setRun(r);
-      if (m && (m !== "live" || !cfg.liveProblems.length)) setModeState(m);
-      // Introduce each person once, not on every page load.
-      if (p && store.get("a2a.introduced") !== p.id) {
-        store.set("a2a.introduced", p.id);
-        setIntroKey((k) => k + 1);
-      }
+      if (m && (m === "replay" || (m === "live" && !cfg.liveProblems.length))) setModeState(m);
     }, 0);
     return () => clearTimeout(t);
-  }, [cfg.liveProblems.length]);
+  }, [cfg.liveProblems.length, introduce]);
 
   const setPersona = useCallback(
     (id: PersonaId, go = true) => {
       setPersonaId(id);
       store.set("a2a.persona", id);
-      store.set("a2a.introduced", id);
-      setIntroKey((k) => k + 1);
+      introduce(id);
       if (go) router.push(personaById(id)!.home);
     },
-    [router],
+    [router, introduce],
   );
   const setRunId = useCallback((id: string | null) => {
     setRun(id);
     store.set("a2a.run", id);
-    if (!id) setSummary(null);
+    if (!id) {
+      setSummary(null);
+      // A new case: its notifications and the mode question come again.
+      store.set(TOASTED, JSON.stringify(store.list(TOASTED).filter((k) => !k.startsWith("case:"))));
+      store.set("a2a.modeChosen", null);
+    }
   }, []);
   const setMode = useCallback((m: RunMode) => {
     setModeState(m);
@@ -107,7 +147,32 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
     setTimeout(() => setSnacks((s) => s.filter((x) => x.id !== id)), 4500);
   }, []);
 
-  // A light poll of the open run's summary, for the dock's "whose turn" hints.
+  const show = useCallback((t: Toast) => {
+    setToasts((s) => (s.some((x) => x.key === t.key) ? s : [...s.slice(-2), t]));
+    setTimeout(() => setToasts((s) => s.filter((x) => x.key !== t.key)), 9000);
+  }, []);
+  const dockOpenRef = useRef(false);
+  const toast = useCallback(
+    (t: Toast, delayMs = 600) => {
+      const done = store.list(TOASTED);
+      if (done.includes(t.key)) return;
+      store.set(TOASTED, JSON.stringify([...done, t.key].slice(-300)));
+      setTimeout(() => {
+        // Wait while the prototype dock is open, so the two never overlap.
+        if (dockOpenRef.current) queued.current.push(t);
+        else show(t);
+      }, delayMs);
+    },
+    [show],
+  );
+  useEffect(() => {
+    dockOpenRef.current = dockOpen;
+    if (dockOpen) return;
+    const q = queued.current.splice(0);
+    q.forEach((t, i) => setTimeout(() => show(t), 400 + i * 500));
+  }, [dockOpen, show]);
+
+  // A light poll of the open run's summary, for the dock's "whose turn" hints and the sidebar.
   useEffect(() => {
     if (!runId) return;
     let alive = true;
@@ -132,8 +197,8 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
   }, [runId, setRunId]);
 
   const value = useMemo<Ctx>(
-    () => ({ cfg, persona: personaById(personaId) ?? PERSONAS[0], setPersona, runId, setRunId, summary, mode, setMode, snack, introKey }),
-    [cfg, personaId, setPersona, runId, setRunId, summary, mode, setMode, snack, introKey],
+    () => ({ cfg, persona: personaById(personaId) ?? PERSONAS[0], setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen, setDockOpen }),
+    [cfg, personaId, setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen],
   );
 
   return (
@@ -147,6 +212,48 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
           </div>
         ))}
       </div>
+      <div aria-live="polite" aria-label="Notifications" className="pointer-events-none fixed right-4 bottom-20 z-50 flex w-[22rem] max-w-[calc(100vw-2rem)] flex-col gap-2">
+        {toasts.map((t) => (
+          <ToastCard
+            key={t.key}
+            t={t}
+            onClose={() => setToasts((s) => s.filter((x) => x.key !== t.key))}
+            onOpen={() => {
+              setToasts((s) => s.filter((x) => x.key !== t.key));
+              if (t.href) router.push(t.href);
+            }}
+          />
+        ))}
+      </div>
     </ProtoCtx.Provider>
+  );
+}
+
+function AppIcon({ app }: { app: Toast["app"] }) {
+  return app === "teams" ? (
+    <span className="flex h-4 w-4 items-center justify-center rounded-[3px] bg-[#5b5fc7] text-[9px] font-bold text-white">T</span>
+  ) : (
+    <span className="flex h-4 w-4 items-center justify-center rounded-[3px] bg-[#0f6cbd] text-[9px] font-bold text-white">O</span>
+  );
+}
+
+/** Looks like the operating system's notification, not like the product. */
+function ToastCard({ t, onClose, onOpen }: { t: Toast; onClose: () => void; onOpen: () => void }) {
+  return (
+    <div role="status" className="toast-in pointer-events-auto overflow-hidden rounded-xl border border-black/10 bg-[#f8f8f8]/95 font-sans shadow-2xl backdrop-blur">
+      <div className="flex items-center gap-2 px-3 pt-2.5 text-[11px] text-[#555]">
+        <AppIcon app={t.app} />
+        <span className="font-medium">{t.app === "teams" ? "Microsoft Teams" : "Outlook"}</span>
+        <span>· now</span>
+        <button onClick={onClose} aria-label="Dismiss notification" className="ml-auto rounded px-1 text-[13px] leading-none text-[#777] hover:bg-black/5 hover:text-black">
+          ×
+        </button>
+      </div>
+      <button onClick={onOpen} className="block w-full px-3 pt-1 pb-3 text-left">
+        <span className="block text-[13px] font-semibold text-[#111]">{t.from}</span>
+        <span className="block text-[13px] text-[#111]">{t.title}</span>
+        {t.body && <span className="mt-0.5 line-clamp-2 text-[12px] text-[#444]">{t.body}</span>}
+      </button>
+    </div>
   );
 }

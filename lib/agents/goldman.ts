@@ -96,7 +96,7 @@ export function composeRequest(run: Run, c: GsCase, receiverName: string) {
 
 // ---------- Outreach: interpret BNY's reply ----------
 const interpretSchema = z.object({
-  summary: z.string(),
+  summary: z.string().describe("Two short sentences for Goldman ops: what changed at the custodian, and what we should do and by when"),
   action: z.enum(["hold", "redeliver", "escalate"]).describe("hold: keep our side as is and wait; redeliver: propose a redelivery to GS ops"),
   quantity: z.number().describe("Quantity to redeliver, or 0 when holding"),
   findings: z.array(findingSchema),
@@ -116,7 +116,7 @@ registerMock("gs_outreach_interpret", (input) => {
   const qty = Number(shared.quantity_instructed);
   const available = inv ? Number(inv.quantity_available) : qty;
   return {
-    summary: `BNY now instructs ${qty.toLocaleString("en-US")} (${shared.instruction_status}) and asks us to redeliver; ${available.toLocaleString("en-US")} shares are available in our DTC box.`,
+    summary: `BNY's client has re-instructed: BNY now instructs ${qty.toLocaleString("en-US")} (${shared.instruction_status}), matching our delivery. Redeliver ${qty.toLocaleString("en-US")} before ${shared.settle_by ?? "15:10 ET"}; ${available.toLocaleString("en-US")} shares are available in our DTC box.`,
     action: qty === Number(d.quantity) && available >= qty ? "redeliver" : "escalate",
     quantity: qty,
     findings: [
@@ -126,7 +126,7 @@ registerMock("gs_outreach_interpret", (input) => {
   };
 });
 
-export function interpretReply(run: Run, c: GsCase, shared: Record<string, unknown>, text: string) {
+export function interpretReply(run: Run, c: GsCase, shared: Record<string, unknown>, text: string, earlier: string[] = []) {
   return agentCall(run, ACTORS.gsOutreach, "goldman", {
     schemaName: "gs_outreach_interpret",
     schema: interpretSchema,
@@ -135,8 +135,10 @@ export function interpretReply(run: Run, c: GsCase, shared: Record<string, unkno
       "You are Goldman Sachs' Counterparty Outreach Agent. The receiving custodian replied. If it asks us to hold while its client re-instructs, choose hold and keep our side as is. " +
       "If it asks us to redeliver, propose a redelivery to Goldman ops if its instructed quantity (in shared) matches our trade quantity and our box has the shares; otherwise escalate. " +
       "The shared fields are the custodian's own statement through a verified gateway: take them as given, since you cannot and need not verify the custodian's records. Cite only our own records for our side. " +
+      "earlierMessages are the custodian's previous messages in this case, oldest first. In the summary, say what changed on the custodian's side (from resolution, if given) and what we should do by when (settle_by, if given). " +
+      "Do not express doubt about anything the custodian states in shared fields, and do not mention things the custodian was never asked. " +
       CITE_RULE,
-    input: JSON.stringify({ shared, replyText: text, records: rowsOf(c) }),
+    input: JSON.stringify({ shared, replyText: text, earlierMessages: earlier, records: rowsOf(c) }),
   });
 }
 

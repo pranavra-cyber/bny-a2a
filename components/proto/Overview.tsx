@@ -92,14 +92,31 @@ export function Overview() {
             <div className="mt-2 flex items-center gap-3 rounded-lg border border-dashed border-white/20 px-3 py-2">
               <Image src={CLIENT.photo} alt="" width={32} height={32} className="h-8 w-8 rounded-full opacity-80" />
               <p className="text-xs text-white/70">
-                <span className="font-semibold text-white">{CLIENT.name}</span>, {CLIENT.role} at {CLIENT.firm}: the client. Outside the network, so she&apos;s reached by Teams and
-                email. That&apos;s where time is lost.
+                <span className="font-semibold text-white">{CLIENT.name}</span>, {CLIENT.role} at {CLIENT.firm}: the client. Outside the network, so reached only by email. That&apos;s where time is lost.
               </p>
             </div>
           </div>
           <div>
             <h2 className="text-xs font-semibold tracking-[0.14em] text-white/60 uppercase">3 · Oversight</h2>
             <div className="mt-2">{by("Oversight").map((p) => <PersonCard key={p.id} p={p} />)}</div>
+          </div>
+          <div>
+            <h2 className="text-xs font-semibold tracking-[0.14em] text-white/60 uppercase">4 · Security tests: try to break in</h2>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {by("Security tests").map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setPersona(p.id)}
+                  className="group flex items-center gap-3 rounded-lg bg-[#e0484c]/[0.08] p-2.5 text-left ring-1 ring-[#e0484c]/25 transition hover:bg-[#e0484c]/[0.16] hover:ring-[#e0484c]/60"
+                >
+                  <Image src={p.photo} alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-white">{p.name}</span>
+                    <span className="block truncate text-xs text-white/60">{p.task}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
           <p className="text-[11px] text-white/40 short:hidden">{DISCLAIMER}</p>
         </section>

@@ -30,16 +30,6 @@ export const BNY_CONNECTIONS: Connection[] = [
     counterparty: "Goldman Sachs",
     chats: [
       { id: LIVE_CHAT_ID, title: "NVDA 10,000 · rejected delivery", meta: "Live · cutoff 11:30 ET", status: "live", messages: [] },
-      closed("aapl-gs-0072", "AAPL 4,500 · amount break", "Resolved 17 Nov", "GS Counterparty Outreach Agent", [
-        "Goldman's agent asked why its AAPL delivery DTC-DO-20261117-000214 was DK'd for an amount difference.",
-        "Our settlement amount was $1,041,300.00; we delivered against $1,041,325.00 after a commission correction.",
-        "The client confirmed the corrected amount; Goldman redelivered and it settled at 11:42 ET.",
-      ]),
-      closed("msft-gs-0065", "MSFT 2,000 · status check", "Closed 12 Nov", "GS Counterparty Outreach Agent", [
-        "Goldman's agent asked for the status of a pending receipt.",
-        "Instruction status MATCHED; expected settlement today.",
-        "Settled at 09:58 ET. No action needed.",
-      ]),
     ],
   },
   {
@@ -58,6 +48,11 @@ export const BNY_CONNECTIONS: Connection[] = [
           { from: "assistant", who: "Settlement Fails Orchestrator", text: "Reference Data is verifying the new SSI. I'll update you when the instruction is released; cutoff 14:30 ET." },
         ],
       },
+      closed("msft-ms-0365", "MSFT 2,000 · status check", "Closed 12 Nov", "MS Settlement Agent", [
+        "Morgan Stanley's agent asked for the status of a pending receipt.",
+        "Instruction status MATCHED; expected settlement today.",
+        "Settled at 09:58 ET. No action needed.",
+      ]),
       closed("tsla-ms-0391", "TSLA 1,200 · short delivery", "Resolved 14 Nov", "MS Settlement Agent", [
         "Morgan Stanley could deliver 800 of 1,200 TSLA.",
         "Our client accepted a partial: 800 today, 400 the next day.",
@@ -70,6 +65,11 @@ export const BNY_CONNECTIONS: Connection[] = [
     label: "BNY ⇄ J.P. Morgan",
     counterparty: "J.P. Morgan",
     chats: [
+      closed("aapl-jpm-0372", "AAPL 4,500 · amount break", "Resolved 17 Nov", "JPM Fails Agent", [
+        "J.P. Morgan's agent asked why its AAPL delivery DTC-DO-20261117-000214 was DK'd for an amount difference.",
+        "Our settlement amount was $1,041,300.00; J.P. Morgan delivered against $1,041,325.00 after a commission correction.",
+        "The client confirmed the corrected amount; J.P. Morgan redelivered and it settled at 11:42 ET.",
+      ]),
       closed("goog-jpm-0350", "GOOGL 3,000 · late affirmation", "Resolved 10 Nov", "JPM Fails Agent", [
         "J.P. Morgan's agent reported its confirm was affirmed late in CTM.",
         "Our instruction matched once the affirmation arrived.",
@@ -86,11 +86,6 @@ export const GS_CONNECTIONS: Connection[] = [
     counterparty: "BNY",
     chats: [
       { id: LIVE_CHAT_ID, title: "NVDA 10,000 · DK by BNY", meta: "Live · GS-FAIL-…0091", status: "live", messages: [] },
-      closed("aapl-bny-0072", "AAPL 4,500 · amount break", "Resolved 17 Nov", "BNY Settlement Ops Agent", [
-        "BNY's agent confirmed the amount difference came from a commission correction.",
-        "We redelivered at the corrected amount.",
-        "Settled at 11:42 ET.",
-      ]),
     ],
   },
   {

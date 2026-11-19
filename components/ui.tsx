@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { GatewayCheck } from "@/lib/a2a/types";
+import { sourceOf } from "@/lib/data/sources";
 import type { ActorType, ResolvedRecord } from "@/lib/engine/types";
 
 /** Who did it: an agent, a rule (deterministic code) or a person. Text label, quiet colour. */
@@ -63,10 +64,11 @@ export function RecordChips({ records }: { records?: ResolvedRecord[] }) {
         <button
           key={`${r.table}#${r.id}`}
           onClick={() => setOpen(r)}
-          className="rounded bg-canvas px-1.5 py-0.5 font-mono text-[11px] text-navy hover:bg-teal-soft"
-          title="Show source row"
+          className="rounded bg-canvas px-1.5 py-0.5 text-left font-mono text-[11px] text-navy hover:bg-teal-soft"
+          title={`${sourceOf(r.table, r.id)?.file ?? r.table} · ${sourceOf(r.table, r.id)?.version ?? "version unknown"}. Click to show the row.`}
         >
           {short(r.table)}#{r.id}
+          {sourceOf(r.table, r.id) && <span className="ml-1.5 font-sans text-[10px] text-muted">{sourceOf(r.table, r.id)!.version}</span>}
         </button>
       ))}
       {open && <RecordModal record={open} onClose={() => setOpen(null)} />}
@@ -75,6 +77,7 @@ export function RecordChips({ records }: { records?: ResolvedRecord[] }) {
 }
 
 export function RecordModal({ record, onClose }: { record: ResolvedRecord; onClose: () => void }) {
+  const src = sourceOf(record.table, record.id);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -83,9 +86,16 @@ export function RecordModal({ record, onClose }: { record: ResolvedRecord; onClo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 p-4" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label={`${record.table} ${record.id}`} className="max-h-[80vh] w-full max-w-xl overflow-auto rounded-lg bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <header className="flex items-center justify-between border-b border-line px-4 py-2">
-          <div className="font-mono text-sm text-navy">
-            {record.table} · {record.id}
+        <header className="flex items-start justify-between gap-3 border-b border-line px-4 py-2">
+          <div>
+            <div className="font-mono text-sm text-navy">
+              {record.table} · {record.id}
+            </div>
+            {src && (
+              <div className="mt-0.5 text-xs text-muted">
+                From <span className="font-medium text-ink">{src.system}</span> · <span className="font-mono">{src.file}</span> · version <span className="font-medium text-ink">{src.version}</span>
+              </div>
+            )}
           </div>
           <button onClick={onClose} autoFocus className="text-sm text-muted hover:text-navy">
             Close <span className="text-[11px]">(Esc)</span>
@@ -101,6 +111,19 @@ export function RecordModal({ record, onClose }: { record: ResolvedRecord; onClo
             ))}
           </tbody>
         </table>
+        {src && src.history.length > 1 && (
+          <div className="border-t border-line px-4 py-3 text-xs">
+            <p className="font-semibold text-muted">Versions of this source</p>
+            <ul className="mt-1 space-y-1">
+              {src.history.map((h) => (
+                <li key={h.version} className={h.version === src.version ? "text-ink" : "text-muted"}>
+                  <span className="font-medium">{h.version}</span>
+                  {h.version === src.version && <span className="ml-1 rounded bg-teal-soft px-1 text-[10px] text-navy">in use</span>} · {h.change}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -191,8 +214,8 @@ export function ErrorNote({ error, className = "" }: { error: string; className?
             Start a new case
           </Link>{" "}
           or{" "}
-          <Link href="/eliza/audit" className="font-semibold underline">
-            run a safety test
+          <Link href="/attack" className="font-semibold underline">
+            open the attack console
           </Link>
           .
         </>

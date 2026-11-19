@@ -17,6 +17,9 @@ export type Actor = { id: string; name: string; firm: Firm | "dtc" | "network"; 
 /** A cited row, resolved from the citing firm's own scope, rendered as strings. */
 export type ResolvedRecord = { firm: string; table: string; id: string; row: Record<string, string> };
 
+/** A source an answer relied on: the file and the version read. */
+export type AnswerSource = { file: string; system: string; version: string; usedFor: string };
+
 export type ApprovalKind = "bny-client-message" | "gs-redelivery" | "bny-late-exception";
 
 export type ApprovalRequest = {
@@ -71,7 +74,7 @@ export type RunEvent = {
   /** Guided case: the copilot waits here for the user. */
   checkpoint?: Checkpoint;
   /** Guided case: a chat line between the user and their firm's copilot. */
-  chat?: { role: "user" | "assistant" };
+  chat?: { role: "user" | "assistant"; sources?: AnswerSource[]; answeredBy?: "model" | "offline"; costUsd?: number };
   /** Which person's chat shows this event when one firm has several (BNY Settlement Ops vs Client Service). */
   desk?: Seat;
   /** A notice to one person (title is the message): a Teams message or an in-app alert. */
@@ -103,6 +106,8 @@ export type RunSummary = {
   /** The checkpoint the copilot is waiting on, if any. */
   pendingCheckpoint?: { id: CheckpointId; seat: Seat; seq: number };
   copilotBusy: boolean;
+  /** Which seat's assistant is busy answering, if any. */
+  busySeat?: Seat | null;
   /** Guided case: which firm the case is waiting on, if any. Says nothing about that firm's internals. */
   turn: Seat | null;
   /** Guided case: index into STAGES of the first stage not yet done. */

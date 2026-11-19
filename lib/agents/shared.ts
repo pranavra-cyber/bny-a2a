@@ -37,6 +37,7 @@ export const cite = (r: Record<string, string> | undefined, ...cols: string[]) =
 const g = globalThis as unknown as { __llmCtx?: WeakMap<Run, ModelContext> };
 const contexts = (g.__llmCtx ??= new WeakMap<Run, ModelContext>());
 export const attachModel = (run: Run, ctx: ModelContext) => contexts.set(run, ctx);
+export const modelContextOf = (run: Run) => contexts.get(run);
 
 export async function agentCall<T extends z.ZodType>(
   run: Run,

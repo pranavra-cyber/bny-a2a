@@ -2,17 +2,17 @@
 // the portraits are illustrations in public/personas. Safe for client components.
 import type { Seat } from "./engine/guide";
 
-export type PersonaId = "chen" | "torres" | "sharma" | "kim" | "nguyen";
+export type PersonaId = "chen" | "torres" | "sharma" | "kim" | "nguyen" | "hacker" | "insider";
 
 export type Persona = {
   id: PersonaId;
   name: string;
   role: string;
   team: string;
-  firm: "BNY" | "Goldman Sachs";
+  firm: "BNY" | "Goldman Sachs" | "Outside the network";
   photo: string;
   /** Which part of the prototype they play. */
-  section: "Onboarding" | "Live A2A case" | "Oversight";
+  section: "Onboarding" | "Live A2A case" | "Oversight" | "Security tests";
   /** The task, as a title and one sentence. */
   task: string;
   taskLine: string;
@@ -75,7 +75,7 @@ export const PERSONAS: Persona[] = [
     photo: "/personas/kim.svg",
     section: "Live A2A case",
     task: "Ask the client to re-instruct",
-    taskLine: "Approve the agent's draft to AllianzGI, send it by Teams and email, and pass the client's fix time back.",
+    taskLine: "Approve the agent's draft to the client, email it to AllianzGI, and pass the client's fix time back.",
     seat: "bny-cs",
     home: "/eliza/case",
     decides: "Every message to the client, before it is sent.",
@@ -89,9 +89,35 @@ export const PERSONAS: Persona[] = [
     photo: "/personas/nguyen.svg",
     section: "Oversight",
     task: "Review the closed case",
-    taskLine: "Check that every approval was given and only permitted data crossed the boundary, then test the controls.",
+    taskLine: "Check that every approval was given and that only permitted data crossed the boundary.",
     home: "/eliza/audit",
     decides: "Whether approvals were given and only permitted data was shared.",
+  },
+  {
+    id: "hacker",
+    name: "Unknown attacker",
+    role: "External threat actor",
+    team: "No access to the network",
+    firm: "Outside the network",
+    photo: "/personas/hacker.svg",
+    section: "Security tests",
+    task: "Get past BNY's gateway from outside",
+    taskLine: "Pose as Goldman, forge its Agent Card, steal its pass, replay or edit its messages.",
+    home: "/attack",
+    decides: "Nothing: every attempt is stopped and logged.",
+  },
+  {
+    id: "insider",
+    name: "Jordan Blake",
+    role: "Operations Analyst (rogue insider)",
+    team: "Goldman Sachs Operations",
+    firm: "Goldman Sachs",
+    photo: "/personas/insider.svg",
+    section: "Security tests",
+    task: "Misuse Goldman's real agent",
+    taskLine: "Use the registered, trusted agent to inject instructions, fish for client data or exceed its permissions.",
+    home: "/attack",
+    decides: "Nothing: the gateway limits what the real agent can get.",
   },
 ];
 

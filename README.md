@@ -2,7 +2,7 @@
 
 *Illustrative prototype. Firm names are used to make the scenario concrete; all records are synthetic and no real event is depicted.*
 
-A working simulation of a cross-firm agent-to-agent (A2A) interaction in post-trade operations, inside BNY's Eliza workspace. Goldman Sachs' delivery of 10,000 NVDA was rejected by BNY because AllianzGI, BNY's client, raised the trade from 8,000 overnight but its corrected instruction never reached BNY. Goldman's agent asks BNY's agent why. BNY's Settlement Ops Agent finds that the client's side differs and hands the case to Client Service. Client Service approves a message to the client and sends it by Teams and email; this part is manual, and it is where time is lost. BNY's agent keeps Goldman informed with a fix time, the client re-instructs, Goldman redelivers, and DTC settles.
+A working simulation of a cross-firm agent-to-agent (A2A) interaction in post-trade operations, inside BNY's Eliza workspace. Goldman Sachs' delivery of 10,000 NVDA was rejected by BNY because AllianzGI, BNY's client, raised the trade from 8,000 overnight but its corrected instruction never reached BNY. Goldman's agent asks BNY's agent why. BNY's Settlement Ops Agent finds that the client's side differs and hands the case to Client Service. Client Service approves an email to the client, and Goldman's agent is told to hold; the client is outside the network, so this part is manual, and it is where time is lost. BNY's agent keeps Goldman informed with a fix time, the client re-instructs, Goldman redelivers, and DTC settles.
 
 Every cross-firm message passes BNY's gateway. Every agent finding cites a source record. Every model call is metered against a hard $0.20-per-case cap.
 
@@ -20,11 +20,11 @@ npm run dev                     # http://localhost:3000
 
 | Mode | What happens |
 |---|---|
-| `replay` (default) | Plays a saved run from `runs/*.json` and makes **no API calls**. Approvals and each person's steps still wait for you. Questions are answered from the procedures (see below). The cost meter shows the recorded cost. |
-| `live` | Calls OpenAI (`OPENAI_MODEL`) through `callModel()`. It refuses to start unless `OPENAI_API_KEY`, `MODEL_INPUT_USD_PER_1M` and `MODEL_OUTPUT_USD_PER_1M` are set. |
+| `replay` (default) | Plays a recorded live run from `runs/*.json`: the model's earlier decisions, with **no API calls for the case**. Approvals and each person's steps still wait for you. Questions you type still go to the model when a key is set (see below). The cost meter shows the recorded cost. |
+| `live` | Every agent step calls OpenAI (`OPENAI_MODEL`) through `callModel()` on the case data: it reads the records, decides, and cites them. It refuses to start unless `OPENAI_API_KEY`, `MODEL_INPUT_USD_PER_1M` and `MODEL_OUTPUT_USD_PER_1M` are set. |
 | `mock` | Scripted agent decisions over the real data, with no API calls. Used by the tests and to seed recordings. |
 
-`DEMO_MODE` sets the default. You can switch modes from the **Prototype** button (bottom right) before starting a case. Live is disabled when its configuration is missing.
+`DEMO_MODE` sets the default. Before the live case starts, a dark prototype dialog asks whether to run it **Live** or as a **Replay**; restart the case from the Prototype button to try the other. Live is disabled when its configuration is missing. The case header shows which mode is running.
 
 **Where OpenAI is called.** Only `OpenAIClient.create()` in `lib/llm/client.ts` calls the API, always through `callModel()` in `lib/llm/callModel.ts`. That function checks the budget, sets `max_output_tokens`, prices the usage and validates the JSON.
 
@@ -32,7 +32,7 @@ These are the model steps:
 - Goldman: summarize the fail, write the inquiry, read BNY's replies, and follow up.
 - BNY Settlement Ops Agent: find the cause, and write each message to Goldman.
 - BNY Client Team Agent: draft the request to the client.
-- Each person's assistant: understand what you type, and answer questions.
+- Each person's assistant: understand what you type, and answer questions from the data (`lib/engine/ask.ts`).
 
 ### Prices
 
@@ -65,9 +65,10 @@ Anything that belongs to the prototype rather than the product is dark navy: the
    - Onboarding: David Chen.
    - The live case: Michael Torres at Goldman, then Priya Sharma and Daniel Kim at BNY. Emily Carter, the client, is outside the network.
    - Oversight: Sarah Nguyen.
+   - Security tests: an unknown external attacker, and Jordan Blake, a rogue Goldman insider.
 
    **Start prototype** opens Eliza as David. Clicking a person opens their workspace.
-2. **Eliza home, David Chen** (`/eliza`). A Teams message from the relationship manager asks him to onboard Goldman's agent. The pulsing **Onboard new agent** button is the entry point.
+2. **Eliza home, David Chen** (`/eliza`). A Teams message from the relationship manager slides in as a desktop notification (bottom right), asking him to onboard Goldman's agent. **Onboard new agent** at the bottom of the sidebar is the entry point. Until onboarding is finished, there is no BNY ⇄ Goldman Sachs connection in the sidebar.
 3. **Onboarding** (`/eliza/onboarding`). Step by step, one security layer at a time:
    - application and firm agreement;
    - company (LEI) and DTC account;
@@ -76,23 +77,40 @@ Anything that belongs to the prototype rather than the product is dark navy: the
    - limits and access pass;
    - link test and go live.
 
-   Two checks find problems (a mistyped LEI and an unproven web address). The step shows how to resolve each: ask Goldman, wait for the resubmission, check again. Progress is kept, so leaving and coming back resumes where you were.
-4. **The live case** (`/eliza/case`). Each person has the same dashboard: their assistant chat on the left; on the right, the two agents talking, the case record, safety and analytics summaries, and **Examine A2A interaction**. Notifications sit top right. Each person's part starts with a Teams message.
+   Each step has up to three parts: upload the document Goldman sent (simulated; nothing is read from your computer) or enter the application's details with a click; **system checks** that run against BNY's reference data; and **your checks**, which only a person can do (read the document, confirm with someone). The certificate step shows Goldman's Agent Card and takes the certificate request. **Set limits** covers permissions, rate, open cases, hours, pass lifetime, turns per case, what a BNY person must approve, and which fields replies may carry.
+
+   Two checks find problems (a mistyped LEI and an unproven web address). The step shows how to resolve each: ask Goldman, wait for the resubmission, enter the corrected detail, check again. Progress is kept, so leaving and coming back resumes where you were. Once finished, BNY ⇄ Goldman Sachs appears in the sidebar; its case appears there when Goldman's agent first contacts BNY.
+4. **The live case** (`/eliza/case`). Each person has the same dashboard: their assistant chat on the left; on the right, the two agents (click either to see its full Agent Card), the case record, safety and analytics summaries, and **Examine A2A interaction**. Teams and Outlook messages arrive as desktop notifications at the bottom right, and stay in the bell at the top right.
    - **Michael Torres (Goldman):** asks his GS Fails Assistant about the DK and sends the inquiry. Later he holds while BNY's client fixes its side, then approves the redelivery.
-   - **Priya Sharma (BNY Settlement Ops):** the Settlement Fails Orchestrator shows the verified inquiry. The Settlement Ops Agent compares the details, finds that the client's side differs, and Priya hands the case to Client Service. Goldman is told to hold, automatically.
-   - **Daniel Kim (BNY Client Service):** the Client Team Agent drafts the request to Emily Carter. The approval arrives in the chat as a message from the Orchestrator. **Approve and send** sends it by Teams and email, and a confirmation appears. Emily replies by email with a time; Daniel passes it on, and Goldman is told the fix time automatically.
-   - When the case moves to someone else, the Prototype button opens and offers to switch to them.
+   - **Priya Sharma (BNY Settlement Ops):** the Settlement Fails Orchestrator shows the verified inquiry. The Settlement Ops Agent compares the details, finds that the client's side differs, and Priya hands the case to Client Service.
+   - **Daniel Kim (BNY Client Service):** **Draft the request to the client**: the Client Team Agent drafts it, and the approval arrives in the chat as a message from the Orchestrator. **Send email to Emily Carter** sends it, a confirmation snackbar appears, and Goldman's agent is told to hold (no client details cross). About five seconds later Emily's reply arrives as an Outlook notification; Daniel passes the time on, and Goldman is told the fix time automatically. When the client re-instructs, Goldman is told what changed and to redeliver before DTC closes at 15:10 ET.
+   - The Prototype panel opens by itself only the first time you become someone. When the case moves to someone else, a small **Switch** hint appears beside the Prototype button instead.
 5. **Examine A2A interaction** (`/eliza/a2a`). It has two views:
    - **Security view (case tracker):** who holds the ball, the journey across firms, every cross-firm message with its gateway result, what crossed the boundary, each firm's ID for the trade, and guardrails.
    - **Technical view (conversation trace):** a filterable transcript, a map of who talked to whom, and each message's envelope (records behind it, fields shared and withheld, gateway checks, why the agent sent it, raw A2A).
-6. **Safety and audit, Sarah Nguyen** (`/eliza/audit`). The case at a glance, the security controls table (risk, control, maturity, how it is simulated), safety tests FP1–FP8, and the full audit log with CSV export.
-7. **Analytics** (`/eliza/analytics`). Where this case's time went (most of it waiting on the client by hand), and the benchmark: manual vs single agent vs A2A.
+6. **Safety and audit, Sarah Nguyen** (`/eliza/audit`). The full audit log of the case, filterable, with CSV export.
+7. **Attack console** (`/attack`, dark: it is a prototype stage). As the external attacker or the rogue Goldman insider, pick a preset attack, launch it, and watch BNY's real gateway code respond step by step: what was sent, each gateway check, what BNY's agent received, and what came back. See *Attack console* below.
+8. **Documents** (folder icon, top right, BNY only; `/eliza/documents`). Documents uploaded and details entered during onboarding, what was granted, and every data source with the version in use and its history.
+9. **Analytics** (`/eliza/analytics`). Where this case's time went (most of it waiting on the client by hand), and the benchmark: manual vs single agent vs A2A.
 
-The sidebar lists Eliza's digital employees, and the A2A connections (Goldman Sachs, Morgan Stanley, J.P. Morgan) with their case chats. The other chats are read-only examples.
+The sidebar lists Eliza's digital employees and the A2A connections. Morgan Stanley and J.P. Morgan show read-only example chats; Goldman Sachs appears only after onboarding, and holds only the live case.
 
 ### Questions in the chat
 
-Ask the assistant things like *"What happens if this misses the cutoff?"*. Without a model (replay, mock, budget spent), answers come from `lib/engine/faq.ts`, which draws on the firms' procedures and the case clock. In live mode the model gets the same knowledge plus the firm's case activity. Example answer: the client's instruction is due by 11:30 ET. After that, a manager can approve a late-instruction exception until 14:45 ET. DTC closes at 15:10 ET, after which the trade fails overnight and goes to the 15:30 fails call.
+You can ask your assistant anything about the case at any point, including while the agents are working or after the case closes. For example: *"Which version of the SSI is this based on?"*, *"Have similar fails happened before?"*, *"What happens if this misses the cutoff?"*.
+
+When an API key is set (in Live **and** Replay), each question is a model call (`lib/engine/ask.ts`) that reads only that firm's own data:
+- the case activity so far;
+- the records its agents used, each tagged with its source file and version;
+- the catalog of data sources, with the version in use and earlier versions (`lib/data/sources.ts`);
+- past items like this one, from the firm's own fails or exceptions file;
+- the procedures and cutoffs.
+
+The answer lists the files and versions it relied on, and its cost (about $0.005). Without a key, a fixed answer from `lib/engine/faq.ts` is given and labelled as such.
+
+### Where data comes from
+
+Every record chip in the case shows the version it came from. Click a chip to see the row, its system of record, file, version and earlier versions. The catalog is in `lib/data/sources.ts` (synthetic metadata), and the Documents page lists it.
 
 ## What is where
 
@@ -125,20 +143,27 @@ tests/               acceptance tests
 - **Audit.** Every tool lookup, model call, gateway decision, notification and human decision.
 - **Cost.** One `Budget` per case. `callModel()` refuses a call whose worst case would cross $0.20, then prices the actual usage. When the budget runs out, the case escalates.
 
-## Safety tests
+## Attack console
 
-| Test | What happens |
-|---|---|
-| FP1 Spoofed agent | Unregistered look-alike rejected at the gateway |
-| FP2 Prompt injection | Flagged, passed as quoted data; replies hold allowlisted fields only |
-| FP3 Unsupported claim | BNY asks for a record reference, then escalates to Priya |
-| FP4 Client stays silent | Goldman keeps asking for a fix time; the limits hand both sides to people |
-| FP5 Client misses the cutoff | Corrected instruction at 11:52 ET; Priya must approve a late-instruction exception |
-| FP6 Forged Agent Card | Right name, wrong signing key: rejected (simulated) |
-| FP7 Replay and tampering | Resent message (nonce reused) and edited copy (signature mismatch) rejected (simulated) |
-| FP8 Data fishing | Fund, trade date, holding size asked over three turns: the combination is flagged and answers stop |
+Presets only; each runs against BNY's real gateway code (`lib/attacks.ts`), with no model calls. Card and message signatures and nonces are simulated, as everywhere in the prototype.
 
-Safety tests run unattended: approvals are given by the default person after a short pause, and the test opens in the A2A view.
+| Attacker | Attack | Stopped by |
+|---|---|---|
+| External | Pose as Goldman's agent (was FP1) | Identity: not in the registry |
+| External | Forge Goldman's Agent Card (was FP6) | Agent Card signature |
+| External | Use a stolen access pass from another address | Identity: domain doesn't match the attested one |
+| External | Replay a captured message (was FP7) | Fresh nonce |
+| External | Change a message in transit (was FP7) | Message signature |
+| Rogue insider | Prompt injection (was FP2) | Injection scan, quoted-data handling, outbound filter |
+| Rogue insider | Role manipulation ("you are now BNY's internal bot") | Injection scan, outbound filter |
+| Rogue insider | Smuggle extra fields | Field allowlist |
+| Rogue insider | Ask for a permission it wasn't given | Scope |
+| Rogue insider | Fish for data, a little at a time (was FP8) | Request-pattern monitor |
+| Rogue insider | Flood the agent | Turn limit |
+
+For the two injection attacks, the console also shows what would happen if BNY's agent had obeyed: the outbound filter strips the client's name, account and internal ids from the draft. Writing these tests found a real gap, now fixed: the filter missed the fund's name as people write it, and a short code inside a longer reference.
+
+FP3 (unsupported claim), FP4 (client silent) and FP5 (late instruction) are case variants rather than attacks. They are still recorded in `runs/` and covered by the tests.
 
 ## Cost of a run (measured live, gpt-6.1-terra, 18 Nov 2026)
 
@@ -146,15 +171,16 @@ Prices: $1.00 input, $0.05 cached input and $5.00 output per 1M tokens. Reasonin
 
 | Request | Outcome | Model calls | Tokens in / out | Cost |
 |---|---|---|---|---|
-| Golden case | settled 11:17 ET | 9 | 8,582 / 2,477 | **$0.0185** |
+| Golden case | settled 11:17 ET | 9 | 9,238 / 2,320 | **$0.0183** |
 | FP1 spoofed agent | rejected | 0 | 0 / 0 | $0.0000 |
-| FP2 prompt injection | settled, injection blocked | 9 | 8,581 / 2,508 | $0.0186 |
-| FP3 unsupported claim | escalated | 3 | 2,724 / 775 | $0.0056 |
-| FP4 client stays silent | escalated (time limit) | 8 | 7,741 / 2,245 | $0.0165 |
-| FP5 client misses the cutoff | settled after Priya's exception | 9 | 8,504 / 2,402 | $0.0180 |
+| FP2 prompt injection | settled, injection blocked | 9 | 9,426 / 2,176 | $0.0178 |
+| FP3 unsupported claim | escalated | 3 | 2,724 / 746 | $0.0054 |
+| FP4 client stays silent | escalated (time limit) | 8 | 7,834 / 1,879 | $0.0147 |
+| FP5 client misses the cutoff | settled after Priya's exception | 9 | 9,268 / 2,416 | $0.0188 |
 | FP6 forged Agent Card | rejected | 0 | 0 / 0 | $0.0000 |
 | FP7 replay and tampering | rejected | 0 | 0 / 0 | $0.0000 |
 | FP8 data fishing | escalated | 0 | 0 / 0 | $0.0000 |
+| A question to an assistant | answered, with sources | 1 | about 3,500 / 300 | about $0.005 |
 | Benchmark, single agent | — | 1 | 2,437 total | $0.0068 |
 
 Every case costs under 10% of the $0.20 cap. Benchmark time from the DK at 08:16 ET to settlement:
@@ -162,18 +188,19 @@ Every case costs under 10% of the $0.20 cap. Benchmark time from the DK at 08:16
 - **Single agent:** 4h 04m (assumed waits).
 - **A2A:** 3h 01m (scripted).
 
-Most of the A2A time is the wait for the client by Teams and email.
+Most of the A2A time is the wait for the client's email.
 
 ### Live-mode notes
 
 - The first live runs showed the triage agent answering "unclear" about who must act (BNY can't tell which quantity is right). The prompt now says the client must act whenever its instruction differs from a delivery that matches the counterparty's affirmed confirm. A code check still stops the hand-over otherwise.
 - Goldman's agent first refused to redeliver because it "couldn't verify" BNY's quantity. It now treats BNY's gateway fields as BNY's statement and cites only Goldman's own records.
 - The OpenAI client times out after 90 s with two retries, so a stuck call doesn't hold a case for minutes.
+- Goldman's agent once summarised the redelivery as "the custodian could not confirm the cutoff time or explain the earlier mismatch": BNY's message hadn't said what changed. BNY's messages now carry a `resolution` note and a `settle_by` time (both allowlisted, internal-labelled), Goldman's agent sees BNY's earlier messages, and BNY's replies no longer say they "cannot confirm" things nobody asked them to withhold. Recordings were re-made on 18 Nov 2026; the previous ones are in `runs/archive-previous/`.
 
 ## Assumptions and choices
 
 - **Next.js 16.2**, Tailwind v4, plain Tailwind primitives.
-- **The story** follows the operations-flow deck: find the cause, hand over, ask the client, notify the counterparty, re-instruct, settle and close. The client has no agent; Daniel reaches Emily by Teams and email, and her reply is scripted.
+- **The story** follows the operations-flow deck: find the cause, hand over, ask the client, notify the counterparty, re-instruct, settle and close. The client has no agent; Daniel reaches Emily by email, and her reply is scripted.
 - **Scenario clock.**
   - Agent steps advance the clock by small fixed amounts.
   - The scripted human times:

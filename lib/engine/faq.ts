@@ -33,7 +33,7 @@ export function knowledgeFor(f: Facts): string {
     "If the client's corrected instruction arrives after 11:30 ET, it can still settle today only with a late-instruction exception approved by a manager (Priya Sharma) by 14:45 ET. If it has not settled when DTC closes at 15:10 ET, the trade fails overnight: it goes to the 15:30 daily fails call, and the counterparty keeps an open fail that ages.",
     "Escalation: item over USD 1m within 2 hours of cutoff → team lead. Tier-1 client item at risk of missing cutoff → team lead and Service Executive. Counterparty unresponsive 60 minutes on a DK → team lead and a call with the counterparty's fails desk.",
     "AllianzGI is a tier-1 client. Service terms: notify any trade at risk of failing by 10:00 ET on settlement date; notify an actual fail within 30 minutes; every fail notice includes fund, ISIN, quantity, counterparty, reason, next action and expected resolution time.",
-    `BNY cannot change a client's instruction itself; only the client can re-instruct (by SWIFT MT541 or the portal). The client contact is ${CLIENT_CONTACT.name}, ${CLIENT_CONTACT.title} at ${CLIENT_CONTACT.firm}, reached by Teams and email (no agent on the client side).`,
+    `BNY cannot change a client's instruction itself; only the client can re-instruct (by SWIFT MT541 or the portal). The client contact is ${CLIENT_CONTACT.name}, ${CLIENT_CONTACT.title} at ${CLIENT_CONTACT.firm}, reached by email (no agent on the client side).`,
     "The counterparty sees only gateway-approved fields. Client names, accounts and internal ids never leave BNY.",
   ].join("\n");
 }
@@ -64,7 +64,7 @@ const ENTRIES: Entry[] = [
     answer: (f) =>
       f.seat === "goldman"
         ? "We don't see BNY's client. BNY says its client must re-instruct; we keep our side as is and redeliver when BNY asks."
-        : `Only the client can change its instruction; BNY can't amend it for them. ${CLIENT_CONTACT.name} (${CLIENT_CONTACT.title}, ${CLIENT_CONTACT.firm}) is reached by Teams and email. There is no agent on the client side, which is where time is usually lost.`,
+        : `Only the client can change its instruction; BNY can't amend it for them. ${CLIENT_CONTACT.name} (${CLIENT_CONTACT.title}, ${CLIENT_CONTACT.firm}) is reached by email. There is no agent on the client side, which is where time is usually lost.`,
   },
   {
     test: /see|share|shared|field|data|know about|disclos|private/i,

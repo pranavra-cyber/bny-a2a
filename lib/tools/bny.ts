@@ -144,6 +144,7 @@ export function sensitiveTerms(c: BnyCase): string[] {
   return [
     c.account?.client_legal_name,
     c.account?.fund_name,
+    c.account?.fund_name.replace(/\s*\(synthetic\)\s*$/, ""), // the name as people write it
     c.account?.client_short_code,
     c.account?.account_id,
     c.instruction.client_ref,

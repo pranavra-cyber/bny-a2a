@@ -16,6 +16,31 @@ import { ApprovalCard, approvalsOf, Step } from "../Step";
 import type { Notice } from "./Shell";
 import { TeamsCard } from "./TeamsCard";
 
+/** Where an answer came from: the files and versions the model read, or a note that it was a fixed answer. */
+function AnswerSources({ e }: { e: RunEvent }) {
+  const c = e.chat!;
+  return (
+    <div className="mt-2 ml-11 rounded-md border border-line bg-white/70 px-3 py-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2 text-muted">
+        <span className={`font-semibold ${c.answeredBy === "model" ? "text-teal" : "text-warn"}`}>{c.answeredBy === "model" ? "Worked out from the data" : "Fixed answer (no model)"}</span>
+        {c.costUsd !== undefined && <span className="tabular">· ${c.costUsd.toFixed(4)}</span>}
+      </div>
+      {c.sources && c.sources.length > 0 && (
+        <ul className="mt-1.5 space-y-1">
+          {c.sources.map((src) => (
+            <li key={`${src.file}${src.version}${src.usedFor}`} className="flex flex-wrap gap-x-2">
+              <span className="font-mono text-navy">{src.file.replace(/^data\//, "")}</span>
+              {src.version && <span className="rounded bg-canvas px-1.5 text-muted">{src.version}</span>}
+              {src.system && <span className="text-muted">{src.system}</span>}
+              {src.usedFor && <span className="text-ink">· {src.usedFor}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export const deskOf = (e: RunEvent): Seat => e.desk ?? (e.lane === "goldman" ? "goldman" : "bny");
 
 /** Notifications addressed to this person, as notices for the bell and the trigger card. */
@@ -101,9 +126,8 @@ function ClientMsg({ e }: { e: RunEvent }) {
 export function ChatThread({ runId, seat, summary, events }: { runId: string; seat: Seat; summary: RunSummary | null; events: RunEvent[] }) {
   const { snack } = useProto();
   const mine = events.filter((e) => deskOf(e) === seat);
-  const trigger = noticesFor(events, seat).find((n) => n.channel === "teams");
   const pending = summary?.pendingCheckpoint?.seat === seat ? summary.pendingCheckpoint : undefined;
-  const busy = !!summary?.copilotBusy && !!pending;
+  const busy = !!summary?.copilotBusy && summary.busySeat === seat;
   const approvals = approvalsOf(mine);
   const decidedOf = (e: RunEvent) => approvals.find((a) => a.req.seq === e.seq)?.decided;
   const awaitingMine = approvals.find((a) => !a.decided);
@@ -118,7 +142,7 @@ export function ChatThread({ runId, seat, summary, events }: { runId: string; se
   }, [mine.length, pending?.seq, busy]);
 
   const send = async (body: { text?: string; action?: string }) => {
-    if (!pending) return;
+    if (body.action && !pending) return;
     setSending(true);
     setErr(null);
     try {
@@ -150,17 +174,17 @@ export function ChatThread({ runId, seat, summary, events }: { runId: string; se
     <section className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-3xl space-y-5 px-5 py-6">
-          {trigger && (
-            <div>
-              <p className="mb-2 text-xs text-muted">This came in on Teams:</p>
-              <TeamsCard n={trigger} />
-            </div>
-          )}
           {items.map((it, i) => {
             if (it.type === "work") return <WorkLog key={`w${it.events[0].seq}`} events={it.events} seat={seat} defaultOpen={i === lastWork && !final} />;
             const e = it.e;
             if (e.kind === "chat" && e.chat?.role === "user") return <UserMsg key={e.seq} seat={seat} text={e.title} />;
-            if (e.kind === "chat") return <AssistantMsg key={e.seq} seat={seat}>{e.title}</AssistantMsg>;
+            if (e.kind === "chat")
+              return (
+                <div key={e.seq}>
+                  <AssistantMsg seat={seat}>{e.title}</AssistantMsg>
+                  {e.chat?.answeredBy && <AnswerSources e={e} />}
+                </div>
+              );
             if (e.kind === "checkpoint")
               return (
                 <div key={e.seq}>
@@ -185,8 +209,9 @@ export function ChatThread({ runId, seat, summary, events }: { runId: string; se
                       decided={d}
                       onDone={(outcome, channels) => {
                         if (outcome !== "approved") return snack("Rejected: the case goes to people at the firms.");
-                        if (e.approval?.message) snack(`Sent to Emily Carter by ${channels.map((c) => (c === "teams" ? "Teams" : "email")).join(" and ")}`);
+                        if (e.approval?.message) snack(`Email sent to ${e.approval.message.to.replace(/\s*<.*>$/, "")}`);
                         else snack(`${e.approval?.title ?? "Approved"}: approved`);
+                        void channels;
                       }}
                     />
                   </div>
@@ -214,9 +239,9 @@ export function ChatThread({ runId, seat, summary, events }: { runId: string; se
           )}
           <Composer
             tone={seat === "goldman" ? "bg-gs-dark" : "bg-navy"}
-            disabled={!pending || sending || busy}
+            disabled={sending || busy}
             onSend={(text) => send({ text })}
-            placeholder={pending && pendingDef ? `Message ${SEATS[seat].assistant}, or ask a question` : final ? "This case is closed." : "The assistant will ask when it needs you…"}
+            placeholder={pending && pendingDef ? `Message ${SEATS[seat].assistant}, or ask a question` : "Ask about the case, the data or where it comes from…"}
           />
           {err && (
             <p role="alert" className="mt-1 text-sm text-bad">

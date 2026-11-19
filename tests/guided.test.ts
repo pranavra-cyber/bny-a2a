@@ -33,12 +33,18 @@ describe("guided case", () => {
     expect(project(run.summary(), run.events, "bny").events).toHaveLength(0);
     await submitChat(run, "goldman", { text: "send it" });
     await atCheckpoint(run, "investigate");
-    await expect(submitChat(run, "goldman", { text: "go" })).rejects.toBeInstanceOf(ChatError);
+    // Not Michael's step: his choices are refused, but he can still ask his assistant a question.
+    await expect(submitChat(run, "goldman", { action: "send" })).rejects.toBeInstanceOf(ChatError);
+    const before = run.pendingCheckpoint?.def.id;
+    await submitChat(run, "goldman", { text: "What happens if this misses the cutoff?" });
+    expect(run.pendingCheckpoint?.def.id).toBe(before);
+    expect(run.events.at(-1)?.chat?.role).toBe("assistant");
+    expect(run.events.at(-1)?.desk).toBe("goldman");
     await submitChat(run, "bny", { text: "compare the details" });
     await atCheckpoint(run, "handover");
     await submitChat(run, "bny", { action: "handover" });
     await atCheckpoint(run, "contact");
-    await expect(submitChat(run, "bny", { text: "go" })).rejects.toBeInstanceOf(ChatError);
+    await expect(submitChat(run, "bny", { action: "draft" })).rejects.toBeInstanceOf(ChatError);
     await submitChat(run, "bny-cs", { action: "draft" });
     await atApproval(run, "bny-client-message");
     run.decide("bny-client-message", "approved", "Daniel Kim");

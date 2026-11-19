@@ -608,7 +608,7 @@ async function caseFlow(cs: CaseState) {
     seat: "bny",
     prompt:
       `${tri.rootCause} BNY can't change a client's instruction, so this goes to Client Service to ask AllianzGI to check and re-instruct by 11:30 ET. ` +
-      "I'll tell Goldman's agent to hold while we wait. Hand the case to Daniel Kim in Client Service?",
+      "Once the request goes to the client, Goldman's agent is told to hold. Hand the case to Daniel Kim in Client Service?",
     actions: [
       { id: "handover", label: "Hand to Client Service", kind: "primary", keywords: ["hand", "client service", "daniel", "pass", "transfer", "assign", "yes"] },
       { id: "cancel", label: "Keep it and work it by hand", kind: "cancel", keywords: ["by hand", "myself", "keep it"] },
@@ -616,7 +616,7 @@ async function caseFlow(cs: CaseState) {
     questions: ["Why can't we just fix the instruction ourselves?", "What happens if this misses the cutoff?", "How close are we to cutoff?"],
   });
 
-  // 4. Hand over (RULE) and tell Goldman to hold (AGENT text, RULE fields + filter).
+  // 4. Hand over (RULE).
   run.clock.at("09:08:00");
   step(cs, "bny", ACTORS.bnyCaseRule, "Case handed to Client Service", { detail: "Client Team Agent assigned; Daniel Kim notified in Teams." });
   audit(cs, ACTORS.bnyOps, "hand over to client service", "handed to Daniel Kim", { approver: "Priya Sharma" });
@@ -626,12 +626,6 @@ async function caseFlow(cs: CaseState) {
     detail: `AllianzGI's instruction is for ${n(bc.instruction.quantity)}; Goldman delivered ${n(c.delivery.quantity)} against an affirmed confirm. The client has to re-instruct by 11:30 ET. Tier 1, $1.86m.`,
   });
   const blocked = delivered.injection.length ? [`request in counterparty text (${delivered.injection.join(", ")})`] : [];
-  const holdFields = { dtc_reference: bc.dtcEvents[0].dtc_reference, isin: bc.instruction.isin, settle_date: bc.instruction.settle_date, instruction_status: "PENDING_CLIENT_CONFIRMATION", requested_action: "hold" };
-  const hold = await draftReply(run, holdFields, "Our client must confirm the quantity and re-instruct. Ask the counterparty to hold; an expected fix time will follow.", delivered.quotedText, blocked);
-  const holdOut = await sendToGoldman(cs, { text: hold.message, data: holdFields, state: "input-required", title: "waiting on our client, please hold" });
-  if (blocked.length)
-    step(cs, "bny", ACTORS.gateway, "Blocked request: not an approved field", { detail: `"${INJECTION_TEXT}" was treated as data. Reply contained only: ${holdOut.fieldsShared.join(", ")}.`, flags: ["injection-blocked"] });
-  step(cs, "goldman", ACTORS.gsOutreachRule, "BNY asks us to hold while its client confirms", { detail: holdOut.text });
 
   // ===== BNY Client Service: Daniel Kim =====
   await gate(cs, {
@@ -639,8 +633,8 @@ async function caseFlow(cs: CaseState) {
     seat: "bny-cs",
     prompt:
       `Hi Daniel. Priya handed you this case: AllianzGI's instruction ${bc.instruction.instruction_id} is for ${n(bc.instruction.quantity)} NVDA, but Goldman delivered ${n(c.delivery.quantity)}, matching its affirmed confirm. ` +
-      `Only the client can re-instruct, and same-day instructions are due by 11:30 ET. Shall the Client Team Agent draft the request to ${CLIENT_CONTACT.name}?`,
-    actions: [{ id: "draft", label: `Draft the request to ${CLIENT_CONTACT.name.split(" ")[0]}`, kind: "primary", keywords: ["draft", "write", "prepare", "message", "email", "ask", "client", "emily"] }],
+      "Only the client can re-instruct, and same-day instructions are due by 11:30 ET. Shall the Client Team Agent draft the request to the client?",
+    actions: [{ id: "draft", label: "Draft the request to the client", kind: "primary", keywords: ["draft", "write", "prepare", "message", "email", "ask", "client", "emily"] }],
     questions: ["Who is the right contact at AllianzGI?", "What happens if this misses the cutoff?"],
   });
 
@@ -652,21 +646,31 @@ async function caseFlow(cs: CaseState) {
   tick(run, 30);
   const draftRecs = grounded(cs, "bny", ACTORS.bnyClientTeam, draft.findings, "bny-cs");
   step(cs, "bny", ACTORS.bnyClientTeam, `Request drafted for ${CLIENT_CONTACT.name}`, { desk: "bny-cs", detail: `${draft.subject}\n\n${draft.body}`, records: draftRecs });
-  const sentMsg = await approval(cs, "bny-cs", ACTORS.bnyCopilot, "Approve the request to the client", {
+  const sentMsg = await approval(cs, "bny-cs", ACTORS.bnyCopilot, "Approve the email to the client", {
     kind: "bny-client-message",
     firm: "bny",
-    title: `Send to ${CLIENT_CONTACT.name} (${CLIENT_CONTACT.firm})`,
-    summary: "The Client Team Agent drafted this from the case record. Approving sends it by Teams and email from your account; nothing goes to the client until you approve.",
+    title: `Email ${CLIENT_CONTACT.name} (${CLIENT_CONTACT.firm})`,
+    summary: `The Client Team Agent drafted this from the case record. Sending emails it to ${CLIENT_CONTACT.name} from your account, and tells Goldman's agent to hold while the client checks (no client details go to Goldman). Nothing is sent until you approve.`,
     evidence: [...bc.records, ...cc.records].filter((r) => ["bny/settlement_instructions", "dtc/settlement_activity", "bny/client_accounts", "bny/docs"].includes(r.table)),
-    message: { to: `${CLIENT_CONTACT.name} <${CLIENT_CONTACT.email}>`, subject: draft.subject, body: draft.body, channels: ["teams", "email"] },
+    message: { to: `${CLIENT_CONTACT.name} <${CLIENT_CONTACT.email}>`, subject: draft.subject, body: draft.body, channels: ["email"] },
   }, "09:12:00");
   if (sentMsg.outcome !== "approved") throw escalation("rejected-by-human", `${sentMsg.by} did not approve the message to the client.`);
-  step(cs, "bny", ACTORS.bnyClientService, `Sent to ${CLIENT_CONTACT.name} by Teams and email`, {
+  step(cs, "bny", ACTORS.bnyClientService, `Email sent to ${CLIENT_CONTACT.name}`, {
     desk: "bny-cs",
     detail: "Manual channel: there is no agent on the client's side. From here the case waits on a person at AllianzGI.",
     flags: ["manual"],
   });
-  audit(cs, ACTORS.bnyClientService, "send client request (Teams + email)", `sent to ${CLIENT_CONTACT.email}`, { approver: sentMsg.by, fieldsShared: Object.keys(cf) });
+  audit(cs, ACTORS.bnyClientService, "send client request (email)", `sent to ${CLIENT_CONTACT.email}`, { approver: sentMsg.by, fieldsShared: Object.keys(cf) });
+
+  // 5b. Tell Goldman to hold while the client checks (AGENT text, RULE fields + filter).
+  const holdFields = { dtc_reference: bc.dtcEvents[0].dtc_reference, isin: bc.instruction.isin, settle_date: bc.instruction.settle_date, instruction_status: "PENDING_CLIENT_CONFIRMATION", requested_action: "hold" };
+  const hold = await draftReply(run, holdFields, "We have asked our client to confirm the quantity and re-instruct. Ask the counterparty to hold; an expected fix time will follow.", delivered.quotedText, blocked);
+  const holdOut = await sendToGoldman(cs, { text: hold.message, data: holdFields, state: "input-required", title: "client asked to confirm, please hold", sender: { ...ACTORS.bnyCase, name: "BNY Settlement Ops Agent" } });
+  if (blocked.length)
+    step(cs, "bny", ACTORS.gateway, "Blocked request: not an approved field", { desk: "bny-cs", detail: `"${INJECTION_TEXT}" was treated as data. Reply contained only: ${holdOut.fieldsShared.join(", ")}.`, flags: ["injection-blocked"] });
+  step(cs, "bny", ACTORS.bnyCaseRule, "Goldman's agent told to hold", { desk: "bny-cs", detail: holdOut.text });
+  step(cs, "goldman", ACTORS.gsOutreachRule, "BNY asks us to hold while its client confirms", { detail: holdOut.text });
+  notify(cs, "goldman", "info", "BNY has asked its client to confirm: hold our side", { channel: "teams", from: "GS Fails Assistant", detail: holdOut.text });
 
   if (run.scenario === "fp4") return clientSilent(cs, bc, String(fields.dtc_reference));
 
@@ -677,6 +681,8 @@ async function caseFlow(cs: CaseState) {
     detail: `No reply yet. Cutoff for the corrected instruction: 11:30 ET.`,
     flags: ["waiting"],
   });
+  // The client answers by email, outside the network: a real pause in the demo.
+  if (!run.fast) await new Promise((r) => setTimeout(r, 5000));
   run.clock.at(late ? "11:20:00" : "10:24:00");
   const fixTime = late ? "11:50 ET" : "11:15 ET";
   const reply = late
@@ -700,13 +706,28 @@ async function caseFlow(cs: CaseState) {
   run.clock.at(late ? "11:22:00" : "10:26:00");
   step(cs, "bny", ACTORS.bnyClientTeamRule, `Expected fix time passed to Settlement Ops: ${fixTime}`, { desk: "bny-cs" });
   notify(cs, "bny", "info", `Client expects to re-instruct by ${fixTime}`, { detail: `${CLIENT_CONTACT.name} confirmed 10,000. Goldman is being told to hold.`, from: "BNY Client Team Agent" });
-  const fixFields = { dtc_reference: bc.dtcEvents[0].dtc_reference, isin: bc.instruction.isin, settle_date: bc.instruction.settle_date, instruction_status: "PENDING_CLIENT_REINSTRUCTION", expected_fix_time: fixTime, requested_action: "hold_until_fix" };
-  const fixMsg = await draftReply(run, fixFields, `Our client will send a corrected instruction by ${fixTime}. Ask the counterparty to keep its side as is.`, delivered.quotedText, blocked);
+  const fixFields = {
+    dtc_reference: bc.dtcEvents[0].dtc_reference,
+    isin: bc.instruction.isin,
+    settle_date: bc.instruction.settle_date,
+    instruction_status: "PENDING_CLIENT_REINSTRUCTION",
+    resolution: `Difference is on BNY's side: our client confirmed ${n(c.delivery.quantity)} is correct and will re-instruct`,
+    expected_fix_time: fixTime,
+    settle_by: "15:10 ET (DTC DVP close)",
+    requested_action: "hold_until_fix",
+  };
+  const fixMsg = await draftReply(
+    run,
+    fixFields,
+    `The quantity difference is on our side: our client confirmed the counterparty's ${n(c.delivery.quantity)} is correct and will send a corrected instruction by ${fixTime}. Ask the counterparty to keep its side as is; the trade can still settle today before 15:10 ET.`,
+    delivered.quotedText,
+    blocked,
+  );
   const fixOut = await sendToGoldman(cs, { text: fixMsg.message, data: fixFields, state: "input-required", title: `fix expected by ${fixTime}` });
 
   // ===== Goldman: Michael Torres =====
   notify(cs, "goldman", "action", `BNY expects a fix by ${fixTime}: hold our side`, { channel: "teams", from: "GS Fails Assistant", detail: fixOut.text });
-  const holdInterp = await interpretReply(run, c, fixOut.data, fixOut.text);
+  const holdInterp = await interpretReply(run, c, fixOut.data, fixOut.text, [holdOut.text]);
   const holdRecs = grounded(cs, "goldman", ACTORS.gsOutreach, holdInterp.findings);
   step(cs, "goldman", ACTORS.gsOutreach, holdInterp.action === "hold" ? "Recommends holding our side as is" : "Recommends a different action", { detail: holdInterp.summary, records: holdRecs });
   if (holdInterp.action !== "hold") throw escalation("grounding", "Goldman's agent did not agree to hold.", "goldman");
@@ -743,12 +764,27 @@ async function caseFlow(cs: CaseState) {
   }
 
   // 9. Tell Goldman to redeliver (AGENT text, RULE fields + filter).
-  const approvedFields = { dtc_reference: bc.dtcEvents[0].dtc_reference, isin: bc.instruction.isin, quantity_instructed: c.delivery.quantity, settle_date: bc.instruction.settle_date, instruction_status: "SENT_TO_DTC", requested_action: "redeliver" };
-  const goMsg = await draftReply(run, approvedFields, "Our instruction now matches; ask the counterparty to redeliver the full quantity.", delivered.quotedText, blocked);
+  const approvedFields = {
+    dtc_reference: bc.dtcEvents[0].dtc_reference,
+    isin: bc.instruction.isin,
+    quantity_instructed: c.delivery.quantity,
+    settle_date: bc.instruction.settle_date,
+    instruction_status: "SENT_TO_DTC",
+    resolution: `Client re-instructed for ${n(c.delivery.quantity)} at ${fmtEt(run.clock.iso)}; BNY's instruction now matches your delivery`,
+    settle_by: "15:10 ET (DTC DVP close)",
+    requested_action: "redeliver",
+  };
+  const goMsg = await draftReply(
+    run,
+    approvedFields,
+    `Our client has re-instructed and our instruction now matches the counterparty's delivery of ${n(c.delivery.quantity)}. Ask it to redeliver the full quantity before 15:10 ET.`,
+    delivered.quotedText,
+    blocked,
+  );
   const out = await sendToGoldman(cs, { text: goMsg.message, data: approvedFields, state: "input-required", title: "instruction updated, please redeliver" });
 
   // 10. Goldman interprets (AGENT) and Michael approves the redelivery (HUMAN).
-  const interp = await interpretReply(run, c, out.data, out.text);
+  const interp = await interpretReply(run, c, out.data, out.text, [holdOut.text, fixOut.text]);
   const interpRecs = grounded(cs, "goldman", ACTORS.gsOutreach, interp.findings);
   cs.notes.goldman.push(interp.summary);
   step(cs, "goldman", ACTORS.gsOutreach, interp.action === "redeliver" ? "Proposes redelivery" : "Cannot redeliver in full", { detail: interp.summary, records: interpRecs });

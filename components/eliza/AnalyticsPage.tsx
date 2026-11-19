@@ -56,14 +56,14 @@ function CaseTimes() {
   const { summary: s, events } = useRun(runId, "bny");
   if (!runId || !s) return null;
   const at = (p: string) => events.find((e) => e.title.startsWith(p))?.at;
-  const sent = at("Sent to Emily Carter");
+  const sent = at("Email sent to Emily Carter");
   const reply = at("Email from Emily Carter");
   const ms = (a?: string, b?: string) => (a && b ? new Date(b).getTime() - new Date(a).getTime() : 0);
   const total = ms(s.scenarioStart, s.clock);
   const waiting = ms(sent, reply ?? s.clock);
   const tiles: [string, string, string][] = [
     ["Case time so far", fmtDuration(total), `09:02 → ${new Date(new Date(s.clock).getTime() - 5 * 3600_000).toISOString().slice(11, 16)} ET`],
-    ["Waiting on the client", waiting ? fmtDuration(waiting) : "–", "manual: Teams and email"],
+    ["Waiting on the client", waiting ? fmtDuration(waiting) : "–", "manual: email"],
     ["Share of case time", total && waiting ? `${Math.round((waiting / total) * 100)}%` : "–", "waiting on a person outside the network"],
     ["Model cost", `$${s.budget.spentUsd.toFixed(4)}`, `${s.budget.calls} calls · cap $0.20`],
   ];

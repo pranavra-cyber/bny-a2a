@@ -13,10 +13,10 @@ describe("people approve every step that matters", () => {
     const run = startRun("golden", "mock", { fast: true });
     for (let i = 0; i < 100 && !run.pendingApprovals.includes("bny-client-message"); i++) await settle();
     expect(run.pendingApprovals).toEqual(["bny-client-message"]);
-    expect(run.events.some((e) => e.title.startsWith("Sent to Emily Carter"))).toBe(false);
+    expect(run.events.some((e) => e.title.startsWith("Email sent to Emily Carter"))).toBe(false);
     run.decide("bny-client-message", "approved", "Daniel Kim");
     for (let i = 0; i < 100 && !run.pendingApprovals.includes("gs-redelivery"); i++) await settle();
-    expect(run.events.some((e) => e.title.startsWith("Sent to Emily Carter"))).toBe(true);
+    expect(run.events.some((e) => e.title.startsWith("Email sent to Emily Carter"))).toBe(true);
     expect(run.events.some((e) => e.title.startsWith("Client's corrected instruction received"))).toBe(true);
     expect(run.events.some((e) => e.title.startsWith("Redelivered"))).toBe(false);
     run.decide("gs-redelivery", "approved", "Michael Torres");
@@ -36,7 +36,7 @@ describe("people approve every step that matters", () => {
     const run = await runToEnd("golden", { "bny-client-message": "rejected" });
     expect(run.status).toBe("escalated");
     expect(run.statusReason).toBe("rejected-by-human");
-    expect(run.events.some((e) => e.title.startsWith("Sent to Emily Carter"))).toBe(false);
+    expect(run.events.some((e) => e.title.startsWith("Email sent to Emily Carter"))).toBe(false);
   });
 
   it("a late re-instruction (FP5) needs Priya's exception before Goldman is asked to redeliver", async () => {

@@ -21,7 +21,8 @@ export function projectSummary(s: RunSummary, view: View): RunSummary {
     ...s,
     pendingApprovals: s.pendingApprovals.filter((k) => APPROVAL_FIRM[k] === view),
     pendingCheckpoint: s.pendingCheckpoint && firmOfSeat(s.pendingCheckpoint.seat) === view ? s.pendingCheckpoint : undefined,
-    copilotBusy: s.copilotBusy && !!s.pendingCheckpoint && firmOfSeat(s.pendingCheckpoint.seat) === view,
+    copilotBusy: s.copilotBusy && !!s.busySeat && firmOfSeat(s.busySeat) === view,
+    busySeat: s.busySeat && firmOfSeat(s.busySeat) === view ? s.busySeat : null,
   };
 }
 

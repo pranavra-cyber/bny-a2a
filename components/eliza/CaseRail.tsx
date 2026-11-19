@@ -6,7 +6,9 @@ import type { Seat } from "@/lib/engine/guide";
 import { ballText, statusText, statusTone } from "@/lib/engine/status";
 import type { RunEvent, RunSummary } from "@/lib/engine/types";
 import { fmtDuration, fmtEt, fmtUtc } from "@/lib/time";
+import { useState } from "react";
 import { Pill } from "../ui";
+import { AgentCardOverlay } from "./AgentCardOverlay";
 
 function Card({ title, href, cta, children }: { title: string; href?: string; cta?: string; children: React.ReactNode }) {
   const body = (
@@ -27,10 +29,13 @@ function Card({ title, href, cta, children }: { title: string; href?: string; ct
   );
 }
 
-function AgentCard({ firm, name, line, verified }: { firm: "BNY" | "Goldman Sachs"; name: string; line: string; verified: boolean }) {
+function AgentCard({ id, firm, name, line, verified }: { id: string; firm: "BNY" | "Goldman Sachs"; name: string; line: string; verified: boolean }) {
   const gs = firm === "Goldman Sachs";
+  const [open, setOpen] = useState(false);
   return (
-    <div className="min-w-0 flex-1 rounded-md bg-canvas p-3">
+    <>
+    {open && <AgentCardOverlay agentId={id} onClose={() => setOpen(false)} />}
+    <button onClick={() => setOpen(true)} title="Show the full Agent Card" className="min-w-0 flex-1 rounded-md bg-canvas p-3 text-left ring-teal transition hover:ring-1">
       <div className="flex items-center gap-2">
         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold text-white ${gs ? "bg-gs-dark font-serif" : "bg-gradient-to-br from-teal to-navy"}`}>{gs ? "GS" : "BNY"}</span>
         <span className="truncate text-[11px] font-medium text-muted">{firm}</span>
@@ -38,7 +43,9 @@ function AgentCard({ firm, name, line, verified }: { firm: "BNY" | "Goldman Sach
       <p className="mt-2 text-sm leading-snug font-semibold text-navy">{name}</p>
       <p className="mt-0.5 text-xs text-muted">{line}</p>
       {verified && <p className="mt-2 text-[11px] font-medium text-ok">✓ Signed card, verified</p>}
-    </div>
+      <p className="mt-1 text-[11px] font-medium text-teal">View card →</p>
+    </button>
+    </>
   );
 }
 
@@ -61,7 +68,7 @@ export function CaseRail({ seat, summary: s, events }: { seat: Seat; summary: Ru
   const blocked = gateways.filter((e) => e.flags?.includes("rejected") || e.flags?.includes("blocked") || e.flags?.includes("withheld")).length + events.filter((e) => e.flags?.includes("injection-blocked")).length;
   const approvals = events.filter((e) => e.kind === "approval");
   const sharedOut = new Set(events.filter((e) => e.kind === "gateway" && e.title.startsWith("Outbound")).flatMap((e) => (e.checks?.find((c) => c.id === "fields")?.detail ?? "").split(", ").filter((x) => x && x !== "none")));
-  const sentAt = events.find((e) => e.title.startsWith("Sent to Emily Carter"))?.at;
+  const sentAt = events.find((e) => e.title.startsWith("Email sent to Emily Carter"))?.at;
   const replyAt = events.find((e) => e.title.startsWith("Email from Emily Carter"))?.at;
   const waitedMs = sentAt && replyAt ? new Date(replyAt).getTime() - new Date(sentAt).getTime() : sentAt && s ? new Date(s.clock).getTime() - new Date(sentAt).getTime() : 0;
   const elapsed = s ? new Date(s.clock).getTime() - new Date(s.scenarioStart).getTime() : 0;
@@ -73,15 +80,15 @@ export function CaseRail({ seat, summary: s, events }: { seat: Seat; summary: Ru
         <div className="flex items-stretch gap-2">
           {gs ? (
             <>
-              <AgentCard firm="Goldman Sachs" name="GS Counterparty Outreach Agent" line="Ours: contacts the custodian" verified={false} />
+              <AgentCard id="gs-outreach" firm="Goldman Sachs" name="GS Counterparty Outreach Agent" line="Ours: contacts the custodian" verified={false} />
               <Arrows n={crossFirm} />
-              <AgentCard firm="BNY" name="BNY Intake Gateway" line="Their entry point" verified={toBny > 0} />
+              <AgentCard id="bny-gateway" firm="BNY" name="BNY Intake Gateway" line="Their entry point" verified={toBny > 0} />
             </>
           ) : (
             <>
-              <AgentCard firm="BNY" name="BNY Settlement Ops Agent" line="Ours: behind the gateway" verified={false} />
+              <AgentCard id="bny-settlement-agent" firm="BNY" name="BNY Settlement Ops Agent" line="Ours: behind the gateway" verified={false} />
               <Arrows n={crossFirm} />
-              <AgentCard firm="Goldman Sachs" name="GS Counterparty Outreach Agent" line="Registered counterparty agent" verified={crossFirm > 0} />
+              <AgentCard id="gs-outreach" firm="Goldman Sachs" name="GS Counterparty Outreach Agent" line="Registered counterparty agent" verified={crossFirm > 0} />
             </>
           )}
         </div>

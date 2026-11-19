@@ -72,6 +72,8 @@ export class Run {
   /** Unattended runs (safety demo): approvals are decided by the named person after a short pause. */
   autoApprove?: Partial<Record<ApprovalKind, [outcome: string, by: string]>>;
   private copilotBusy = false;
+  /** Whose assistant is answering right now (questions can come from any seat at any time). */
+  busySeat: Seat | null = null;
   private pending = new Map<ApprovalKind, (d: Decision) => void>();
   private cp?: { def: Checkpoint; seq: number; resolve: (action: string) => void };
   private cpWaiters: (() => void)[] = [];
@@ -154,6 +156,7 @@ export class Run {
 
   set copilotWorking(v: boolean) {
     this.copilotBusy = v;
+    if (!v) this.busySeat = null;
     for (const l of this.listeners) l(null);
   }
 
@@ -196,6 +199,7 @@ export class Run {
       guided: this.guided,
       pendingCheckpoint: this.cp && { id: this.cp.def.id, seat: this.cp.def.seat, seq: this.cp.seq },
       copilotBusy: this.copilotBusy,
+      busySeat: this.copilotBusy ? (this.busySeat ?? this.cp?.def.seat ?? null) : null,
       turn: this.cp?.def.seat ?? (this.pendingApprovals.length ? APPROVAL_SEAT[this.pendingApprovals[0]] : null),
       guideStage: this.guided ? stageIndexOf(this.events, this.status) : 0,
     };

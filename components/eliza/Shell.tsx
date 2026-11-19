@@ -40,7 +40,7 @@ function ElizaMark({ gs }: { gs: boolean }) {
   );
 }
 
-function ConnectionGroup({ c, gs, pending }: { c: Connection; gs: boolean; pending: boolean }) {
+function ConnectionGroup({ c, gs, chats }: { c: Connection; gs: boolean; chats: Connection["chats"] }) {
   const [open, setOpen] = useState(c.id === "gs" || c.id === "bny");
   const path = usePathname();
   const chatParam = useSearchParams().get("chat");
@@ -49,11 +49,12 @@ function ConnectionGroup({ c, gs, pending }: { c: Connection; gs: boolean; pendi
       <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-ink hover:bg-canvas">
         <span className={`text-[10px] text-muted transition ${open ? "rotate-90" : ""}`}>▶</span>
         <span className="min-w-0 flex-1 truncate font-medium">{c.label}</span>
-        {pending ? <span className="text-[10px] font-medium text-warn">onboarding</span> : <span className="h-1.5 w-1.5 rounded-full bg-ok" title="Connected" />}
+        <span className="h-1.5 w-1.5 rounded-full bg-ok" title="Connected" />
       </button>
       {open && (
         <ul className="mt-0.5 mb-1 ml-4 space-y-0.5 border-l border-line pl-2">
-          {c.chats.map((ch) => {
+          {chats.length === 0 && <li className="px-2 py-1.5 text-[11px] text-muted">No open cases</li>}
+          {chats.map((ch) => {
             const href = ch.id === LIVE_CHAT_ID ? "/eliza/case" : `/eliza/chat?chat=${ch.id}`;
             const active = ch.id === LIVE_CHAT_ID ? path === "/eliza/case" : chatParam === ch.id;
             return (
@@ -80,12 +81,17 @@ function ConnectionGroup({ c, gs, pending }: { c: Connection; gs: boolean; pendi
 
 function Sidebar({ gs, pulseOnboard }: { gs: boolean; pulseOnboard: boolean }) {
   const path = usePathname();
-  const [pending, setPending] = useState(false);
+  const { runId, summary } = useProto();
+  const [onboarded, setOnboarded] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setPending(!onboardingDone()), 0);
+    const t = setTimeout(() => setOnboarded(onboardingDone()), 0);
     return () => clearTimeout(t);
   }, [path]);
-  const connections = gs ? GS_CONNECTIONS : BNY_CONNECTIONS;
+  // BNY only has a Goldman connection once Goldman's agent is onboarded (or has already
+  // contacted BNY), and the live case appears only once Goldman's request has arrived.
+  const requestArrived = !!runId && !!summary && summary.turns > 0;
+  const connections = gs ? GS_CONNECTIONS : BNY_CONNECTIONS.filter((c) => c.id !== "gs" || onboarded || requestArrived);
+  const chatsOf = (c: Connection) => (!gs && c.id === "gs" ? c.chats.filter((ch) => ch.id !== LIVE_CHAT_ID || requestArrived) : c.chats);
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-line bg-white">
       <div className="px-4 pt-4 pb-3">
@@ -119,7 +125,7 @@ function Sidebar({ gs, pulseOnboard }: { gs: boolean; pulseOnboard: boolean }) {
           <h2 className="px-2 text-[11px] font-semibold tracking-wide text-muted uppercase">{gs ? "Network connections" : "A2A connections"}</h2>
           <ul className="mt-1 space-y-0.5">
             {connections.map((c) => (
-              <ConnectionGroup key={c.id} c={c} gs={gs} pending={!gs && c.id === "gs" && pending} />
+              <ConnectionGroup key={c.id} c={c} gs={gs} chats={chatsOf(c)} />
             ))}
           </ul>
         </div>
@@ -230,6 +236,13 @@ export function Shell({
             {subtitle && <div className="truncate text-xs text-muted">{subtitle}</div>}
           </div>
           {right}
+          {!gs && (
+            <Link href="/eliza/documents" aria-label="Documents and data sources" title="Documents and data sources" className="flex h-9 w-9 items-center justify-center rounded-full text-ink hover:bg-canvas">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              </svg>
+            </Link>
+          )}
           <Bell items={notices} gs={gs} />
           <div className="flex items-center gap-2 border-l border-line pl-3">
             <Image src={persona.photo} alt="" width={32} height={32} className="h-8 w-8 rounded-full" />

@@ -1,11 +1,11 @@
 "use client";
-// Workspace home. For the onboarding lead, a Teams message is the trigger and the
-// "Onboard new agent" button is the entry point; for others it points to their work.
+// Workspace home. For the onboarding lead, a Teams message (a desktop notification,
+// not part of Eliza) is the trigger and the "Onboard new agent" button in the
+// sidebar is the entry point; for others it points to their work.
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useProto } from "../proto/Proto";
 import { onboardingDone, type Notice, Shell } from "./Shell";
-import { TeamsCard } from "./TeamsCard";
 
 const TRIGGER: Notice = {
   id: "okafor",
@@ -18,12 +18,16 @@ const TRIGGER: Notice = {
 };
 
 export function ElizaHome() {
-  const { persona } = useProto();
+  const { persona, toast } = useProto();
   const [done, setDone] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setDone(onboardingDone()), 0);
+    const t = setTimeout(() => {
+      const d = onboardingDone();
+      setDone(d);
+      if (persona.id === "chen" && !d) toast({ key: "okafor", app: "teams", from: "Rachel Okafor · Relationship Manager", title: TRIGGER.title, body: TRIGGER.detail }, 900);
+    }, 0);
     return () => clearTimeout(t);
-  }, []);
+  }, [persona.id, toast]);
   const first = persona.name.split(" ")[0];
   const onboarding = persona.id === "chen";
   return (
@@ -34,7 +38,6 @@ export function ElizaHome() {
 
         {onboarding ? (
           <div className="mt-8 space-y-6">
-            <TeamsCard n={TRIGGER} />
             {done ? (
               <div className="rounded-lg border border-ok/30 bg-ok-soft px-5 py-4">
                 <p className="font-semibold text-ok">Goldman&apos;s agent is live on the network.</p>
@@ -44,11 +47,9 @@ export function ElizaHome() {
                 </Link>
               </div>
             ) : (
-              <div className="flex flex-col items-start gap-3 rounded-lg border border-line bg-white p-6">
-                <p className="text-sm text-ink">Start from the Network Onboarding Assistant. It walks through each security layer and records every check.</p>
-                <Link href="/eliza/onboarding" className="halo inline-flex items-center gap-2 rounded-md bg-navy px-6 py-3 text-base font-semibold text-white hover:bg-teal">
-                  <span aria-hidden>＋</span> Onboard new agent
-                </Link>
+              <div className="rounded-lg border border-dashed border-line bg-white p-6 text-sm text-muted">
+                <p>No agent onboardings in progress.</p>
+                <p className="mt-1">To connect another firm&apos;s agent to BNY&apos;s network, use <span className="font-medium text-ink">Onboard new agent</span> at the bottom of the sidebar.</p>
               </div>
             )}
           </div>
@@ -58,10 +59,12 @@ export function ElizaHome() {
               <p className="text-sm font-semibold text-navy">{persona.task}</p>
               <p className="mt-1 text-sm text-ink">{persona.taskLine}</p>
             </Link>
-            <Link href="/eliza/audit" className="rounded-lg border border-line bg-white p-4 hover:border-teal">
-              <p className="text-sm font-semibold text-navy">Safety and audit</p>
-              <p className="mt-1 text-sm text-ink">Every step, message and approval, and the controls that guard them.</p>
-            </Link>
+            {persona.firm === "BNY" && (
+              <Link href="/eliza/audit" className="rounded-lg border border-line bg-white p-4 hover:border-teal">
+                <p className="text-sm font-semibold text-navy">Safety and audit</p>
+                <p className="mt-1 text-sm text-ink">Every step, message and approval, in the audit log.</p>
+              </Link>
+            )}
           </div>
         )}
       </div>
