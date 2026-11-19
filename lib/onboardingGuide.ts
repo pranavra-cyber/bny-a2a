@@ -266,10 +266,10 @@ export const STAGE_WORK: Record<OnboardingStage, StageWork> = {
     showCredentials: true,
     system: [
       "Client ID registered and tied to the step 8 certificate",
-      "Auth server accepts this client only over mTLS with that certificate",
+      "In production the auth server accepts this client only over mTLS with that certificate (TLS ends at the edge; the prototype does not run it, and its first enforced check is the token and registry)",
       "Test pass issued for the Eliza gateway",
       "Test pass expires as set in the limits",
-      "Test pass is bound to the certificate and carries no permissions",
+      "Test pass carries no permissions (certificate binding is simulated in the prototype)",
     ],
     manual: ["Goldman's agent platform team confirmed their agent fetches and renews passes itself", "Disabling the registry entry stops new passes; existing ones expire within the pass lifetime"],
   },
