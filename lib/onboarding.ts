@@ -135,15 +135,15 @@ export function runCheck(app: Application, stage: OnboardingStage, approvedSkill
         ...base,
         ok: v.ok,
         result: v.ok
-          ? `Client ID ${clientId} is registered with BNY's auth server and tied to the agent's certificate. A test pass was issued for the Eliza gateway, valid ${passMinutes} minutes, bound to the certificate and carrying no permissions: the gateway reads those from the registry on every request.`
+          ? `Client ID ${clientId} is registered with BNY's auth server and tied to the agent's certificate. A test pass was issued for the Eliza gateway, valid ${passMinutes} minutes, carrying no permissions (certificate binding is simulated): the gateway reads those from the registry on every request.`
           : `The test pass failed its own check (${v.reason}).`,
         technical: {
-          source: "BNY auth server (simulated: OAuth 2.0 client credentials, mTLS-bound passes)",
+          source: "BNY auth server (simulated: OAuth 2.0 client credentials; mTLS and certificate binding are not run in this prototype)",
           detail: {
             client_id: clientId,
             certificate_subject: `CN=${app.agentId}, O=${app.legalName}`,
             certificate_fingerprint: certFp,
-            token_endpoint: `${AUTH_SERVER}/oauth2/token · mTLS only`,
+            token_endpoint: `${AUTH_SERVER}/oauth2/token · mTLS in production, not run in this prototype`,
             grant_type: "client_credentials (machine to machine)",
             audience: GATEWAY_AUDIENCE,
             pass_lifetime: `${passMinutes} minutes`,
@@ -161,7 +161,7 @@ export function runCheck(app: Application, stage: OnboardingStage, approvedSkill
         ...base,
         ok: v.ok,
         result: v.ok
-          ? `The agent fetched a fresh access pass from BNY's auth server (valid ${passMinutes} minutes, ${granted.length} permission${granted.length === 1 ? "" : "s"}, bound to its certificate), and its test message passed every gateway check (registered, card signature, token holder, message signature, fresh nonce, schema, scope). "${app.agentName}" is live in the network directory. If it gets stuck: Priya Sharma (BNY) and the Goldman fails desk lead.`
+          ? `The agent fetched a fresh access pass from BNY's auth server (valid ${passMinutes} minutes, ${granted.length} permission${granted.length === 1 ? "" : "s"}, certificate binding simulated), and its test message passed every gateway check (registered, card signature, token holder, message signature, fresh nonce, schema, scope). "${app.agentName}" is live in the network directory. If it gets stuck: Priya Sharma (BNY) and the Goldman fails desk lead.`
           : `The test token failed its own check (${v.reason}).`,
         technical: {
           source: "auth server and gateway test harness (simulated)",

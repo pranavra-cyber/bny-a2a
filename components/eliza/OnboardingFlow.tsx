@@ -750,7 +750,7 @@ function Credentials({ st, detail }: { st: OnboardingState; detail?: Record<stri
               <p className="mt-3 text-xs font-medium text-ink">Test pass, decoded</p>
               <pre className="mt-1 overflow-x-auto rounded-md bg-navy px-3 py-2 font-mono text-[11px] leading-relaxed text-white">{detail.test_pass}</pre>
               <p className="mt-1 text-[11px] text-muted">
-                No permissions in it: the gateway looks them up by client ID. <span className="font-mono">cnf</span> holds the certificate&apos;s fingerprint, so a copied pass is useless without Goldman&apos;s private key.
+                No permissions in it: the gateway looks them up by client ID. <span className="font-mono">cnf</span> holds the certificate&apos;s fingerprint, so in production a copied pass is useless without Goldman&apos;s private key. The prototype simulates that binding.
               </p>
             </>
           )}
