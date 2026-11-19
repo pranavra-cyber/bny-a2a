@@ -102,7 +102,7 @@ export const PERSONAS: Persona[] = [
     photo: "/personas/hacker.svg",
     section: "Security tests",
     task: "Get past BNY's gateway from outside",
-    taskLine: "Pose as Goldman, forge its Agent Card, steal its pass, replay or edit its messages.",
+    taskLine: "Pose as Goldman, forge its Agent Card, steal its token, replay or edit its messages.",
     home: "/attack",
     decides: "Nothing: every attempt is stopped and logged.",
   },

@@ -21,8 +21,8 @@ export function DocumentsPage() {
   }, []);
   const uploads = st ? ONBOARDING_STAGES.flatMap((s) => (st.uploads[s.id] ?? []).map((u) => ({ ...u, step: s.label }))) : [];
   const inputs = st ? Object.entries(st.inputs) : [];
-  const pass = st?.results.pass?.technical.detail;
   const cert = st?.results.identity?.technical.detail;
+  const creds = st?.results.credentials?.technical.detail;
 
   return (
     <Shell title="Documents and data sources" subtitle="What was uploaded, what was entered, and where every record comes from">
@@ -118,11 +118,11 @@ export function DocumentsPage() {
                         <dd className="font-mono text-[11px] break-all">{cert.certificate_fingerprint}</dd>
                       </div>
                     )}
-                    {pass && (
+                    {creds?.client_id && (
                       <div className="grid grid-cols-[11rem_1fr] gap-3 py-1.5">
-                        <dt className="text-muted">Access pass</dt>
+                        <dt className="text-muted">Client ID</dt>
                         <dd className="text-xs">
-                          {pass.scopes} · expires {pass.expires_utc} UTC
+                          <span className="font-mono">{String(creds.client_id)}</span> · a fresh access pass fetched per call from BNY&apos;s auth server, valid {st.limits.pass ?? "10 min"}
                         </dd>
                       </div>
                     )}

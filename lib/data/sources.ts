@@ -43,7 +43,7 @@ export const SOURCES: Source[] = [
     history: [
       { version: "SIS extract 2026-11-19 08:00 ET", at: "2026-11-19 08:00 ET", change: "Current. BNYI-20261118-5527301 (AllianzGI NVDA, 8,000, SENT_TO_DTC) still live; no amendment received." },
       { version: "SIS extract 2026-11-18 18:00 ET", at: "2026-11-18 18:00 ET", change: "End of day. Same NVDA instruction at 8,000." },
-      { version: "SIS extract 2026-11-18 15:15 ET", at: "2026-11-18 15:15 ET", change: "BNYI-20261118-5527301 received 15:10 ET at 8,000 via SWIFT MT541." },
+      { version: "SIS extract 2026-11-18 15:05 ET", at: "2026-11-18 15:05 ET", change: "BNYI-20261118-5527301 received 14:58 ET at 8,000 via SWIFT MT541." },
     ],
   }),
   s({

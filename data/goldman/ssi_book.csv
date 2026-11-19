@@ -1,5 +1,5 @@
 ssi_ref,custodian_name,client_name,market,dtc_participant,effective_date,status
-GSSSI-00001,Citibank NA (custody),Aldgate Investments,US,7203,2025-01-15,ACTIVE
+GSSSI-00001,JPMorgan Chase Bank NA (custody),Aldgate Investments,US,7202,2025-01-15,ACTIVE
 GSSSI-00002,The Bank of New York Mellon,Allianz Global Investors GmbH,US,0901,2025-01-15,ACTIVE
 GSSSI-00003,The Bank of New York Mellon,Aurora Wealth Partners,US,0901,2025-01-15,ACTIVE
 GSSSI-00004,The Bank of New York Mellon,Bayside Municipal Pension,US,0901,2025-01-15,ACTIVE
@@ -9,37 +9,37 @@ GSSSI-00007,Citibank NA (custody),Cardinal Insurance Co,US,7203,2025-01-15,ACTIV
 GSSSI-00008,The Bank of New York Mellon,Clearwater Endowment,US,0901,2025-01-15,ACTIVE
 GSSSI-00009,The Bank of New York Mellon,Cobalt Investment Managers,US,0901,2025-01-15,ACTIVE
 GSSSI-00010,The Bank of New York Mellon,Copperfield Asset Management,US,0901,2025-01-15,ACTIVE
-GSSSI-00011,The Northern Trust Company,Coral Bay Capital,US,7204,2025-01-15,ACTIVE
+GSSSI-00011,Citibank NA (custody),Coral Bay Capital,US,7203,2025-01-15,ACTIVE
 GSSSI-00012,The Bank of New York Mellon,Crescent Sovereign Fund,US,0901,2025-01-15,ACTIVE
 GSSSI-00013,The Bank of New York Mellon,Elmwood Retirement Trust,US,0901,2025-01-15,ACTIVE
 GSSSI-00014,The Bank of New York Mellon,Evergreen University Endowment,US,0901,2025-01-15,ACTIVE
 GSSSI-00015,The Bank of New York Mellon,Fairhaven Advisors,US,0901,2025-01-15,ACTIVE
 GSSSI-00016,The Bank of New York Mellon,Foxglove Capital,US,0901,2025-01-15,ACTIVE
 GSSSI-00017,The Bank of New York Mellon,Glenmore Capital,US,0901,2025-01-15,ACTIVE
-GSSSI-00018,JPMorgan Chase Bank NA (custody),Granby Endowment,US,7202,2025-01-15,ACTIVE
+GSSSI-00018,The Northern Trust Company,Granby Endowment,US,7204,2025-01-15,ACTIVE
 GSSSI-00019,The Bank of New York Mellon,Granite State Employees Retirement,US,0901,2025-01-15,ACTIVE
-GSSSI-00020,State Street Bank and Trust Co,Halcyon Capital,US,7201,2025-01-15,ACTIVE
+GSSSI-00020,JPMorgan Chase Bank NA (custody),Halcyon Capital,US,7202,2025-01-15,ACTIVE
 GSSSI-00021,The Bank of New York Mellon,Harbor Light Insurance,US,0901,2025-01-15,ACTIVE
 GSSSI-00022,The Bank of New York Mellon,Harbourview Asset Management,US,0901,2025-01-15,ACTIVE
-GSSSI-00023,Citibank NA (custody),Hawthorn Pension,US,7203,2025-01-15,ACTIVE
+GSSSI-00023,The Northern Trust Company,Hawthorn Pension,US,7204,2025-01-15,ACTIVE
 GSSSI-00024,The Bank of New York Mellon,Highland County Retirement,US,0901,2025-01-15,ACTIVE
 GSSSI-00025,The Bank of New York Mellon,Ironwood Asset Management,US,0901,2025-01-15,ACTIVE
 GSSSI-00026,The Bank of New York Mellon,Juniper State Pension,US,0901,2025-01-15,ACTIVE
 GSSSI-00027,The Bank of New York Mellon,Kestrel Global Advisors,US,0901,2025-01-15,ACTIVE
 GSSSI-00028,The Bank of New York Mellon,Lakeshore Teachers' Pension Plan,US,0901,2025-01-15,ACTIVE
 GSSSI-00029,The Bank of New York Mellon,Larkspur Investment Partners,US,0901,2025-01-15,ACTIVE
-GSSSI-00030,Citibank NA (custody),Lumen Asset Management,US,7203,2025-01-15,ACTIVE
+GSSSI-00030,State Street Bank and Trust Co,Lumen Asset Management,US,7201,2025-01-15,ACTIVE
 GSSSI-00031,The Bank of New York Mellon,Maple & Oak Advisors,US,0901,2025-01-15,ACTIVE
-GSSSI-00032,Citibank NA (custody),Meadowlark Advisors,US,7203,2025-01-15,ACTIVE
+GSSSI-00032,The Northern Trust Company,Meadowlark Advisors,US,7204,2025-01-15,ACTIVE
 GSSSI-00033,The Bank of New York Mellon,Monarch Family Office,US,0901,2025-01-15,ACTIVE
 GSSSI-00034,The Bank of New York Mellon,Northbridge Mutual Insurance,US,0901,2025-01-15,ACTIVE
 GSSSI-00035,The Bank of New York Mellon,Northstar Sovereign Holdings,US,0901,2025-01-15,ACTIVE
 GSSSI-00036,The Bank of New York Mellon,Oakmont Endowment,US,0901,2025-01-15,ACTIVE
 GSSSI-00037,The Bank of New York Mellon,Orchard Life Assurance,US,0901,2025-01-15,ACTIVE
-GSSSI-00038,The Northern Trust Company,Osprey Partners,US,7204,2025-01-15,ACTIVE
+GSSSI-00038,JPMorgan Chase Bank NA (custody),Osprey Partners,US,7202,2025-01-15,ACTIVE
 GSSSI-00039,The Bank of New York Mellon,Pacific Crest Pension Fund,US,0901,2025-01-15,ACTIVE
 GSSSI-00040,The Bank of New York Mellon,Prairie Mutual,US,0901,2025-01-15,ACTIVE
-GSSSI-00041,The Northern Trust Company,Redwood Pension Board,US,7204,2025-01-15,ACTIVE
+GSSSI-00041,State Street Bank and Trust Co,Redwood Pension Board,US,7201,2025-01-15,ACTIVE
 GSSSI-00042,The Bank of New York Mellon,Ridgeway Capital Partners,US,0901,2025-01-15,ACTIVE
 GSSSI-00043,The Bank of New York Mellon,Riverside Healthcare Pension,US,0901,2025-01-15,ACTIVE
 GSSSI-00044,The Bank of New York Mellon,Sequoia Hill Pension,US,0901,2025-01-15,ACTIVE

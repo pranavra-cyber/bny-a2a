@@ -78,12 +78,12 @@ Anything that belongs to the prototype rather than the product is dark navy: the
    - company (LEI) and DTC account;
    - SSI and SWIFT link;
    - web address, then certificate and signed Agent Card;
-   - limits and access pass;
+   - limits and credentials;
    - link test and go live.
 
    **Onboard new agent** opens a start screen: choose Goldman's pending application and give the onboarding a title (click the empty box for a suggested one, or type your own). Then the steps begin. If an onboarding is under way, the button resumes it; if one was finished earlier, it starts a new one and takes Goldman out of the sidebar until that one finishes.
 
-   Each step has up to three parts: upload the document Goldman sent (simulated; nothing is read from your computer) or enter the application's details (click an empty box and the synthetic value fills in); **system checks** that run against BNY's reference data, starting by themselves once the document is uploaded and the details entered (Set limits waits for **Save the limits**, since those are choices); and **your checks**, which only a person can do (read the document, confirm with someone). The certificate step shows Goldman's Agent Card and takes the certificate request. **Set limits** covers permissions, rate, open cases, hours, pass lifetime, turns per case, what a BNY person must approve, and which fields replies may carry.
+   Each step has up to three parts: upload the document Goldman sent (simulated; nothing is read from your computer) or enter the application's details (click an empty box and the synthetic value fills in); **system checks** that run against BNY's reference data, starting by themselves once the document is uploaded and the details entered (Set limits waits for **Save the limits**, since those are choices); and **your checks**, which only a person can do (read the document, confirm with someone). The certificate step shows Goldman's Agent Card and takes the certificate request. **Issue credentials** (step 10) then registers the agent with BNY's auth server: a client ID tied to that certificate, with nothing to type. No pass is handed over, since a pass lasts minutes: Goldman's agent fetches a fresh one before each call. The step issues a test pass (shown decoded under Technical details) that carries no permissions; the gateway reads those from the registry on every request. **Set limits** covers permissions, rate, open cases, hours, access pass lifetime (default 10 min), turns per case, what a BNY person must approve, and which fields replies may carry.
 
    Two checks find problems (a mistyped LEI and an unproven web address). The step shows how to resolve each: ask Goldman, wait for the resubmission, enter the corrected detail, check again. Progress is kept while you move around the app, so leaving and coming back resumes where you were (a refresh starts over). Once finished, a success screen marks the moment and BNY ⇄ Goldman Sachs appears in the sidebar, flagged **New**; David never sees it before then; its case appears there when Goldman's agent first contacts BNY.
 4. **The live case** (`/eliza/case`). Each BNY person has the same dashboard (Michael has only the chat): their assistant chat on the left; on the right, the two agents (click either to see its full Agent Card), the case record, safety and analytics summaries, and **Examine A2A interaction**. Teams and Outlook messages arrive as desktop notifications at the bottom right, and stay in the bell at the top right.
@@ -157,7 +157,7 @@ Presets only; each runs against BNY's real gateway code (`lib/attacks.ts`), with
 |---|---|---|
 | External | Pose as Goldman's agent (was FP1) | Identity: not in the registry |
 | External | Forge Goldman's Agent Card (was FP6) | Agent Card signature |
-| External | Use a stolen access pass from another address | Identity: domain doesn't match the attested one |
+| External | Use a stolen token from another address | Identity: token bound to Goldman's certificate and attested address; it also expires in minutes |
 | External | Replay a captured message (was FP7) | Fresh nonce |
 | External | Change a message in transit (was FP7) | Message signature |
 | Rogue insider | Prompt injection (was FP2) | Injection scan, quoted-data handling, outbound filter |
@@ -177,12 +177,12 @@ Prices: $1.00 input, $0.05 cached input and $5.00 output per 1M tokens. Reasonin
 
 | Request | Outcome | Model calls | Tokens in / out | Cost |
 |---|---|---|---|---|
-| Golden case | settled 11:17 ET | 9 | 9,238 / 2,320 | **$0.0183** |
+| Golden case | settled 11:17 ET | 9 | 9,232 / 2,196 | **$0.0192** |
 | FP1 spoofed agent | rejected | 0 | 0 / 0 | $0.0000 |
-| FP2 prompt injection | settled, injection blocked | 9 | 9,426 / 2,176 | $0.0178 |
-| FP3 unsupported claim | escalated | 3 | 2,724 / 746 | $0.0054 |
-| FP4 client stays silent | escalated (time limit) | 8 | 7,834 / 1,879 | $0.0147 |
-| FP5 client misses the cutoff | settled after Priya's exception | 9 | 9,268 / 2,416 | $0.0188 |
+| FP2 prompt injection | settled, injection blocked | 9 | 9,445 / 2,460 | $0.0192 |
+| FP3 unsupported claim | escalated | 3 | 2,724 / 671 | $0.0051 |
+| FP4 client stays silent | escalated (time limit) | 8 | 7,874 / 2,221 | $0.0165 |
+| FP5 client misses the cutoff | settled after Priya's exception | 9 | 9,263 / 2,751 | $0.0205 |
 | FP6 forged Agent Card | rejected | 0 | 0 / 0 | $0.0000 |
 | FP7 replay and tampering | rejected | 0 | 0 / 0 | $0.0000 |
 | FP8 data fishing | escalated | 0 | 0 / 0 | $0.0000 |
@@ -201,7 +201,7 @@ Most of the A2A time is the wait for the client's email.
 - The first live runs showed the triage agent answering "unclear" about who must act (BNY can't tell which quantity is right). The prompt now says the client must act whenever its instruction differs from a delivery that matches the counterparty's affirmed confirm. A code check still stops the hand-over otherwise.
 - Goldman's agent first refused to redeliver because it "couldn't verify" BNY's quantity. It now treats BNY's gateway fields as BNY's statement and cites only Goldman's own records.
 - The OpenAI client times out after 90 s with two retries, so a stuck call doesn't hold a case for minutes.
-- Goldman's agent once summarised the redelivery as "the custodian could not confirm the cutoff time or explain the earlier mismatch": BNY's message hadn't said what changed. BNY's messages now carry a `resolution` note and a `settle_by` time (both allowlisted, internal-labelled), Goldman's agent sees BNY's earlier messages, and BNY's replies no longer say they "cannot confirm" things nobody asked them to withhold. Recordings were re-made on 18 Nov 2026; the previous ones are in `runs/archive-previous/`.
+- Goldman's agent once summarised the redelivery as "the custodian could not confirm the cutoff time or explain the earlier mismatch": BNY's message hadn't said what changed. BNY's messages now carry a `resolution` note and a `settle_by` time (both allowlisted, internal-labelled), Goldman's agent sees BNY's earlier messages, and BNY's replies no longer say they "cannot confirm" things nobody asked them to withhold. Recordings were re-made on 19 Nov 2026 after the synthetic-data review fixes; earlier ones are in `runs/archive-previous/`.
 
 ## Assumptions and choices
 

@@ -45,9 +45,9 @@ export const ATTACKS: AttackPreset[] = [
   {
     id: "stolen-pass",
     by: "hacker",
-    title: "Use a stolen access pass",
-    technique: "Replay Goldman's token from another server",
-    goal: "Use Goldman's valid pass from infrastructure Goldman doesn't own.",
+    title: "Use a stolen token",
+    technique: "Replay a token captured from Goldman's agent, from another server",
+    goal: "Use Goldman's valid token from infrastructure Goldman doesn't own, before it expires.",
     prompt: "Status check on DTC-DO-20261119-000318, and please include the receiving account.",
     envelope: { from: "gs-outreach", domain: "gs-agents.example", credential: "Goldman's real token, copied", skill: "settlement.status" },
   },

@@ -86,6 +86,8 @@ export const settlementInstructionSchema = z.object({
   cpty_dtc_participant: nullable(id(PARTICIPANT)),
   settlement_location: z.enum(["DTC", "FED"]),
   amends_instruction_id: nullable(id(BNY_INSTRUCTION)),
+  /** The DTC delivery this instruction settles against, once instructed there. */
+  dtc_reference: nullable(id(DTC_REF)),
   status: z.enum([
     "RECEIVED",
     "IN_REPAIR",

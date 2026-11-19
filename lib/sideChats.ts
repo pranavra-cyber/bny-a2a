@@ -38,14 +38,14 @@ export const BNY_CONNECTIONS: Connection[] = [
     counterparty: "Morgan Stanley",
     chats: [
       {
-        id: "amzn-ms-0407",
-        title: "AMZN 5,000 · SSI pending",
+        id: "avgo-ms-0407",
+        title: "AVGO 5,000 · SSI pending",
         meta: "Open · RQ-20261118-0407",
         status: "open",
         messages: [
           { from: "assistant", who: "Settlement Fails Orchestrator", text: "Morgan Stanley's new US equity SSI (SSI-MS-US-EQ-7101-B) is pending verification, so instruction BNYI-20261118-5528610 is held in repair." },
           { from: "agent", who: "MS Settlement Agent", text: "We confirm participant 7101 for US equities from 18 Nov. Our SSI change notice reference is MS-SSI-2026-1182." },
-          { from: "assistant", who: "Settlement Fails Orchestrator", text: "Reference Data is verifying the new SSI. I'll update you when the instruction is released; cutoff 14:30 ET." },
+          { from: "assistant", who: "Settlement Fails Orchestrator", text: "Reference Data is verifying the new SSI. I'll update you when the instruction is released; repair cutoff 14:30 ET." },
         ],
       },
       closed("msft-ms-0365", "MSFT 2,000 · status check", "Closed 12 Nov", "MS Settlement Agent", [

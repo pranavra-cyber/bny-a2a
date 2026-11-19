@@ -69,7 +69,12 @@ const plainSkill = (id: string) => PERMISSIONS.find((p) => p.id === id)?.label ?
 /** Goldman's agent BIC, from BNY's active SSI. */
 export const agentBicFor = () => scopeFor("bny").read("bny/ssi_counterparties").find((x) => x.counterparty_name === "Goldman Sachs & Co. LLC" && x.status === "ACTIVE")?.agent_bic ?? "";
 
-export function runCheck(app: Application, stage: OnboardingStage, approvedSkills: string[] = [], passHours = 24): CheckResult {
+const AUTH_SERVER = "https://auth.bny.example";
+const GATEWAY_AUDIENCE = "eliza-gateway.bny.example";
+/** BNY generates the client ID once, at registration. */
+const clientIdFor = (app: Application) => `${app.agentId}-${crypto.createHash("sha256").update(`client:${app.agentId}`).digest("hex").slice(0, 4)}`;
+
+export function runCheck(app: Application, stage: OnboardingStage, approvedSkills: string[] = [], passMinutes = 10): CheckResult {
   const bny = scopeFor("bny");
   const copy = ONBOARDING_STAGES.find((s) => s.id === stage)!;
   const base = { stage, what: copy.what, why: copy.why };
@@ -114,16 +119,58 @@ export function runCheck(app: Application, stage: OnboardingStage, approvedSkill
         ...base,
         ok: true,
         result: `Certificate issued, Goldman's signing key registered, and the Agent Card for "${app.agentName}" verifies against it. The gateway now rejects any card or message not signed with this key.`,
-        technical: { source: "registry PKI (simulated: Ed25519)", detail: { certificate_fingerprint: certFp, signing_key: `ed25519 ${keyFp.slice(0, 23)}`, card_signature: "valid", revocation: "not revoked" } },
+        technical: { source: "registry PKI (simulated: Ed25519)", detail: { certificate_subject: `CN=${app.agentId}, O=${app.legalName}`, certificate_fingerprint: certFp, signing_key: `ed25519 ${keyFp.slice(0, 23)}`, card_signature: "valid", revocation: "not revoked" } },
       };
     }
-    case "test":
+    case "credentials": {
+      // Registered once: a client ID bound to the certificate. The pass itself is fetched per call.
+      const clientId = clientIdFor(app);
+      const certFp = fp(`cert:${app.agentId}`);
+      const token = issueToken({ sub: app.agentId, clientId, firm: "goldman", scopes: [] }, passMinutes * 60);
+      const v = verifyToken(token);
+      const pass = v.ok
+        ? { iss: AUTH_SERVER, sub: clientId, aud: GATEWAY_AUDIENCE, iat: v.claims.iat, exp: v.claims.exp, jti: crypto.randomUUID(), cnf: { "x5t#S256": Buffer.from(certFp.replace(/:/g, ""), "hex").toString("base64url").slice(0, 22) } }
+        : null;
       return {
         ...base,
-        ok: true,
-        result: `Test message passed every gateway check (registered, card signature, token holder, message signature, fresh nonce, schema, scope). "${app.agentName}" is live in the network directory. If it gets stuck: Priya Sharma (BNY) and the Goldman fails desk lead.`,
-        technical: { source: "gateway test harness (simulated)", detail: { test_message: "settlement.status ping", checks: "7 of 7 passed", listed: app.agentId, escalation_contacts: "BNY Settlement Ops lead; GS fails desk lead" } },
+        ok: v.ok,
+        result: v.ok
+          ? `Client ID ${clientId} is registered with BNY's auth server and tied to the agent's certificate. A test pass was issued for the Eliza gateway, valid ${passMinutes} minutes, bound to the certificate and carrying no permissions: the gateway reads those from the registry on every request.`
+          : `The test pass failed its own check (${v.reason}).`,
+        technical: {
+          source: "BNY auth server (simulated: OAuth 2.0 client credentials, mTLS-bound passes)",
+          detail: {
+            client_id: clientId,
+            certificate_subject: `CN=${app.agentId}, O=${app.legalName}`,
+            certificate_fingerprint: certFp,
+            token_endpoint: `${AUTH_SERVER}/oauth2/token · mTLS only`,
+            grant_type: "client_credentials (machine to machine)",
+            audience: GATEWAY_AUDIENCE,
+            pass_lifetime: `${passMinutes} minutes`,
+            test_pass: pass ? JSON.stringify(pass, null, 2) : "",
+          },
+        },
       };
+    }
+    case "test": {
+      // The agent does what it will do before every call: fetch a fresh, minutes-long token.
+      const granted = approvedSkills.filter((s) => app.requestedSkills.includes(s));
+      const token = issueToken({ sub: app.agentId, clientId: clientIdFor(app), firm: "goldman", scopes: granted }, passMinutes * 60);
+      const v = verifyToken(token);
+      return {
+        ...base,
+        ok: v.ok,
+        result: v.ok
+          ? `The agent fetched a fresh access pass from BNY's auth server (valid ${passMinutes} minutes, ${granted.length} permission${granted.length === 1 ? "" : "s"}, bound to its certificate), and its test message passed every gateway check (registered, card signature, token holder, message signature, fresh nonce, schema, scope). "${app.agentName}" is live in the network directory. If it gets stuck: Priya Sharma (BNY) and the Goldman fails desk lead.`
+          : `The test token failed its own check (${v.reason}).`,
+        technical: {
+          source: "auth server and gateway test harness (simulated)",
+          detail: v.ok
+            ? { client_id: clientIdFor(app), pass_lifetime: `${passMinutes} minutes, fetched per call`, scopes: v.claims.scopes.join(", "), test_message: "settlement.status ping", checks: "8 of 8 passed", listed: app.agentId, escalation_contacts: "BNY Settlement Ops lead; GS fails desk lead" }
+            : { reason: v.reason },
+        },
+      };
+    }
     case "application":
       return {
         ...base,
@@ -175,20 +222,6 @@ export function runCheck(app: Application, stage: OnboardingStage, approvedSkill
           ? "No permissions selected. The agent could not send BNY anything."
           : `Granted: ${granted.map(plainSkill).join("; ")}. Anything else, and every message to the client, needs a BNY person's approval.${risky ? " Warning: you granted access to instruction details, which include client information Goldman doesn't need to resolve a fail." : ` Declined: ${app.requestedSkills.filter((s) => !granted.includes(s)).map(plainSkill).join("; ") || "nothing"}.`}`,
         technical: { source: "registry membership", detail: { approved_skills: granted.join(", ") } },
-      };
-    }
-    case "pass": {
-      const granted = approvedSkills.filter((s) => app.requestedSkills.includes(s));
-      const token = issueToken({ sub: app.agentId, clientId: `${app.agentId}-01`, firm: "goldman", scopes: granted }, passHours * 3600);
-      const v = verifyToken(token);
-      const expires = v.ok ? new Date(v.claims.exp * 1000).toISOString().slice(0, 16).replace("T", " ") : "";
-      return {
-        ...base,
-        ok: v.ok,
-        result: v.ok
-          ? `Issued and checked. The pass carries exactly ${granted.length} permission${granted.length === 1 ? "" : "s"}, is bound to the agent's certificate, and expires ${expires} UTC. BNY's gateway checks it on every message.`
-          : `The pass failed its own check (${v.reason}).`,
-        technical: { source: "registry token service", detail: v.ok ? { issuer: v.claims.iss, subject: v.claims.sub, scopes: v.claims.scopes.join(", "), expires_utc: expires, token: `${token.slice(0, 24)}…` } : { reason: v.reason } },
       };
     }
   }

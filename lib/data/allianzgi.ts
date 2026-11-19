@@ -10,7 +10,8 @@ export const orderSchema = z.object({
   agi_order_id: id(AGI_ORDER),
   created_ts_cet: agiTs(),
   portfolio_manager: text(),
-  fund_code: id(FUND),
+  // BLOCK: one order for several funds, split in allocations (one row per fund).
+  fund_code: z.union([z.literal("BLOCK"), id(FUND)]),
   side: z.enum(["BUY", "SELL"]),
   isin: id(ISIN),
   quantity: num(),

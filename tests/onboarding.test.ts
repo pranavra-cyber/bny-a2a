@@ -26,14 +26,14 @@ describe("onboarding desk", () => {
     expect(runCheck(applicationFor(["lei", "domain"]), "domain").ok).toBe(true);
   });
 
-  it("issues a pass carrying exactly the approved permissions", () => {
+  it("the go-live test fetches a fresh token carrying exactly the approved permissions", () => {
     const app = applicationFor(["lei", "domain"]);
-    const pass = runCheck(app, "pass", RECOMMENDED);
+    const pass = runCheck(app, "test", RECOMMENDED);
     expect(pass.ok).toBe(true);
     expect(scopesOf(pass.technical.detail).sort()).toEqual([...RECOMMENDED].sort());
     expect(scopesOf(pass.technical.detail)).not.toContain(RISKY_SKILL);
 
-    const fewer = runCheck(app, "pass", RECOMMENDED.slice(0, 1));
+    const fewer = runCheck(app, "test", RECOMMENDED.slice(0, 1));
     expect(scopesOf(fewer.technical.detail)).toEqual(RECOMMENDED.slice(0, 1));
   });
 

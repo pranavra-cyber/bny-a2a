@@ -153,17 +153,37 @@ export const AGI_ORDER = /^AGI-ORD-\d{2}-\d{3}-\d{4}$/;
 /** A source timestamp normalized to UTC, with the original string kept for display. */
 export type Timestamp = { utc: Date; raw: string };
 
-// The generator writes fixed offsets with no DST: ET = UTC-05:00, CET = UTC+01:00.
-// Parsing with the same fixed offsets keeps every firm's view of a trade on one timeline.
-const ET_OFFSET = "-05:00";
-const CET_OFFSET = "+01:00";
+// BNY and AllianzGI write local wall-clock time in their real time zones (daylight saving
+// included: in this data the US is on EDT until 1 Nov and Europe on CEST until 25 Oct).
+// Each is converted to UTC with the offset in force at that moment, so every firm's view
+// of a trade sits on one timeline. DTC and Goldman carry explicit offsets already.
+const ET_ZONE = "America/New_York";
+const CET_ZONE = "Europe/Berlin";
+
+const zoneParts = (zone: string) =>
+  new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function offsetMs(zone: string, utcMs: number): number {
+  const f = formatters.get(zone) ?? formatters.set(zone, zoneParts(zone)).get(zone)!;
+  const p = Object.fromEntries(f.formatToParts(new Date(utcMs)).map((x) => [x.type, x.value]));
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - utcMs;
+}
+/** Wall-clock "YYYY-MM-DD" + "HH:MM:SS" in `zone` → ISO 8601 UTC, or null for an impossible date. */
+function zonedToIso(ymd: string, hms: string, zone: string): string | null {
+  if (!isRealDate(ymd)) return null;
+  const wall = Date.parse(`${ymd}T${hms}Z`);
+  if (Number.isNaN(wall)) return null;
+  let t = wall - offsetMs(zone, wall);
+  t = wall - offsetMs(zone, t); // second pass settles times near a daylight-saving change
+  return new Date(t).toISOString();
+}
 
 function isRealDate(ymd: string): boolean {
   const d = new Date(`${ymd}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === ymd;
 }
 
-function timestamp(re: RegExp, toIso: (m: RegExpMatchArray) => string, format: string) {
+function timestamp(re: RegExp, toIso: (m: RegExpMatchArray) => string | null, format: string) {
   return z.string().transform((raw, ctx): Timestamp => {
     const m = raw.match(re);
     const iso = m && toIso(m);
@@ -178,24 +198,24 @@ function timestamp(re: RegExp, toIso: (m: RegExpMatchArray) => string, format: s
 
 /** BNY: "YYYY-MM-DD HH:MM:SS" in US Eastern. */
 export const bnyTs = () =>
-  timestamp(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/, (m) => `${m[1]}T${m[2]}${ET_OFFSET}`, "YYYY-MM-DD HH:MM:SS (ET)");
+  timestamp(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/, (m) => zonedToIso(m[1], m[2], ET_ZONE), "YYYY-MM-DD HH:MM:SS (ET)");
 
-/** DTC: ISO 8601 with an explicit offset (always -05:00 in this feed). */
+/** DTC: ISO 8601 with an explicit offset (-04:00 or -05:00, US Eastern). */
 export const dtcTs = () =>
   timestamp(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/, (m) => m[0], "ISO 8601 with offset");
 
 /** Goldman: ISO 8601 UTC ending in Z. */
 export const gsTs = () => timestamp(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/, (m) => m[0], "ISO 8601 UTC (…Z)");
 
-/** AllianzGI: "DD.MM.YYYY HH:MM" in CET (UTC+1). */
+/** AllianzGI: "DD.MM.YYYY HH:MM" in Central European time (CET/CEST). */
 export const agiTs = () =>
   timestamp(
     /^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})$/,
-    (m) => `${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:00${CET_OFFSET}`,
+    (m) => zonedToIso(`${m[3]}-${m[2]}-${m[1]}`, `${m[4]}:${m[5]}:00`, CET_ZONE),
     "DD.MM.YYYY HH:MM (CET)",
   );
 
-/** Formats a UTC instant as ET wall-clock "YYYY-MM-DD HH:MM", using the data's fixed offset. */
+/** Formats a UTC instant as US Eastern wall-clock "YYYY-MM-DD HH:MM". */
 export function toEt(d: Date): string {
-  return new Date(d.getTime() - 5 * 3600_000).toISOString().slice(0, 16).replace("T", " ");
+  return new Date(d.getTime() + offsetMs(ET_ZONE, d.getTime())).toISOString().slice(0, 16).replace("T", " ");
 }

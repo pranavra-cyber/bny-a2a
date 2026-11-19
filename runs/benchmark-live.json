@@ -1,5 +1,5 @@
 {
- "createdAt": "2026-11-18T22:00:35.019Z",
+ "createdAt": "2026-11-19T18:45:44.830Z",
  "mode": "live",
  "model": "gpt-6.1-terra",
  "dkAt": "2026-11-19T13:16:02.000Z",
@@ -88,30 +88,29 @@
      "basis": "measured"
     },
     "fieldsShared": {
-     "value": 3,
+     "value": 2,
      "basis": "measured",
      "note": "fields detected in the drafted email"
     },
     "tokens": {
-     "value": 2641,
+     "value": 2653,
      "basis": "measured"
     },
     "costUsd": {
-     "value": 0.0065006000000000005,
+     "value": 0.007909,
      "basis": "measured"
     }
    },
    "fieldsSharedList": [
     "dtc_reference",
-    "isin",
     "quantity"
    ],
-   "detail": "The delivery was automatically DK’d for a quantity mismatch: 10,000 delivered versus 8,000 instructed. The amounts also differ by USD 372,520. The records do not establish which side is correct: no allocation, repair item or inquiry log is provided. Confirm with the client before asserting a correction to the counterparty."
+   "detail": "The delivery was DK'd for a reported quantity mismatch, but the recorded DTC and BNY quantities are both 20,000. The correct instruction and cause cannot be verified from the supplied records. Participant 7101 is recorded as the DTC receiver but as the counterparty on the BNY instruction; its role requires confirmation."
   },
   {
    "mode": "a2a",
    "label": "A2A (this design)",
-   "description": "Full multi-agent run r_995c8bc4 (live, gpt-6.1-terra).",
+   "description": "Full multi-agent run r_5497d540 (live, gpt-6.1-terra).",
    "metrics": {
     "minutesToResolution": {
      "value": 181,
@@ -141,12 +140,12 @@
      "note": "distinct fields BNY sent across the boundary"
     },
     "tokens": {
-     "value": 11558,
+     "value": 11428,
      "basis": "measured",
      "note": "API usage fields"
     },
     "costUsd": {
-     "value": 0.01832525,
+     "value": 0.019184100000000003,
      "basis": "measured"
     }
    },
@@ -165,14 +164,14 @@
  ],
  "emails": [
   {
-   "to": "AllianzGI Global Equity Fund (synthetic) — client contact not provided",
-   "subject": "Please check and re-instruct: AGI-ORD-26-322-0773",
-   "body": "Hello,\n\nThe delivery for ISIN US67066G1040 was DK’d: Goldman Sachs delivered 10,000 shares for USD 1,862,600, while your instruction was for 8,000 shares and USD 1,490,080.\n\nPlease check your latest allocation and any repair or inquiry, confirm the correct quantity and amount, and re-instruct if needed. The settlement date is November 19, 2026; same-day instructions are due by 11:30 ET.\n\nThank you."
+   "to": "Cobalt Investment Managers Core Portfolio",
+   "subject": "Action requested: DK on CIM-261118-9595",
+   "body": "Dear Client,\n\nThe delivery under DTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. Both the DTC activity and your recorded instruction show 20,000 shares and USD 7,802,400; the cause is not yet verified.\n\nPlease check your latest allocation and intended settlement details, including the counterparty, and re-instruct or confirm the correct details. Please also advise of any relevant repair or inquiry.\n\nRegards,\nBNY Operations"
   },
   {
-   "to": "Goldman Sachs & Co. LLC fails desk — address not provided",
-   "subject": "DK under review: DTC-DO-20261119-000318",
-   "body": "Hello,\n\nYour delivery of 10,000 shares of ISIN US67066G1040 for USD 1,862,600 was DK’d against our instruction for 8,000 shares and USD 1,490,080. We are checking the correct terms with our client and will update you once confirmed.\n\nDTC reference: DTC-DO-20261119-000318.\n\nThank you."
+   "to": "Morgan Stanley & Co. LLC — Fails Desk (participant 7101; role to be confirmed)",
+   "subject": "DK notification: DTC-DO-20261119-000044",
+   "body": "Dear Fails Desk,\n\nDTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. The recorded DTC delivery and our instruction both show 20,000 shares and USD 7,802,400. We have asked our client to check and confirm or re-instruct; the correct details and cause are not yet verified.\n\nPlease check the delivery and confirm your role and instruction details. Our records show participant 7101 as the DTC receiver but as the counterparty on our instruction.\n\nRegards,\nBNY Operations"
   }
  ]
 }

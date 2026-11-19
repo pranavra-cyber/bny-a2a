@@ -11,7 +11,7 @@
 
 Tried the BNY number on the contact sheet, it goes to a general line. Left a message. Contact sheet for BNY settlements was last updated 2024, the named person has moved on.
 
-Client coverage says AllianzGI amended last night from 8k to 10k, CTM affirmed 10k at 22:52 UTC. Our side looks right. We need BNY to update their receive and DK the old one, or accept a redeliver.
+Client coverage says AllianzGI's PM topped the order up to 10k before we filled it; their first allocation came in at 8k, they amended it to 10k last night and affirmed CTM at 10k at 22:52 UTC. Our side looks right. We need BNY to update their receive and DK the old one, or accept a redeliver.
 
 Exposure 1.86m, will hit desk lead threshold at 15:00 if not moving.
 

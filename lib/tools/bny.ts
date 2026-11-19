@@ -120,6 +120,7 @@ export function applyClientInstruction(ctx: ToolCtx, c: BnyCase, quantity: numbe
     quantity: String(quantity),
     settlement_amount: String(Math.round(amount * 100) / 100),
     amends_instruction_id: c.instruction.instruction_id,
+    dtc_reference: "",
     status: "SENT_TO_DTC",
     status_ts_et: at,
   };

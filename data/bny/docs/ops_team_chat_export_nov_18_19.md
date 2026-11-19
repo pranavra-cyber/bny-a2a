@@ -6,7 +6,7 @@
 
 **2026-11-18**
 
-**[17:42] B. Murphy:** handing over. queue at 3 open, all for tomorrow's 14:30 cutoff. one is the AGI TECH / MS SSI thing (RQ-0407), waiting on the new MS SSI to be verified
+**[17:42] B. Murphy:** handing over. repair queue at 5 open, all for tomorrow's 14:30 repair cutoff. one is the AGI TECH / MS SSI thing (RQ-0407), waiting on the new MS SSI to be verified; it's past AGI's 60-min SLA, K. Brennan knows. anything that lands tonight waits for the morning
 
 **[17:44] O. Ahmadov:** thanks, got it. nothing new from AGI tonight, their desk is closed (midnight there)
 
@@ -20,6 +20,6 @@
 
 **[08:33] P. Sharma:** meanwhile someone needs to tell GS fails we're on it. anyone have a current contact there? the sheet is from 2024
 
-**[08:41] D. Kim:** $1.86m, tier 1, cutoff 14:30. flagging to the service executive
+**[08:41] D. Kim:** $1.86m, tier 1. AGI has to re-instruct by 11:30 for it to settle today. flagging to the service executive
 
-**[08:52] P. Sharma:** noted. if AGI hasn't re-instructed by 12 we call GS and agree to hold
+**[08:52] P. Sharma:** noted. if AGI hasn't re-instructed by 11:00 we call GS and agree to hold; after 11:30 it needs a late exception from me

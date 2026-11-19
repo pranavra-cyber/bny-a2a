@@ -2,7 +2,7 @@
 
 *Synthetic data for an illustrative prototype. No real accounts, people or events.*
 
-Every table in the synthetic data estate. Each table is one tab in a Google Sheet and exports to `/data/<firm>/<tab>.csv`. Dates are `YYYY-MM-DD` unless the format column says otherwise. Each firm uses its own time zone and timestamp format: BNY and DTC in US Eastern, Goldman Sachs in UTC, AllianzGI in CET with European date format.
+Every table in the synthetic data estate. Each table is one tab in a Google Sheet and exports to `/data/<firm>/<tab>.csv`. Dates are `YYYY-MM-DD` unless the format column says otherwise. Each firm uses its own time zone and timestamp format: BNY and DTC in US Eastern, Goldman Sachs in UTC, AllianzGI in Central European time with European date format. Local times follow the real zones, daylight saving included: the US is on EDT (UTC-4) until 1 Nov 2026 and Europe on CEST (UTC+2) until 25 Oct. Equity settlement amounts include $0.01/share commission (added for buyers, deducted for sellers); bond amounts are price × face / 100 with no commission. The data is a snapshot at 09:00 ET on 19 Nov 2026: nothing after it exists.
 
 ## bny/client_accounts
 
@@ -77,7 +77,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 | isin | text | FK securities_master.isin | US1667641005 |
 | quantity | number | Shares or face amount | 5000 |
 | price | decimal | Trade price | 157.2 |
-| settlement_amount | decimal USD | Net settlement amount | 786000 |
+| settlement_amount | decimal USD | Net settlement amount, commission included for equities | 786000 |
 | currency | ISO 4217 | USD | USD |
 | trade_date | date | Trade date | 2026-10-20 |
 | settle_date | date | Contractual settlement date | 2026-10-21 |
@@ -85,6 +85,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 | cpty_dtc_participant | text 4 | Counterparty DTC participant; blank when missing | 7106 |
 | settlement_location | enum | DTC, FED | DTC |
 | amends_instruction_id | text | Instruction this one amends; blank if new | BNYI-20261118-5527301 |
+| dtc_reference | text DTC-DO-... | The DTC delivery this instruction settles against; blank until instructed at DTC (and for Fedwire) | DTC-DO-20261119-000318 |
 | status | enum | RECEIVED, IN_REPAIR, ENRICHED, SENT_TO_DTC, SENT_TO_FED, MATCHED, SETTLED, PENDING_SETTLEMENT, CANCELLED | SETTLED |
 | status_ts_et | datetime ET | Last status change | 2026-10-21 15:05:00 |
 
@@ -187,7 +188,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 | quantity | number | Shares | 2500 |
 | price | decimal | Price | 163.13 |
 | gross_amount | decimal | quantity x price | 407825 |
-| commission | decimal | Commission charged | 25 |
+| commission | decimal | Commission charged ($0.01/share on equities; 0 on bonds, booked on the US Credit desk) | 25 |
 | trade_date | date | Trade date | 2026-10-20 |
 | settle_date | date | Settlement date | 2026-10-21 |
 | desk | text | Desk | High Touch |
@@ -219,7 +220,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 
 | Column | Type / format | Description and allowed values | Example |
 |---|---|---|---|
-| delivery_id | text DEL-... | Goldman delivery id | DEL-20261020-440030 |
+| delivery_id | text DEL-... | Goldman delivery id; a block trade has one per allocation (DEL-...-1, -2) | DEL-20261020-440030 |
 | gs_trade_ref | text | FK trade_blotter | GS-EQ-20261020-440030 |
 | dtc_reference | text | Depository reference, shared with DTC and custodian | DTC-DO-20261021-000003 |
 | from_participant | text 4 | Deliverer | 0901 |
@@ -241,7 +242,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 | gs_fail_id | text GS-FAIL-YYYYMMDD-nnnn | Fail id | GS-FAIL-20261021-0072 |
 | delivery_id | text | FK deliveries | DEL-20261020-442397 |
 | counterparty_custodian | text | Receiving / delivering custodian | Citibank NA (custody) |
-| fail_reason | enum | SHORT_INVENTORY, CPTY_SSI_MISMATCH, UNAFFIRMED, DK_BY_RECEIVER, HELD, CPTY_CASH | DK_BY_RECEIVER |
+| fail_reason | enum | When Goldman delivers: SHORT_INVENTORY, DK_BY_RECEIVER, HELD, CPTY_CASH. When it receives: CPTY_FAILED_TO_DELIVER, DK_ISSUED. Either: CPTY_SSI_MISMATCH, UNAFFIRMED. next_action follows the reason | DK_BY_RECEIVER |
 | opened_ts_utc | datetime Z | Opened | 2026-10-21T13:09:00Z |
 | age_days | int | Days since settle date | 29 |
 | exposure_usd | decimal | Value | 1161025 |
@@ -305,7 +306,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 | settlement_amount | decimal | USD | 1847325 |
 | transaction_type | enum | DVP | DVP |
 | event | enum | INSTRUCTED, SETTLED, PENDING, DK | INSTRUCTED |
-| reason_code | enum | QTY_MISMATCH, INSUFFICIENT_POSITION; blank otherwise | INSUFFICIENT_POSITION |
+| reason_code | enum | DK: QTY_MISMATCH, SSI_MISMATCH. PENDING: INSUFFICIENT_POSITION, UNAFFIRMED, HOLD, NET_DEBIT_CAP. Blank otherwise. A DK'd delivery is redelivered under the same reference (a second INSTRUCTED, then SETTLED) | INSUFFICIENT_POSITION |
 
 ## dtc/participants
 
@@ -328,7 +329,7 @@ Every table in the synthetic data estate. Each table is one tab in a Google Shee
 | agi_order_id | text AGI-ORD-YY-DDD-nnnn | OMS order id (DDD = day of year) | AGI-ORD-26-293-0013 |
 | created_ts_cet | datetime DD.MM.YYYY HH:MM CET | Order created | 20.10.2026 15:20 |
 | portfolio_manager | text | PM (synthetic) | C. Rossi |
-| fund_code | text | FK funds | AGI-INCO |
+| fund_code | text | FK funds, or BLOCK for one order across several funds (split in allocations) | AGI-INCO |
 | side | enum | BUY, SELL | SELL |
 | isin | text | ISIN | US1912161007 |
 | quantity | number | Order quantity | 5000 |

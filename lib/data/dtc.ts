@@ -14,7 +14,8 @@ export const settlementActivitySchema = z.object({
   settlement_amount: num(),
   transaction_type: z.enum(["DVP"]),
   event: z.enum(["INSTRUCTED", "SETTLED", "PENDING", "DK"]),
-  reason_code: nullable(z.enum(["QTY_MISMATCH", "INSUFFICIENT_POSITION"])),
+  // DK: QTY_MISMATCH, SSI_MISMATCH. PENDING: INSUFFICIENT_POSITION, UNAFFIRMED, HOLD, NET_DEBIT_CAP.
+  reason_code: nullable(z.enum(["QTY_MISMATCH", "SSI_MISMATCH", "INSUFFICIENT_POSITION", "UNAFFIRMED", "HOLD", "NET_DEBIT_CAP"])),
 });
 
 export const participantSchema = z.object({

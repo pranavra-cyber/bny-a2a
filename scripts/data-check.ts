@@ -11,27 +11,27 @@ import { loadGoldman } from "../lib/data/goldman";
 
 const EXPECTED_COUNTS: Record<string, Record<string, number>> = {
   bny: {
-    settlement_instructions: 2258,
+    settlement_instructions: 2307,
     repair_queue: 143,
-    fails_exceptions: 90,
-    positions: 1671,
-    cash_ledger: 2143,
-    client_inquiries: 537,
+    fails_exceptions: 94,
+    positions: 2426,
+    cash_ledger: 2220,
+    client_inquiries: 529,
     client_accounts: 83,
     securities_master: 146,
     ssi_counterparties: 18,
   },
   goldman: {
-    trade_blotter: 1888,
-    allocations_confirms: 1889,
-    deliveries: 1888,
-    fails: 70,
+    trade_blotter: 1853,
+    allocations_confirms: 1868,
+    deliveries: 1866,
+    fails: 73,
     inventory: 42,
     ssi_book: 52,
     stock_loan: 160,
   },
-  dtc: { settlement_activity: 6504, participants: 14 },
-  allianzgi: { orders: 371, allocations: 371, funds: 8, broker_list: 8 },
+  dtc: { settlement_activity: 6735, participants: 14 },
+  allianzgi: { orders: 379, allocations: 459, funds: 8, broker_list: 8 },
 };
 
 const failures: string[] = [];
@@ -163,6 +163,27 @@ golden("EXC-20261119-0907: OPEN", bny.fails_exceptions.find((r) => r.exception_i
 const alloc = (id: string) => agi.allocations.find((r) => r.allocation_id === id);
 golden("ALC-26-322-0773-2: 10,000, version 2", alloc("ALC-26-322-0773-2")?.quantity === 10000 && alloc("ALC-26-322-0773-2")?.version === 2);
 golden("ALC-26-322-0773-1: SUPERSEDED", alloc("ALC-26-322-0773-1")?.status === "SUPERSEDED");
+
+golden(
+  "BNYI-20261118-5527301 received 14:58 ET, before AllianzGI's 21:00 CET cutoff",
+  orig !== undefined && toEt(orig.received_ts_et.utc) === "2026-11-18 14:58",
+);
+golden("Lakeshore near-miss DTC-DO-20261119-000301 settled before 09:00", instr("BNYI-20261118-5527388")?.status === "SETTLED");
+
+// ---------- 5. consistency (the 18 Nov data review) ----------
+console.log("\nConsistency");
+const cut = new Date("2026-11-19T14:00:00Z"); // 09:00 ET
+const settledRefs = new Set(dtc.settlement_activity.filter((e) => e.event === "SETTLED").map((e) => e.dtc_reference));
+const consistent = (label: string, ok: boolean) => {
+  console.log(`  ${ok ? "✓" : "✗"} ${label}`);
+  check(ok, `consistency: ${label}`);
+};
+consistent("Nothing after the 09:00 ET snapshot (DTC events, inquiries)", dtc.settlement_activity.every((e) => e.event_ts_et.utc <= cut) && bny.client_inquiries.every((r) => r.received_ts_et.utc <= cut));
+consistent("Every resolved BNY fail at DTC has a SETTLED event", bny.fails_exceptions.filter((f) => f.status === "RESOLVED" && f.dtc_reference).every((f) => settledRefs.has(f.dtc_reference!)));
+consistent("Every closed Goldman fail's delivery settled", gs.fails.filter((f) => f.status === "CLOSED").every((f) => gs.deliveries.find((d) => d.delivery_id === f.delivery_id)?.status === "SETTLED"));
+const assetOf = new Map(bny.securities_master.map((s) => [s.isin, s.asset_class]));
+consistent("No bond settles on Veterans Day (11 Nov)", !bny.settlement_instructions.some((i) => i.settle_date === "2026-11-11" && assetOf.get(i.isin) !== "EQUITY" && assetOf.get(i.isin) !== "ETF"));
+consistent("Goldman allocations use the custodian in its own SSI book", gs.allocations_confirms.every((a) => { const s = gs.ssi_book.find((x) => x.client_name === a.client_name); return !s || s.dtc_participant === a.custodian_dtc_participant; }));
 
 if (failures.length) bail();
 console.log("\n✓ data:check passed");

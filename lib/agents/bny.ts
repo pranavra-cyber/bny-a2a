@@ -12,7 +12,7 @@ import { ACTORS, agentCall, cite, CITE_RULE, compact, findingSchema, rowOf } fro
 const BNY_COLS = {
   "dtc/settlement_activity": ["dtc_reference", "event_ts_et", "deliverer_participant", "receiver_participant", "isin", "quantity", "settlement_amount", "event", "reason_code"],
   fails_exceptions: ["exception_id", "instruction_id", "dtc_reference", "fail_reason", "status", "owner", "resolution_notes"],
-  settlement_instructions: ["instruction_id", "received_ts_et", "source_channel", "client_account_id", "client_ref", "direction", "isin", "quantity", "price", "settlement_amount", "settle_date", "counterparty_name", "cpty_dtc_participant", "amends_instruction_id", "status"],
+  settlement_instructions: ["instruction_id", "received_ts_et", "source_channel", "client_account_id", "client_ref", "direction", "isin", "quantity", "price", "settlement_amount", "settle_date", "counterparty_name", "cpty_dtc_participant", "amends_instruction_id", "dtc_reference", "status"],
   client_accounts: ["account_id", "client_short_code", "fund_name", "client_tier", "service_executive"],
   ssi_counterparties: ["ssi_id", "counterparty_name", "asset_class", "dtc_participant", "agent_bic", "status"],
 };

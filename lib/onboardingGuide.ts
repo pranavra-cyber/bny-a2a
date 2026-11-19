@@ -3,7 +3,7 @@
 // resolve it. Types and text only: safe to import from client components.
 
 export type Problem = "lei" | "domain";
-export type OnboardingStage = "application" | "agreement" | "company" | "account" | "ssi" | "swift" | "domain" | "identity" | "permissions" | "pass" | "test";
+export type OnboardingStage = "application" | "agreement" | "company" | "account" | "ssi" | "swift" | "domain" | "identity" | "permissions" | "credentials" | "test";
 
 export const PERMISSIONS: { id: string; label: string; recommended: boolean; note: string }[] = [
   { id: "settlement.dk-inquiry", label: "Ask why a delivery was rejected", recommended: true, note: "Needed to chase a failed trade." },
@@ -101,7 +101,7 @@ export const ONBOARDING_STAGES: StageCopy[] = [
     label: "Issue certificate and sign the Agent Card",
     owner: "AI Hub, Security",
     what: "BNY issues the agent a certificate, registers Goldman's signing key, and checks the Agent Card is signed with it.",
-    why: "From now on the gateway rejects any card or message not signed with this key, even if it uses Goldman's name (see safety test FP6).",
+    why: "The certificate is what the agent proves itself with from now on. The gateway rejects any card or message not signed with Goldman's key, even if it uses Goldman's name.",
     action: "Issue and sign",
   },
   {
@@ -114,13 +114,13 @@ export const ONBOARDING_STAGES: StageCopy[] = [
     action: "Save the limits",
   },
   {
-    id: "pass",
+    id: "credentials",
     layer: "What it may do",
-    label: "Issue the access pass",
-    owner: "AI Hub",
-    what: "A short-lived pass listing exactly the permissions granted, bound to the agent's certificate.",
-    why: "The agent shows this pass with every message. A pass used by any other holder is refused.",
-    action: "Issue the pass",
+    label: "Issue credentials",
+    owner: "AI Hub, Security",
+    what: "Register Goldman's agent with BNY's auth server: a client ID tied to the certificate from step 8. The agent then fetches its own short-lived access pass whenever it calls.",
+    why: "A pass expires in minutes, so none is handed over here. It only proves who is calling; what the agent may do is read from the registry on every request, so a change or revocation applies at once.",
+    action: "Register credentials",
   },
   {
     id: "test",
@@ -170,6 +170,8 @@ export type StageWork = {
   /** Things only a person can check, in the document or with someone. */
   manual: string[];
   showCard?: boolean;
+  /** Shows the credentials BNY registers (nothing to enter). */
+  showCredentials?: boolean;
 };
 
 export const STAGE_WORK: Record<OnboardingStage, StageWork> = {
@@ -260,13 +262,23 @@ export const STAGE_WORK: Record<OnboardingStage, StageWork> = {
     manual: ["The skills on the card match what Goldman applied for", "The provider and endpoint on the card are Goldman's"],
   },
   permissions: { system: ["Every granted permission was requested", "Limits saved to the registry"], manual: [] },
-  pass: { system: ["The pass lists exactly the granted permissions", "The pass is bound to the agent's certificate", "The pass expires as set in the limits"], manual: [] },
+  credentials: {
+    showCredentials: true,
+    system: [
+      "Client ID registered and tied to the step 8 certificate",
+      "Auth server accepts this client only over mTLS with that certificate",
+      "Test pass issued for the Eliza gateway",
+      "Test pass expires as set in the limits",
+      "Test pass is bound to the certificate and carries no permissions",
+    ],
+    manual: ["Goldman's agent platform team confirmed their agent fetches and renews passes itself", "Disabling the registry entry stops new passes; existing ones expire within the pass lifetime"],
+  },
   test: {
     inputs: [
       { id: "bnyContact", label: "BNY contact if the agent gets stuck", source: "directory" },
       { id: "gsContact", label: "Goldman contact if the agent gets stuck", source: "application" },
     ],
-    system: ["Registered agent", "Agent Card signature", "Token holder", "Message signature", "Fresh nonce", "Message schema", "Scope"],
+    system: ["Fresh access pass from BNY's auth server (lifetime as set, granted permissions only)", "Registered agent", "Agent Card signature", "Token holder", "Message signature", "Fresh nonce", "Message schema", "Scope"],
     manual: ["Both contacts confirmed they are on call for the agent"],
   },
 };
@@ -276,7 +288,12 @@ export const LIMITS = {
   rate: { label: "Messages per hour", options: ["30", "60", "120"], default: "60", note: "Above this the gateway queues the agent's messages." },
   openCases: { label: "Open cases at once", options: ["5", "10", "25"], default: "10", note: "Stops one firm crowding out others." },
   hours: { label: "When it may contact BNY", options: ["07:00–18:00 ET, business days", "24 hours, business days", "Always"], default: "07:00–18:00 ET, business days", note: "Outside these hours messages wait for the next window." },
-  pass: { label: "Access pass lifetime", options: ["24 hours", "7 days", "30 days"], default: "24 hours", note: "Shorter passes limit the damage if one is stolen." },
+  pass: {
+    label: "Access pass lifetime",
+    options: ["5 min", "10 min", "15 min"],
+    default: "10 min",
+    note: "The agent fetches a fresh pass from BNY's auth server before each call; it expires after this long.",
+  },
   turns: { label: "Messages per case before people take over", options: ["6", "10", "15"], default: "10", note: "Also caps model cost per case." },
 } as const;
 export type LimitId = keyof typeof LIMITS;

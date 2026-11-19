@@ -3,6 +3,7 @@ Deterministic (seed 20261119). Writes CSVs to <repo>/data/<firm>/<table>.csv
 """
 import csv, os, random, datetime as dt
 from collections import defaultdict
+from zoneinfo import ZoneInfo
 
 random.seed(20261119)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
@@ -45,9 +46,12 @@ def write(firm, table, rows, cols):
         for r in rows: w.writerow({c: fmt(r.get(c)) for c in cols})
     print(f"{firm}/{table}: {len(rows)}")
 
-ET = dt.timezone(dt.timedelta(hours=-5))
+# Real time zones (daylight saving included): US Eastern for BNY and DTC, Central
+# European for AllianzGI, UTC for Goldman. In this window the US is on EDT (UTC-4)
+# until 1 Nov and Europe on CEST (UTC+2) until 25 Oct.
+ET = ZoneInfo("America/New_York")
 UTC = dt.timezone.utc
-CET = dt.timezone(dt.timedelta(hours=1))
+CET = ZoneInfo("Europe/Berlin")
 def et(d): return d.astimezone(ET).strftime("%Y-%m-%d %H:%M:%S")          # BNY style
 def utc(d): return d.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")      # GS style
 def cet(d): return d.astimezone(CET).strftime("%d.%m.%Y %H:%M")          # AGI style
@@ -190,28 +194,51 @@ ssi_bny.append(dict(ssi_id="SSI-GS-US-EQ-7108", counterparty_name="Goldman Sachs
 ssi_bny.append(dict(ssi_id="SSI-MS-US-EQ-7101-B", counterparty_name="Morgan Stanley & Co. LLC", counterparty_lei="", market="US", asset_class="EQUITY",
     depository="DTC", dtc_participant="7101", agent_bic="", effective_date="2026-11-17", end_date="", verified_by="", verification_date="", status="PENDING_VERIFICATION"))
 
-# ---------------- AllianzGI orders & allocations ----------------
+# ---------------- calendar, amounts, cut ----------------
+# The data is a snapshot taken at 09:00 ET on 19 Nov: nothing after it exists yet.
+CUT = dt.datetime(2026, 11, 19, 9, 0, tzinfo=ET)
+TODAY = D("2026-11-19")
+# Veterans Day: Fedwire and the US bond market are closed; equities trade and settle at DTC.
+BOND_HOLIDAYS = {D("2026-11-11")}
+def is_bond(sec): return sec["asset_class"] in ("UST", "CORP_BOND")
+def settle_for(day, sec):
+    s = next_bd(day, 1)
+    while is_bond(sec) and s in BOND_HOLIDAYS: s = next_bd(s, 1)
+    return s
+
+COMM_PER_SHARE = 0.01  # Goldman and every broker here charge $0.01/share on equities
+def amounts(sec, qty, px, client_side):
+    """(gross, commission, net settlement amount). Equity buyers pay commission on top; sellers receive net of it."""
+    if is_bond(sec):
+        g = round(qty * px / 100, 2); return g, 0.0, g
+    g = round(qty * px, 2); c = round(qty * COMM_PER_SHARE, 2)
+    return g, c, round(g + c if client_side == "BUY" else g - c, 2)
+
+# ---------------- ids ----------------
 agi_orders, agi_allocs = [], []
 pms = ["F. Becker","C. Rossi","E. Laurent","J. Schmidt","A. Novak"]
 ord_seq = defaultdict(int)
-
-# ---------------- trades (BNY instructions) ----------------
-instr, repair, fails_bny, cash, dtc_rows = [], [], [], [], []
+instr, repair, fails_bny, cash, dtc_all = [], [], [], [], []
 gs_trades, gs_allocs, gs_deliv, gs_fails = [], [], [], []
 inst_seq = defaultdict(lambda: 5500000)
-rq_seq = defaultdict(lambda: 380); ex_seq = defaultdict(lambda: 880); dtc_seq = defaultdict(int); gs_seq = defaultdict(lambda: 440000); gsf_seq = defaultdict(lambda: 70)
+dtc_seq = defaultdict(int); gs_seq = defaultdict(lambda: 440000)
 ctm_seq = [77100000]
 analysts = ["J. Rivera","M. Kowalski","S. Iyer","B. Murphy","R. Aboaba","O. Ahmadov"]
+RESERVED_DTC = {"DTC-DO-20261119-000318", "DTC-DO-20261119-000301"}
 
 def new_iid(day):
     inst_seq[day] += random.randint(30, 140)
     return f"BNYI-{day.strftime('%Y%m%d')}-{inst_seq[day]:07d}"
 def new_dtc(day):
-    dtc_seq[day] += 1
-    return f"DTC-{'DO'}-{day.strftime('%Y%m%d')}-{dtc_seq[day]:06d}"
+    while True:
+        dtc_seq[day] += 1
+        ref = f"DTC-DO-{day.strftime('%Y%m%d')}-{dtc_seq[day]:06d}"
+        if ref not in RESERVED_DTC: return ref
 def new_gs(day):
     gs_seq[day] += random.randint(5, 60)
     return f"GS-EQ-{day.strftime('%Y%m%d')}-{gs_seq[day]:06d}"
+
+def pick(pairs): return random.choices([p for p, _ in pairs], weights=[w for _, w in pairs])[0]
 
 RES_BY_REASON = {"MISSING_CPTY_PARTICIPANT": ["ENRICHED_FROM_SSI", "CONFIRMED_WITH_CLIENT"], "QTY_PRICE_MISMATCH": ["CORRECTED_PER_CLIENT", "CONFIRMED_WITH_CLIENT"],
     "INVALID_SSI": ["ENRICHED_FROM_SSI", "CONFIRMED_WITH_CLIENT"], "MISSING_SETTLE_DATE": ["CONFIRMED_WITH_CLIENT", "CORRECTED_PER_CLIENT"],
@@ -222,165 +249,275 @@ COMMENT = {"REJECTED_NO_REFDATA_MATCH": "DE: no unique refdata match, returned t
     "CANCELLED_DUPLICATE": "client confirmed duplicate, cancelled"}
 REPAIR_REASONS = [("MISSING_SEC_ID",0.26),("MISSING_CPTY_PARTICIPANT",0.18),("QTY_PRICE_MISMATCH",0.2),("INVALID_SSI",0.16),("MISSING_SETTLE_DATE",0.1),("DUPLICATE_SUSPECT",0.1)]
 FAIL_REASONS = [("LACK_OF_SECURITIES",0.36),("SSI_MISMATCH",0.18),("LATE_AFFIRMATION",0.15),("DK_QTY_MISMATCH",0.11),("ON_HOLD",0.11),("CASH_SHORTFALL",0.09)]
-def pick(pairs): return random.choices([p for p,_ in pairs], weights=[w for _,w in pairs])[0]
 
-def gs_book(day, exec_dt, client_name, client_side, sec, qty, px, custodian, cust_part, client_ref, settle, status_final, affirmed=True):
+# How each fail shows at DTC: (event, reason_code). The same codes drive BNY's and Goldman's records.
+DTC_FAIL = {"LACK_OF_SECURITIES": ("PENDING", "INSUFFICIENT_POSITION"), "SSI_MISMATCH": ("DK", "SSI_MISMATCH"),
+    "LATE_AFFIRMATION": ("PENDING", "UNAFFIRMED"), "DK_QTY_MISMATCH": ("DK", "QTY_MISMATCH"),
+    "ON_HOLD": ("PENDING", "HOLD"), "CASH_SHORTFALL": ("PENDING", "NET_DEBIT_CAP")}
+# Goldman's own fail reason depends on whether Goldman delivers (client buys) or receives (client sells).
+GS_WHEN_DELIVERING = {"LACK_OF_SECURITIES": "SHORT_INVENTORY", "SSI_MISMATCH": "CPTY_SSI_MISMATCH", "LATE_AFFIRMATION": "UNAFFIRMED",
+    "DK_QTY_MISMATCH": "DK_BY_RECEIVER", "ON_HOLD": "HELD", "CASH_SHORTFALL": "CPTY_CASH"}
+GS_WHEN_RECEIVING = {"LACK_OF_SECURITIES": "CPTY_FAILED_TO_DELIVER", "SSI_MISMATCH": "CPTY_SSI_MISMATCH", "LATE_AFFIRMATION": "UNAFFIRMED",
+    "DK_QTY_MISMATCH": "DK_ISSUED", "ON_HOLD": "CPTY_FAILED_TO_DELIVER", "CASH_SHORTFALL": "CPTY_FAILED_TO_DELIVER"}
+GS_NEXT_ACTION = {"SHORT_INVENTORY": "borrow", "CPTY_SSI_MISMATCH": "confirm SSI with custodian", "UNAFFIRMED": "chase client affirmation",
+    "DK_BY_RECEIVER": "contact receiving custodian", "HELD": "await custodian release", "CPTY_CASH": "await client funding",
+    "CPTY_FAILED_TO_DELIVER": "chase delivering custodian", "DK_ISSUED": "await corrected delivery"}
+NOTES = {
+ ("LACK_OF_SECURITIES","RESOLVED"): ["cpty delivered late, settled S+1", "cpty arranged borrow, settled S+1", "shares recalled from loan, settled late"],
+ ("LACK_OF_SECURITIES","OPEN"): ["cpty says shares due from their own fail", "emailed cpty ops, no response yet", "cpty awaiting recall, ETA tomorrow"],
+ ("SSI_MISMATCH","RESOLVED"): ["SSI corrected after call with cpty ops, redelivered", "client resent instruction with correct SSI, redelivered"],
+ ("SSI_MISMATCH","OPEN"): ["called cpty ops, awaiting confirmation of their SSI", "emailed cpty ops, no response yet"],
+ ("LATE_AFFIRMATION","RESOLVED"): ["client affirmed late in CTM, settled after affirmation"],
+ ("LATE_AFFIRMATION","OPEN"): ["chased client middle office for affirmation"],
+ ("DK_QTY_MISMATCH","RESOLVED"): ["client confirmed qty, instruction amended, cpty redelivered", "cpty corrected delivery qty and redelivered"],
+ ("DK_QTY_MISMATCH","OPEN"): ["qty break vs cpty delivery, confirming with client", "emailed cpty ops, no response yet"],
+ ("ON_HOLD","RESOLVED"): ["hold released after client cash confirmed"],
+ ("ON_HOLD","OPEN"): ["held pending client cash confirmation"],
+ ("CASH_SHORTFALL","RESOLVED"): ["client funded account, settled"],
+ ("CASH_SHORTFALL","OPEN"): ["client notified of shortfall, awaiting funding"]}
+
+def fail_reason(direction):
+    r = pick(FAIL_REASONS)
+    # A client that is selling isn't short of cash: that fail shows as a hold instead.
+    return "ON_HOLD" if direction == "DVP" and r == "CASH_SHORTFALL" else r
+
+def resolve_time(settle, reason):
+    """When the fail clears and the trade settles at DTC."""
+    if reason in ("ON_HOLD", "CASH_SHORTFALL") and random.random() < 0.5:
+        return at(settle, random.randint(12, 14), random.randint(0, 59))
+    d = settle
+    for _ in range(random.choices([1, 2, 3, 5], weights=[0.6, 0.2, 0.12, 0.08])[0]): d = next_bd(d, 1)
+    return at(d, random.randint(7, 13), random.randint(0, 59))
+
+def dtc_flow(ref, settle, deliverer, receiver, sec, qty, amt, reason, resolved):
+    """DTC events for one delivery. Returns (events, settled_at or None, fail_event or None)."""
+    base = dict(dtc_reference=ref, deliverer_participant=deliverer, receiver_participant=receiver, isin=sec["isin"],
+                quantity=qty, settlement_amount=amt, transaction_type="DVP")
+    t0 = at(settle, random.randint(6, 8), random.randint(0, 59), random.randint(0, 59))
+    ev = [dict(base, _t=t0, event="INSTRUCTED", reason_code="")]
+    settled, failed = None, None
+    if reason is None:
+        settled = t0 + dt.timedelta(minutes=random.randint(1, 240))
+        ev.append(dict(base, _t=settled, event="SETTLED", reason_code=""))
+    else:
+        kind, code = DTC_FAIL[reason]
+        failed = dict(base, _t=t0 + dt.timedelta(minutes=1 if kind == "DK" else random.randint(5, 120)), event=kind, reason_code=code)
+        ev.append(failed)
+        if kind == "DK":  # after a DK the deliverer redelivers under the same reference
+            ev.append(dict(base, _t=resolved - dt.timedelta(minutes=random.randint(8, 30)), event="INSTRUCTED", reason_code=""))
+        settled = resolved
+        ev.append(dict(base, _t=resolved, event="SETTLED", reason_code=""))
+    ev = [e for e in ev if e["_t"] <= CUT]
+    if settled and settled > CUT: settled = None
+    dtc_all.extend(ev)
+    return ev, settled, failed
+
+# ---------------- one settlement leg (BNY instruction, repair, DTC, fails, cash) ----------------
+def leg(day, acc, sec, side, qty, px, bn, bpart, exec_dt, recv, client_ref, settle, is_agi):
+    iid = new_iid(day)
+    _, _, amount = amounts(sec, qty, px, side)
+    direction = "RVP" if side == "BUY" else "DVP"
+    loc = sec["settlement_location"]
+    last = settle == TODAY
+    row = dict(instruction_id=iid, _recv=recv, source_channel=random.choice(["SWIFT_MT541","SWIFT_MT541","CTM","PORTAL"]) if side == "BUY" else random.choice(["SWIFT_MT543","CTM","PORTAL"]),
+        client_account_id=acc["account_id"], client_ref=client_ref, direction=direction, isin=sec["isin"], quantity=qty, price=px,
+        settlement_amount=amount, currency="USD", trade_date=str(day), settle_date=str(settle), counterparty_name=bn, cpty_dtc_participant=bpart,
+        settlement_location=loc, amends_instruction_id="", dtc_reference="", status="", _status_t=recv + dt.timedelta(minutes=4), _settled=None,
+        _open_lack=False, _agi=is_agi)
+    # Repair: opened on receipt; nobody works the queue after 17:30 ET, so late items wait for the morning.
+    in_repair = False
+    if random.random() < 0.06:
+        reason = pick(REPAIR_REASONS)
+        de = reason == "MISSING_SEC_ID"; de_ok = de and random.random() < 0.55
+        opened = recv + dt.timedelta(minutes=1)
+        resolved = opened + dt.timedelta(minutes=random.randint(2, 15) if de_ok else random.randint(20, 300))
+        lt = resolved.astimezone(ET)
+        if not de_ok and not (dt.time(7, 30) <= lt.time() <= dt.time(17, 30)) or lt.weekday() >= 5:
+            nd = next_bd(lt.date(), 1) if lt.time() > dt.time(17, 30) or lt.weekday() >= 5 else lt.date()
+            resolved = at(nd, 7, 30) + dt.timedelta(minutes=random.randint(0, 80))
+        open_item = resolved > CUT or (last and random.random() < 0.35)
+        if reason == "MISSING_CPTY_PARTICIPANT": row["cpty_dtc_participant"] = ""
+        pscore = round(min(97, amount / 150000 + (30 if acc["client_tier"] == 1 else 10) + random.uniform(0, 20)), 1)
+        assigned = "" if open_item else ("DE-REPAIR-01" if de else random.choice(analysts))
+        fix = RES_BY_REASON.get(reason, ["CORRECTED_PER_CLIENT"])
+        resolution = "" if open_item else ("ENRICHED_FROM_REFDATA" if de_ok else ("REJECTED_NO_REFDATA_MATCH" if de else random.choice(fix * (4 // len(fix)))))
+        verifier = "" if open_item else random.choice(analysts)
+        if verifier and verifier == assigned: verifier = analysts[(analysts.index(verifier) + 1) % len(analysts)]
+        comments = "awaiting analyst" if open_item else COMMENT.get(resolution, "")
+        repair.append(dict(_rid_day=day if recv.astimezone(ET).date() == day else recv.astimezone(ET).date(), instruction_id=iid, _opened=opened, repair_reason=reason,
+            routed_to="DIGITAL_EMPLOYEE" if de else "HUMAN", priority_score=pscore, cutoff_ts_et=et(at(settle, 14, 30)), trade_value_usd=amount,
+            assigned_to=assigned, resolution=resolution, _resolved=None if open_item else resolved, verified_by=verifier, comments=comments, _agi=is_agi))
+        if open_item:
+            in_repair = True
+            row["status"] = "IN_REPAIR"
+        else:
+            row["_status_t"] = resolved + dt.timedelta(minutes=2)
+    instr.append(row)
+    deliverer, receiver = (bpart or "0000", "0901") if side == "BUY" else ("0901", bpart or "0000")
+    out = dict(row=row, amount=amount, deliverer=deliverer, receiver=receiver, reason=None, resolved=None, events=[], settled=None, failed=None, dref="")
+    if in_repair: return out  # never instructed at DTC yet
+    reason = fail_reason(direction) if random.random() < 0.04 else None
+    resolved = resolve_time(settle, reason) if reason else None
+    out.update(reason=reason, resolved=resolved)
+    if loc == "DTC":
+        dref = new_dtc(settle)
+        row["dtc_reference"] = dref
+        ev, settled, failed = dtc_flow(dref, settle, deliverer, receiver, sec, qty, amount, reason, resolved)
+        out.update(events=ev, settled=settled, failed=failed, dref=dref)
+    else:  # Fedwire: settles on the day unless it fails
+        settled = (resolved if reason else at(settle, random.randint(9, 15), random.randint(0, 59)))
+        out["settled"] = settled if settled <= CUT else None
+        out["failed"] = dict(_t=at(settle, 9, random.randint(5, 50))) if reason else None
+    # BNY fail record
+    if reason:
+        f_t = (out["failed"]["_t"] if out["failed"] else at(settle, 8, 30)) + dt.timedelta(minutes=random.randint(2, 10))
+        if f_t <= CUT:
+            st = "RESOLVED" if out["settled"] else "OPEN"
+            owner = random.choice(analysts) if st == "RESOLVED" or random.random() < 0.6 else ""
+            opts = NOTES.get((reason, st), [""])
+            fails_bny.append(dict(_t=f_t, instruction_id=iid, dtc_reference=row["dtc_reference"], fail_reason=reason, counterparty_name=bn,
+                days_outstanding=(TODAY - settle).days if st == "OPEN" else "", status=st, owner=owner,
+                resolution_notes="" if (st == "OPEN" and not owner) else random.choice(opts)))
+            if st == "OPEN" and reason == "LACK_OF_SECURITIES" and direction == "DVP": row["_open_lack"] = True
+    # instruction status from what actually happened
+    if out["settled"]:
+        row["status"] = "SETTLED"; row["_status_t"] = out["settled"]; row["_settled"] = out["settled"]
+    elif reason and out["failed"] and settle < TODAY:
+        row["status"] = "PENDING_SETTLEMENT"; row["_status_t"] = out["failed"]["_t"]
+    else:
+        row["status"] = ("SENT_TO_FED" if loc == "FED" else random.choice(["SENT_TO_DTC", "MATCHED", "SENT_TO_DTC", "ENRICHED"])) if last else "SETTLED"
+    if row["_settled"]:
+        cash.append(dict(entry_id=f"CL-{iid[5:]}", account_id=acc["account_id"].replace("-AGI-", "-AGC-") if is_agi else acc["account_id"],
+            value_date=str(row["_settled"].astimezone(ET).date()), amount=-amount if side == "BUY" else amount, currency="USD",
+            entry_type="TRADE_SETTLEMENT", related_instruction_id=iid, status="POSTED"))
+    return out
+
+# ---------------- Goldman booking ----------------
+def gs_trade(day, exec_dt, client_name, client_side, sec, qty, px, settle):
     ref = new_gs(day)
-    gross = round(qty * px, 2); comm = round(qty * 0.01, 2)
+    g, c, _ = amounts(sec, qty, px, client_side)
     gs_trades.append(dict(gs_trade_ref=ref, exec_ts_utc=utc(exec_dt), client_name=client_name, side="SELL" if client_side == "BUY" else "BUY",
-        client_side=client_side, ticker=sec["ticker"], isin=sec["isin"], quantity=qty, price=px, gross_amount=gross, commission=comm,
-        trade_date=str(day), settle_date=str(settle), desk=random.choice(["US Cash Equities","Program Trading","High Touch"]),
+        client_side=client_side, ticker=sec["ticker"], isin=sec["isin"], quantity=qty, price=px, gross_amount=g, commission=c,
+        trade_date=str(day), settle_date=str(settle), desk="US Credit" if is_bond(sec) else random.choice(["US Cash Equities","Program Trading","High Touch"]),
         trader_id=f"T{random.randint(1000,9999)}", status="BOOKED"))
+    return ref
+
+def gs_leg(ref, k, block, client_name, client_ref, qty, custodian, cust_part, exec_dt, sec, client_side, out, settle):
+    """Goldman's allocation, DTC delivery and (if any) fail for one leg of a trade."""
     ctm_seq[0] += random.randint(10, 900)
-    gs_allocs.append(dict(alloc_id=f"AL-{ref[6:]}-1", gs_trade_ref=ref, client_name=client_name, client_account_ref=client_ref, quantity=qty,
+    reason, settled = out["reason"], out["settled"]
+    # Affirmation is the client's (or its custodian's) job in CTM. A late affirmation is what causes that fail.
+    late_aff = reason == "LATE_AFFIRMATION"
+    affirmed = not late_aff or settled is not None
+    aff_t = (settled - dt.timedelta(minutes=random.randint(20, 90))) if late_aff and settled else exec_dt + dt.timedelta(hours=random.uniform(1, 5))
+    gs_allocs.append(dict(alloc_id=f"AL-{ref[6:]}-{k}", gs_trade_ref=ref, client_name=client_name, client_account_ref=client_ref, quantity=qty,
         custodian_name=custodian, custodian_dtc_participant=cust_part, ctm_confirm_id=f"CTM-{ctm_seq[0]}", affirmed="Y" if affirmed else "N",
-        affirmed_ts_utc=utc(exec_dt + dt.timedelta(hours=random.uniform(1, 5))) if affirmed else "", version=1, status="AFFIRMED" if affirmed else "PENDING_AFFIRMATION"))
-    return ref, gross, comm
+        affirmed_ts_utc=utc(aff_t) if affirmed else "", version=1, status="AFFIRMED" if affirmed else "PENDING_AFFIRMATION"))
+    if not out["dref"]: return
+    did = f"DEL-{ref[6:]}" + (f"-{k}" if block else "")
+    ev = out["events"]; lastev = max(ev, key=lambda e: e["_t"])
+    gs_deliv.append(dict(delivery_id=did, gs_trade_ref=ref, dtc_reference=out["dref"], from_participant=out["deliverer"], to_participant=out["receiver"],
+        isin=sec["isin"], quantity=qty, settlement_amount=out["amount"], instructed_ts_utc=utc(ev[0]["_t"]),
+        status={"INSTRUCTED": "DELIVERED", "SETTLED": "SETTLED", "PENDING": "PENDING", "DK": "DK"}[lastev["event"]], status_ts_utc=utc(lastev["_t"]),
+        dk_reason=lastev["reason_code"] if lastev["event"] == "DK" else ""))
+    if reason and out["failed"] and out["failed"]["_t"] <= CUT:
+        gs_delivers = out["deliverer"] == "0005"
+        fr = (GS_WHEN_DELIVERING if gs_delivers else GS_WHEN_RECEIVING)[reason]
+        gs_fails.append(dict(_t=out["failed"]["_t"] + dt.timedelta(minutes=1), delivery_id=did, counterparty_custodian=custodian, fail_reason=fr,
+            age_days=(TODAY - settle).days if not settled else (settled.astimezone(ET).date() - settle).days, exposure_usd=out["amount"],
+            owner=random.choice(["fails-desk-1","fails-desk-2","fails-desk-3"]), next_action=GS_NEXT_ACTION[fr], status="CLOSED" if settled else "OPEN"))
 
-dtc_all = []
-def dtc_events(ref, settle, deliverer, receiver, sec, qty, amt, outcome):
-    t0 = at(settle, random.randint(6, 9), random.randint(0, 59))
-    dtc_all.append(dict(dtc_reference=ref, event_ts_et=dtc_ts(t0), deliverer_participant=deliverer, receiver_participant=receiver, isin=sec["isin"],
-        quantity=qty, settlement_amount=amt, transaction_type="DVP", event="INSTRUCTED", reason_code=""))
-    if outcome == "SETTLED":
-        dtc_all.append(dict(dtc_all[-1], event_ts_et=dtc_ts(t0 + dt.timedelta(minutes=random.randint(1, 240))), event="SETTLED"))
-    elif outcome == "DK":
-        dtc_all.append(dict(dtc_all[-1], event_ts_et=dtc_ts(t0 + dt.timedelta(minutes=1)), event="DK", reason_code="QTY_MISMATCH"))
-    elif outcome == "PENDING":
-        dtc_all.append(dict(dtc_all[-1], event_ts_et=dtc_ts(t0 + dt.timedelta(minutes=random.randint(5, 120))), event="PENDING", reason_code="INSUFFICIENT_POSITION"))
-    return t0
+# ---------------- BNY client trades ----------------
+def split_qty(total, k):
+    cuts = sorted(random.sample(range(1, total // 100), k - 1))
+    parts = [b - a for a, b in zip([0] + cuts, cuts + [total // 100])]
+    return [p * 100 for p in parts]
 
-TODAY = D("2026-11-19")
+AGI_FUNDS = list(agi_accounts)
 for day in days[:-1]:  # trade dates Oct 20 .. Nov 18
-    n_trades = random.randint(88, 112)
-    for _ in range(n_trades):
+    for _ in range(random.randint(88, 112)):
         is_agi = random.random() < 0.17
         acc = random.choice([a for a in accounts if a["client_short_code"] == "AGI"]) if is_agi else random.choice([a for a in accounts if a["client_short_code"] != "AGI"])
         r = random.random()
-        sec = random.choice(eq_secs) if r < 0.68 else random.choice([s for s in active_secs if s["asset_class"] == "UST"]) if r < 0.85 else random.choice([s for s in active_secs if s["asset_class"] == "CORP_BOND"])
+        bonds_open = day not in BOND_HOLIDAYS
+        if r < 0.68 or not bonds_open: sec = random.choice(eq_secs)
+        elif r < 0.85: sec = random.choice([s for s in active_secs if s["asset_class"] == "UST"])
+        else: sec = random.choice([s for s in active_secs if s["asset_class"] == "CORP_BOND"])
         bn, bpart = random.choices(brokers, weights=broker_w)[0]
         side = random.choice(["BUY", "SELL"])
-        if sec["asset_class"] in ("EQUITY", "ETF"):
+        if not is_bond(sec):
             qty = random.choice([100, 250, 500, 1000, 1500, 2000, 2500, 5000, 7500, 10000, 15000, 20000, 25000])
             px = round(float(sec["ref_price"]) * random.uniform(0.95, 1.05), 2)
         else:
             qty = random.choice([250000, 500000, 1000000, 2000000, 5000000])
             px = round(float(sec["ref_price"]) * random.uniform(0.99, 1.01), 4)
-        settle = next_bd(day, 1)
-        amount = round(qty * px / (100 if sec["asset_class"] in ("UST","CORP_BOND") else 1), 2)
+        settle = settle_for(day, sec)
+        # US market hours. AllianzGI trades before its 21:00 CET custodian cutoff so allocations go out the same day.
+        agi_cap = at(day, 20, 58, 0, CET)
         exec_dt = at(day, random.randint(9, 15), random.randint(0, 59), random.randint(0, 59))
-        recv = exec_dt + dt.timedelta(hours=random.uniform(1.5, 6))
-        iid = new_iid(day)
-        client_ref = f"{acc['client_short_code']}-{day.strftime('%y%m%d')}-{random.randint(1000,9999)}"
-        # AllianzGI order + allocation
+        if exec_dt < at(day, 9, 30): exec_dt += dt.timedelta(minutes=30)
+        legs = [(acc, qty)]
+        oid = None
         if is_agi:
+            exec_dt = min(exec_dt, agi_cap - dt.timedelta(minutes=random.randint(20, 90)))
+            sent = min(exec_dt + dt.timedelta(minutes=random.randint(15, 90)), agi_cap)
+            recv = sent + dt.timedelta(minutes=random.randint(1, 3), seconds=random.randint(0, 59))
+            # About a third of AllianzGI equity orders are blocks across 2-3 funds, allocated per fund.
+            block = not is_bond(sec) and qty >= 1000 and random.random() < 0.33
+            if block:
+                funds = random.sample(AGI_FUNDS, random.choice([2, 2, 3]))
+                legs = list(zip([next(a for a in accounts if a["account_id"] == agi_accounts[f]) for f in funds], split_qty(qty, len(funds))))
             ord_seq[day] += random.randint(3, 25)
-            fc = [k for k, v in agi_accounts.items() if v == acc["account_id"]][0]
             oid = f"AGI-ORD-26-{day.timetuple().tm_yday:03d}-{ord_seq[day]:04d}"
-            client_ref = oid
+            fc = "BLOCK" if block else [k for k, v in agi_accounts.items() if v == acc["account_id"]][0]
             agi_orders.append(dict(agi_order_id=oid, created_ts_cet=cet(exec_dt - dt.timedelta(minutes=random.randint(5, 90))), portfolio_manager=random.choice(pms),
-                fund_code=fc, side=side, isin=sec["isin"], quantity=qty, limit_price=round(px * 1.01, 2), broker=bn, status="FILLED"))
-            agi_allocs.append(dict(allocation_id=f"ALC-{oid[8:]}-1", agi_order_id=oid, fund_code=fc, quantity=qty, version=1, amended_ts_cet="",
-                custodian="BNY", sent_to_custodian_ts_cet=cet(recv - dt.timedelta(minutes=3)), status="SENT"))
-        # outcome
-        last = settle == TODAY
-        rep = random.random() < 0.06
-        fail = random.random() < 0.04
-        status = "SETTLED"
-        if last: status = random.choice(["SENT_TO_DTC", "MATCHED", "SENT_TO_DTC", "ENRICHED"])
-        loc = sec["settlement_location"]
-        instr_row = dict(instruction_id=iid, received_ts_et=et(recv), source_channel=random.choice(["SWIFT_MT541","SWIFT_MT541","CTM","PORTAL"]) if side == "BUY" else random.choice(["SWIFT_MT543","CTM","PORTAL"]),
-            client_account_id=acc["account_id"], client_ref=client_ref, direction="RVP" if side == "BUY" else "DVP", isin=sec["isin"], quantity=qty, price=px,
-            settlement_amount=amount, currency="USD", trade_date=str(day), settle_date=str(settle), counterparty_name=bn, cpty_dtc_participant=bpart,
-            settlement_location=loc, amends_instruction_id="", status=status, status_ts_et=et(at(settle, 15, random.randint(0, 59)) if status == "SETTLED" else recv + dt.timedelta(minutes=4)))
-        if rep:
-            reason = pick(REPAIR_REASONS)
-            rq_seq[day] += 1
-            rid = f"RQ-{day.strftime('%Y%m%d')}-{rq_seq[day]:04d}"
-            de = reason == "MISSING_SEC_ID"
-            de_ok = de and random.random() < 0.55
-            opened = recv + dt.timedelta(minutes=1)
-            resolved = opened + dt.timedelta(minutes=random.randint(2, 15) if de_ok else random.randint(20, 300))
-            if reason == "MISSING_CPTY_PARTICIPANT": instr_row["cpty_dtc_participant"] = ""
-            open_item = last and random.random() < 0.5
-            pscore = round(min(97, amount / 150000 + (30 if acc["client_tier"] == 1 else 10) + random.uniform(0, 20)), 1)
-            assigned = "" if open_item else ("DE-REPAIR-01" if de else random.choice(analysts))
-            fix = RES_BY_REASON.get(reason, ["CORRECTED_PER_CLIENT"])
-            resolution = "" if open_item else ("ENRICHED_FROM_REFDATA" if de_ok else ("REJECTED_NO_REFDATA_MATCH" if de else random.choice(fix * (4 // len(fix)))))
-            verifier = "" if open_item else random.choice(analysts)
-            if verifier and verifier == assigned: verifier = analysts[(analysts.index(verifier) + 1) % len(analysts)]
-            repair.append(dict(repair_id=rid, instruction_id=iid, opened_ts_et=et(opened), repair_reason=reason, routed_to="DIGITAL_EMPLOYEE" if de else "HUMAN",
-                priority_score=pscore,
-                cutoff_ts_et=et(at(settle, 14, 30)), trade_value_usd=amount, assigned_to=assigned, resolution=resolution,
-                resolved_ts_et="" if open_item else et(resolved), verified_by=verifier,
-                comments="awaiting analyst" if open_item else COMMENT.get(resolution, "")))
-            if open_item: instr_row["status"] = "IN_REPAIR"
-        instr.append(instr_row)
-        # Goldman side
-        gs_ref = None
-        if bn.startswith("Goldman") and loc == "DTC":
-            gs_ref, _, _ = gs_book(day, exec_dt, acc["client_legal_name"].replace(" (synthetic)", "") if acc["client_short_code"] != "AGI" else "Allianz Global Investors GmbH",
-                side, sec, qty, px, "The Bank of New York Mellon", "0901", client_ref, settle, "SETTLED")
-        # DTC & fails
-        if loc == "DTC":
-            dref = new_dtc(settle)
-            deliverer, receiver = (bpart, "0901") if side == "BUY" else ("0901", bpart)
-            outcome = "SETTLED"
-            if fail: outcome = "PENDING"
-            if last and outcome == "SETTLED": outcome = random.choice(["SETTLED", "SETTLED", "INSTRUCTED"])
-            t0 = dtc_events(dref, settle, deliverer, receiver, sec, qty, amount, outcome if outcome != "INSTRUCTED" else "NONE")
-            if gs_ref:
-                gs_deliv.append(dict(delivery_id=f"DEL-{gs_ref[6:]}", gs_trade_ref=gs_ref, dtc_reference=dref, from_participant=deliverer, to_participant=receiver,
-                    isin=sec["isin"], quantity=qty, settlement_amount=amount, instructed_ts_utc=utc(t0),
-                    status="SETTLED" if outcome == "SETTLED" else ("PENDING" if outcome == "PENDING" else "DELIVERED"), status_ts_utc=utc(t0 + dt.timedelta(minutes=30)), dk_reason=""))
-        if fail:
-            reason = pick(FAIL_REASONS)
-            ex_seq[settle] += 1
-            age = max(0, (TODAY - settle).days)
-            st = "OPEN" if age <= 3 and random.random() < 0.6 else "RESOLVED"
-            if instr_row["status"] == "SETTLED" and st == "OPEN": instr_row["status"] = "PENDING_SETTLEMENT"
-            fails_bny.append(dict(exception_id=f"EXC-{settle.strftime('%Y%m%d')}-{ex_seq[settle]:04d}", instruction_id=iid, dtc_reference=dref if loc == "DTC" else "",
-                detected_ts_et=et(at(settle, random.randint(8, 13), random.randint(0, 59))), fail_reason=reason, counterparty_name=bn, days_outstanding=age if st == "OPEN" else "",
-                status=st, owner=random.choice(analysts) if st == "RESOLVED" or random.random() < 0.6 else "",
-                resolution_notes=random.choice(["cpty delivered late, settled S+1","client resent instruction","SSI corrected after call with cpty ops","partial borrow arranged by cpty","awaiting cpty response, chased by email",""]) if st == "RESOLVED" else random.choice(["chased cpty by phone 10:15, awaiting callback","emailed cpty ops, no response yet","cpty says shares due from their own fail",""])))
-            if gs_ref and loc == "DTC":
-                gsf_seq[settle] += 1
-                gs_fails.append(dict(gs_fail_id=f"GS-FAIL-{settle.strftime('%Y%m%d')}-{gsf_seq[settle]:04d}", delivery_id=f"DEL-{gs_ref[6:]}", counterparty_custodian="The Bank of New York Mellon",
-                    fail_reason={"LACK_OF_SECURITIES":"SHORT_INVENTORY","SSI_MISMATCH":"CPTY_SSI_MISMATCH","LATE_AFFIRMATION":"UNAFFIRMED","DK_QTY_MISMATCH":"DK_BY_RECEIVER","ON_HOLD":"HELD","CASH_SHORTFALL":"CPTY_CASH"}[reason],
-                    opened_ts_utc=utc(at(settle, 8, random.randint(0, 59))), age_days=age, exposure_usd=amount, owner=random.choice(["fails-desk-1","fails-desk-2","fails-desk-3"]),
-                    next_action=random.choice(["chase custodian","borrow","await client","escalate"]), status="OPEN" if st == "OPEN" else "CLOSED"))
-        if instr_row["status"] in ("SETTLED",):
-            cash.append(dict(entry_id=f"CL-{iid[5:]}", account_id=acc["account_id"].replace("-AGI-", "-AGC-") if is_agi else acc["account_id"], value_date=str(settle),
-                amount=-amount if side == "BUY" else amount, currency="USD", entry_type="TRADE_SETTLEMENT", related_instruction_id=iid, status="POSTED"))
+                fund_code=fc, side=side, isin=sec["isin"], quantity=qty,
+                # A buy limit is a ceiling, a sell limit a floor: fills sit on the right side of it.
+                limit_price=round(px * (1.01 if side == "BUY" else 0.99), 2), broker=bn, status="FILLED"))
+            for k, (la, lq) in enumerate(legs, 1):
+                lf = [f for f, v in agi_accounts.items() if v == la["account_id"]][0]
+                agi_allocs.append(dict(allocation_id=f"ALC-{oid[8:]}-{k}", agi_order_id=oid, fund_code=lf, quantity=lq, version=1, amended_ts_cet="",
+                    custodian="BNY", sent_to_custodian_ts_cet=cet(sent), status="SENT"))
+        else:
+            recv = exec_dt + dt.timedelta(hours=random.uniform(1.5, 6))
+        outs = []
+        for la, lq in legs:
+            client_ref = oid or f"{la['client_short_code']}-{day.strftime('%y%m%d')}-{random.randint(1000,9999)}"
+            outs.append((la, lq, client_ref, leg(day, la, sec, side, lq, px, bn, bpart, exec_dt, recv, client_ref, settle, is_agi)))
+        if bn.startswith("Goldman") and sec["settlement_location"] == "DTC":
+            cname = "Allianz Global Investors GmbH" if is_agi else acc["client_legal_name"].replace(" (synthetic)", "")
+            ref = gs_trade(day, exec_dt, cname, side, sec, qty, px, settle)
+            for k, (la, lq, cref, out) in enumerate(outs, 1):
+                gs_leg(ref, k, len(outs) > 1, cname, cref, lq, "The Bank of New York Mellon", "0901", exec_dt, sec, side, out, settle)
 
-# Goldman trades with other custodians (non-BNY clients)
+# ---------------- Goldman trades with other custodians (non-BNY clients) ----------------
 other_custs = [("State Street Bank and Trust Co","7201"),("JPMorgan Chase Bank NA (custody)","7202"),("Citibank NA (custody)","7203"),("The Northern Trust Company","7204")]
 other_clients = ["Redwood Pension Board","Halcyon Capital","Cardinal Insurance Co","Granby Endowment","Lumen Asset Management","Osprey Partners","Vantage Mutual",
 "Meadowlark Advisors","Stonebridge Retirement","Aldgate Investments","Coral Bay Capital","Hawthorn Pension"]
+# Each client settles through one custodian, the one in Goldman's SSI book.
+CUSTODIAN_OF = {cn: other_custs[i % len(other_custs)] for i, cn in enumerate(other_clients)}
 for day in days[:-1]:
     for _ in range(random.randint(55, 75)):
-        cn = random.choice(other_clients); cust, cpart = random.choice(other_custs)
+        cn = random.choice(other_clients); cust, cpart = CUSTODIAN_OF[cn]
         sec = random.choice(eq_secs); qty = random.choice([500, 1000, 2500, 5000, 10000, 20000]); px = round(float(sec["ref_price"]) * random.uniform(0.95, 1.05), 2)
-        side = random.choice(["BUY", "SELL"]); settle = next_bd(day, 1)
+        side = random.choice(["BUY", "SELL"]); settle = settle_for(day, sec)
         exec_dt = at(day, random.randint(9, 15), random.randint(0, 59))
-        aff = random.random() > 0.03
-        ref, gross, comm = gs_book(day, exec_dt, cn, side, sec, qty, px, cust, cpart, f"{cn[:3].upper()}{random.randint(100000,999999)}", settle, "SETTLED", affirmed=aff)
-        dref = new_dtc(settle); amount = round(qty * px, 2)
+        if exec_dt < at(day, 9, 30): exec_dt += dt.timedelta(minutes=30)
+        ref = gs_trade(day, exec_dt, cn, side, sec, qty, px, settle)
+        _, _, amount = amounts(sec, qty, px, side)
+        dref = new_dtc(settle)
         deliverer, receiver = ("0005", cpart) if side == "BUY" else (cpart, "0005")
-        f = random.random() < 0.035
-        outcome = "PENDING" if f else ("SETTLED" if settle != TODAY else random.choice(["SETTLED", "NONE"]))
-        t0 = dtc_events(dref, settle, deliverer, receiver, sec, qty, amount, outcome)
-        gs_deliv.append(dict(delivery_id=f"DEL-{ref[6:]}", gs_trade_ref=ref, dtc_reference=dref, from_participant=deliverer, to_participant=receiver, isin=sec["isin"],
-            quantity=qty, settlement_amount=amount, instructed_ts_utc=utc(t0), status={"SETTLED":"SETTLED","PENDING":"PENDING","NONE":"DELIVERED"}[outcome],
-            status_ts_utc=utc(t0 + dt.timedelta(minutes=20)), dk_reason=""))
-        if f:
-            gsf_seq[settle] += 1; age = max(0, (TODAY - settle).days)
-            gs_fails.append(dict(gs_fail_id=f"GS-FAIL-{settle.strftime('%Y%m%d')}-{gsf_seq[settle]:04d}", delivery_id=f"DEL-{ref[6:]}", counterparty_custodian=cust,
-                fail_reason=random.choice(["SHORT_INVENTORY","SHORT_INVENTORY","CPTY_SSI_MISMATCH","UNAFFIRMED","DK_BY_RECEIVER"]), opened_ts_utc=utc(at(settle, 8, (gsf_seq[settle] * 7) % 50 + 5)),
-                age_days=age, exposure_usd=amount, owner=random.choice(["fails-desk-1","fails-desk-2","fails-desk-3"]), next_action=random.choice(["chase custodian","borrow","escalate"]),
-                status="OPEN" if age <= 2 else "CLOSED"))
+        reason = fail_reason("RVP" if side == "BUY" else "DVP") if random.random() < 0.035 else None
+        resolved = resolve_time(settle, reason) if reason else None
+        ev, settled, failed = dtc_flow(dref, settle, deliverer, receiver, sec, qty, amount, reason, resolved)
+        out = dict(reason=reason if failed else None, settled=settled, failed=failed, events=ev, dref=dref, deliverer=deliverer, receiver=receiver, amount=amount)
+        gs_leg(ref, 1, False, cn, f"{cn[:3].upper()}{random.randint(100000,999999)}", qty, cust, cpart, exec_dt, sec, side, out, settle)
 
 # ---------------- GOLDEN CASE ----------------
+# AllianzGI's PM raised the order from 8,000 to 10,000 before Goldman filled it, but the
+# fund's allocation went out at the stale 8,000. CTM showed 10,000 against 8,000, so AGI
+# trade operations amended the allocation late that evening; the amended custodian
+# instruction then stuck in AGI's approval queue and never reached BNY.
 T, S = D("2026-11-18"), D("2026-11-19")
 exec_dt = at(T, 14, 52, 31)
 gs_trades.append(dict(gs_trade_ref="GS-EQ-20261118-448213", exec_ts_utc=utc(exec_dt), client_name="Allianz Global Investors GmbH", side="SELL", client_side="BUY",
@@ -391,85 +528,119 @@ gs_allocs.append(dict(alloc_id="AL-20261118-448213-1", gs_trade_ref="GS-EQ-20261
 gs_allocs.append(dict(alloc_id="AL-20261118-448213-2", gs_trade_ref="GS-EQ-20261118-448213", client_name="Allianz Global Investors GmbH", client_account_ref="AGI-ORD-26-322-0773",
     quantity=10000, custodian_name="The Bank of New York Mellon", custodian_dtc_participant="0901", ctm_confirm_id="CTM-77104562", affirmed="Y",
     affirmed_ts_utc=utc(at(T, 23, 52, 10, CET)), version=2, status="AFFIRMED"))
-agi_orders.append(dict(agi_order_id="AGI-ORD-26-322-0773", created_ts_cet=cet(at(T, 14, 31)), portfolio_manager="F. Becker", fund_code="AGI-GLEQ", side="BUY",
+agi_orders.append(dict(agi_order_id="AGI-ORD-26-322-0773", created_ts_cet=cet(at(T, 14, 31, 0, CET)), portfolio_manager="F. Becker", fund_code="AGI-GLEQ", side="BUY",
     isin="US67066G1040", quantity=10000, limit_price=187.00, broker="Goldman Sachs & Co. LLC", status="FILLED"))
 agi_allocs.append(dict(allocation_id="ALC-26-322-0773-1", agi_order_id="AGI-ORD-26-322-0773", fund_code="AGI-GLEQ", quantity=8000, version=1, amended_ts_cet="",
-    custodian="BNY", sent_to_custodian_ts_cet="18.11.2026 21:10", status="SUPERSEDED"))
+    custodian="BNY", sent_to_custodian_ts_cet="18.11.2026 20:58", status="SUPERSEDED"))
 agi_allocs.append(dict(allocation_id="ALC-26-322-0773-2", agi_order_id="AGI-ORD-26-322-0773", fund_code="AGI-GLEQ", quantity=10000, version=2, amended_ts_cet="18.11.2026 23:40",
     custodian="BNY", sent_to_custodian_ts_cet="", status="NOT_SENT"))
-instr.append(dict(instruction_id="BNYI-20261118-5527301", received_ts_et="2026-11-18 15:10:04", source_channel="SWIFT_MT541", client_account_id="4471-AGI-GLEQ",
+instr.append(dict(instruction_id="BNYI-20261118-5527301", _recv=at(T, 14, 58, 41), source_channel="SWIFT_MT541", client_account_id="4471-AGI-GLEQ",
     client_ref="AGI-ORD-26-322-0773", direction="RVP", isin="US67066G1040", quantity=8000, price=186.25, settlement_amount=1490080.00, currency="USD",
     trade_date=str(T), settle_date=str(S), counterparty_name="Goldman Sachs & Co. LLC", cpty_dtc_participant="0005", settlement_location="DTC",
-    amends_instruction_id="", status="SENT_TO_DTC", status_ts_et="2026-11-18 15:14:22"))
-# The client amended to 10,000 at its broker, but its amended instruction to BNY was never released (NOT_SENT).
-dtc_all.append(dict(dtc_reference="DTC-DO-20261119-000318", event_ts_et="2026-11-19T08:15:09-05:00", deliverer_participant="0005", receiver_participant="0901",
+    amends_instruction_id="", dtc_reference="DTC-DO-20261119-000318", status="SENT_TO_DTC", _status_t=at(T, 15, 2, 10), _settled=None, _open_lack=False, _agi=True))
+dtc_all.append(dict(dtc_reference="DTC-DO-20261119-000318", _t=at(S, 8, 15, 9), deliverer_participant="0005", receiver_participant="0901",
     isin="US67066G1040", quantity=10000, settlement_amount=1862600.00, transaction_type="DVP", event="INSTRUCTED", reason_code=""))
-dtc_all.append(dict(dtc_all[-1], event_ts_et="2026-11-19T08:16:02-05:00", event="DK", reason_code="QTY_MISMATCH"))
+dtc_all.append(dict(dtc_all[-1], _t=at(S, 8, 16, 2), event="DK", reason_code="QTY_MISMATCH"))
 gs_deliv.append(dict(delivery_id="DEL-20261118-448213", gs_trade_ref="GS-EQ-20261118-448213", dtc_reference="DTC-DO-20261119-000318", from_participant="0005",
     to_participant="0901", isin="US67066G1040", quantity=10000, settlement_amount=1862600.00, instructed_ts_utc="2026-11-19T13:15:09Z", status="DK",
     status_ts_utc="2026-11-19T13:16:02Z", dk_reason="QTY_MISMATCH"))
-gs_fails.append(dict(gs_fail_id="GS-FAIL-20261119-0091", delivery_id="DEL-20261118-448213", counterparty_custodian="The Bank of New York Mellon", fail_reason="DK_BY_RECEIVER",
-    opened_ts_utc="2026-11-19T13:17:00Z", age_days=0, exposure_usd=1862600.00, owner="", next_action="contact receiving custodian", status="OPEN"))
-fails_bny.append(dict(exception_id="EXC-20261119-0907", instruction_id="BNYI-20261118-5527301", dtc_reference="DTC-DO-20261119-000318", detected_ts_et="2026-11-19 08:16:30",
+gs_fails.append(dict(gs_fail_id="GS-FAIL-20261119-0091", _t=at(S, 8, 17), delivery_id="DEL-20261118-448213", counterparty_custodian="The Bank of New York Mellon", fail_reason="DK_BY_RECEIVER",
+    age_days=0, exposure_usd=1862600.00, owner="", next_action="contact receiving custodian", status="OPEN"))
+fails_bny.append(dict(exception_id="EXC-20261119-0907", instruction_id="BNYI-20261118-5527301", dtc_reference="DTC-DO-20261119-000318", _t=at(S, 8, 16, 30),
     fail_reason="DK_QTY_MISMATCH", counterparty_name="Goldman Sachs & Co. LLC", days_outstanding=0, status="OPEN", owner="",
     resolution_notes="delivered 10,000 vs instructed 8,000; auto-DK"))
-# near-miss 1: another NVDA trade for a different client same day, Goldman, settles fine
+# near-miss 1: another Goldman NVDA trade the same day for a different client; it settled before 09:00
 lk = [a for a in accounts if a["client_short_code"] == "LTP"][0]
-instr.append(dict(instruction_id="BNYI-20261118-5527388", received_ts_et="2026-11-18 15:22:47", source_channel="CTM", client_account_id=lk["account_id"], client_ref="LTP-261118-4410",
-    direction="RVP", isin="US67066G1040", quantity=8000, price=186.31, settlement_amount=1490480.00, currency="USD", trade_date=str(T), settle_date=str(S),
-    counterparty_name="Goldman Sachs & Co. LLC", cpty_dtc_participant="0005", settlement_location="DTC", amends_instruction_id="", status="MATCHED", status_ts_et="2026-11-18 16:01:10"))
-dtc_all.append(dict(dtc_reference="DTC-DO-20261119-000301", event_ts_et="2026-11-19T07:58:40-05:00", deliverer_participant="0005", receiver_participant="0901",
-    isin="US67066G1040", quantity=8000, settlement_amount=1490480.00, transaction_type="DVP", event="INSTRUCTED", reason_code=""))
-dtc_all.append(dict(dtc_all[-1], event_ts_et="2026-11-19T08:02:15-05:00", event="SETTLED"))
+instr.append(dict(instruction_id="BNYI-20261118-5527388", _recv=at(T, 15, 22, 47), source_channel="CTM", client_account_id=lk["account_id"], client_ref="LTP-261118-4410",
+    direction="RVP", isin="US67066G1040", quantity=8000, price=186.31, settlement_amount=1490560.00, currency="USD", trade_date=str(T), settle_date=str(S),
+    counterparty_name="Goldman Sachs & Co. LLC", cpty_dtc_participant="0005", settlement_location="DTC", amends_instruction_id="", dtc_reference="DTC-DO-20261119-000301",
+    status="SETTLED", _status_t=at(S, 8, 2, 15), _settled=at(S, 8, 2, 15), _open_lack=False, _agi=False))
+cash.append(dict(entry_id="CL-20261118-5527388", account_id=lk["account_id"], value_date="2026-11-19", amount=-1490560.00, currency="USD",
+    entry_type="TRADE_SETTLEMENT", related_instruction_id="BNYI-20261118-5527388", status="POSTED"))
+dtc_all.append(dict(dtc_reference="DTC-DO-20261119-000301", _t=at(S, 7, 58, 40), deliverer_participant="0005", receiver_participant="0901",
+    isin="US67066G1040", quantity=8000, settlement_amount=1490560.00, transaction_type="DVP", event="INSTRUCTED", reason_code=""))
+dtc_all.append(dict(dtc_all[-1], _t=at(S, 8, 2, 15), event="SETTLED"))
 gs_trades.append(dict(gs_trade_ref="GS-EQ-20261118-448190", exec_ts_utc=utc(at(T, 15, 4, 12)), client_name="Lakeshore Teachers' Pension Plan", side="SELL", client_side="BUY",
     ticker="NVDA", isin="US67066G1040", quantity=8000, price=186.31, gross_amount=1490480.00, commission=80.00, trade_date=str(T), settle_date=str(S), desk="Program Trading", trader_id="T2290", status="BOOKED"))
 gs_allocs.append(dict(alloc_id="AL-20261118-448190-1", gs_trade_ref="GS-EQ-20261118-448190", client_name="Lakeshore Teachers' Pension Plan", client_account_ref="LTP-261118-4410",
     quantity=8000, custodian_name="The Bank of New York Mellon", custodian_dtc_participant="0901", ctm_confirm_id="CTM-77104488", affirmed="Y", affirmed_ts_utc="2026-11-18T21:40:55Z", version=1, status="AFFIRMED"))
 gs_deliv.append(dict(delivery_id="DEL-20261118-448190", gs_trade_ref="GS-EQ-20261118-448190", dtc_reference="DTC-DO-20261119-000301", from_participant="0005", to_participant="0901",
-    isin="US67066G1040", quantity=8000, settlement_amount=1490480.00, instructed_ts_utc="2026-11-19T12:58:40Z", status="SETTLED", status_ts_utc="2026-11-19T13:02:15Z", dk_reason=""))
-# near-miss 3: AGI trade with Morgan Stanley in repair (invalid SSI)
-agi_orders.append(dict(agi_order_id="AGI-ORD-26-322-0781", created_ts_cet="18.11.2026 20:12", portfolio_manager="C. Rossi", fund_code="AGI-TECH", side="BUY",
-    isin=sec_by_isin[isin_from_cusip("11135F101")]["isin"], quantity=5000, limit_price=203.0, broker="Morgan Stanley & Co. LLC", status="FILLED"))
-instr.append(dict(instruction_id="BNYI-20261118-5528610", received_ts_et="2026-11-18 16:40:12", source_channel="SWIFT_MT541", client_account_id=agi_accounts["AGI-TECH"],
-    client_ref="AGI-ORD-26-322-0781", direction="RVP", isin=isin_from_cusip("11135F101"), quantity=5000, price=201.88, settlement_amount=1009400.00, currency="USD",
+    isin="US67066G1040", quantity=8000, settlement_amount=1490560.00, instructed_ts_utc="2026-11-19T12:58:40Z", status="SETTLED", status_ts_utc="2026-11-19T13:02:15Z", dk_reason=""))
+# near-miss 3: another AllianzGI trade on 18 Nov, with Morgan Stanley, held in repair on an unverified SSI
+avgo = sec_by_isin[isin_from_cusip("11135F101")]
+agi_orders.append(dict(agi_order_id="AGI-ORD-26-322-0781", created_ts_cet="18.11.2026 19:12", portfolio_manager="C. Rossi", fund_code="AGI-TECH", side="BUY",
+    isin=avgo["isin"], quantity=5000, limit_price=203.0, broker="Morgan Stanley & Co. LLC", status="FILLED"))
+agi_allocs.append(dict(allocation_id="ALC-26-322-0781-1", agi_order_id="AGI-ORD-26-322-0781", fund_code="AGI-TECH", quantity=5000, version=1, amended_ts_cet="",
+    custodian="BNY", sent_to_custodian_ts_cet="18.11.2026 20:39", status="SENT"))
+instr.append(dict(instruction_id="BNYI-20261118-5528610", _recv=at(T, 14, 40, 12), source_channel="SWIFT_MT541", client_account_id=agi_accounts["AGI-TECH"],
+    client_ref="AGI-ORD-26-322-0781", direction="RVP", isin=avgo["isin"], quantity=5000, price=201.88, settlement_amount=1009450.00, currency="USD",
     trade_date=str(T), settle_date=str(S), counterparty_name="Morgan Stanley & Co. LLC", cpty_dtc_participant="7101", settlement_location="DTC", amends_instruction_id="",
-    status="IN_REPAIR", status_ts_et="2026-11-18 16:41:00"))
-repair.append(dict(repair_id="RQ-20261118-0407", instruction_id="BNYI-20261118-5528610", opened_ts_et="2026-11-18 16:41:00", repair_reason="INVALID_SSI", routed_to="HUMAN",
-    priority_score=71.2, cutoff_ts_et="2026-11-19 14:30:00", trade_value_usd=1009400.00, assigned_to="", resolution="", resolved_ts_et="", verified_by="",
-    comments="new MS SSI pending verification (SSI-MS-US-EQ-7101-B)"))
+    dtc_reference="", status="IN_REPAIR", _status_t=at(T, 14, 41), _settled=None, _open_lack=False, _agi=True))
+repair.append(dict(repair_id="RQ-20261118-0407", _rid_day=T, instruction_id="BNYI-20261118-5528610", _opened=at(T, 14, 41), repair_reason="INVALID_SSI", routed_to="HUMAN",
+    priority_score=71.2, cutoff_ts_et="2026-11-19 14:30:00", trade_value_usd=1009450.00, assigned_to="", resolution="", _resolved=None, verified_by="",
+    comments="new MS SSI pending verification (SSI-MS-US-EQ-7101-B)", _agi=True))
 
-# ---------------- positions, inquiries, inventory, stock loan, gs ssi ----------------
-positions = []
-for a in accounts:
-    held = random.sample(active_secs, random.randint(15, 30))
-    for s in held:
-        q = random.choice([1000, 2500, 5000, 10000, 25000, 50000, 100000]) * (100 if s["asset_class"] in ("UST","CORP_BOND") else 1)
-        price = float(s["ref_price"])
-        positions.append(dict(as_of_date="2026-11-18", account_id=a["account_id"], isin=s["isin"], quantity=q, pending_receipts=0, pending_deliveries=0,
-            market_value_usd=round(q * price / (100 if s["asset_class"] in ("UST","CORP_BOND") else 1), 2)))
-# pending receipts for Nov 19 settlements (BNY sees only the active instruction)
-pend = defaultdict(int)
+# ---------------- repair queue: ids, AGI service level ----------------
+_rq = defaultdict(int)
+for r in sorted(repair, key=lambda r: r["_opened"]):
+    if r.get("repair_id") == "RQ-20261118-0407": continue
+    d = r["_rid_day"].strftime("%Y%m%d"); _rq[d] += 1
+    n = 380 + _rq[d]
+    if d == "20261118" and n >= 407: n += 1  # 0407 is the Morgan Stanley near-miss
+    r["repair_id"] = f"RQ-{d}-{n:04d}"
+for r in repair:
+    # AllianzGI's service level: repair items actioned within 60 minutes during US hours.
+    end = r["_resolved"] or CUT
+    if r["_agi"] and r["routed_to"] == "HUMAN" and end - r["_opened"] > dt.timedelta(minutes=60):
+        breach = r["_opened"] + dt.timedelta(minutes=60)
+        note = f"AGI 60-min SLA breached {breach.astimezone(ET).strftime('%H:%M')}; escalated to K. Brennan (service exec)"
+        r["comments"] = f"{r['comments']}; {note}" if r["comments"] else note
+
+# ---------------- positions: built from settled history ----------------
+SETTLED_BY_18 = dt.datetime(2026, 11, 18, 23, 59, tzinfo=ET)
+flows = defaultdict(list)
 for i in instr:
-    if i["settle_date"] == "2026-11-19" and i["direction"] == "RVP" and i["status"] in ("SENT_TO_DTC", "MATCHED", "ENRICHED"):
-        pend[(i["client_account_id"], i["isin"])] += int(i["quantity"])
-pos_idx = {(p["account_id"], p["isin"]): p for p in positions}
-for (aid, isn), q in pend.items():
-    if (aid, isn) in pos_idx: pos_idx[(aid, isn)]["pending_receipts"] = q
+    if i["_settled"] and i["_settled"] <= SETTLED_BY_18:
+        flows[(i["client_account_id"], i["isin"])].append((i["_settled"], int(i["quantity"]) * (1 if i["direction"] == "RVP" else -1)))
+pend_in, pend_out, need_19 = defaultdict(int), defaultdict(int), defaultdict(int)
+for i in instr:
+    if i["settle_date"] != "2026-11-19" or i["status"] in ("CANCELLED", "IN_REPAIR"): continue
+    k = (i["client_account_id"], i["isin"])
+    if i["direction"] == "RVP": pend_in[k] += int(i["quantity"])
     else:
-        positions.append(dict(as_of_date="2026-11-18", account_id=aid, isin=isn, quantity=0, pending_receipts=q, pending_deliveries=0, market_value_usd=0))
-assert pos_idx.get(("4471-AGI-GLEQ", "US67066G1040"), {"pending_receipts": pend[("4471-AGI-GLEQ","US67066G1040")]})["pending_receipts"] == 8000
+        pend_out[k] += int(i["quantity"])
+        if not i["_open_lack"]: need_19[k] += int(i["quantity"])
+positions = []
+sec_by = {s["isin"]: s for s in active_secs}
+for a in accounts:
+    held = {s["isin"] for s in random.sample(active_secs, random.randint(15, 30))}
+    keys = held | {k[1] for k in list(flows) + list(pend_in) + list(pend_out) if k[0] == a["account_id"]}
+    for isn in sorted(keys):
+        s = sec_by[isn]; k = (a["account_id"], isn); unit = 100 if is_bond(s) else 1
+        base = random.choice([1000, 2500, 5000, 10000, 25000, 50000, 100000]) * unit if isn in held else 0
+        run, low = 0, 0
+        for _, q in sorted(flows[k]): run += q; low = min(low, run)
+        opening = max(base, -low)
+        if opening + run < need_19[k]: opening += need_19[k] - (opening + run) + random.choice([0, 0, 500, 1000]) * unit
+        q = opening + run
+        if q == 0 and not pend_in[k] and not pend_out[k]: continue
+        positions.append(dict(as_of_date="2026-11-18", account_id=a["account_id"], isin=isn, quantity=q, pending_receipts=pend_in[k], pending_deliveries=pend_out[k],
+            market_value_usd=round(q * float(s["ref_price"]) / (100 if is_bond(s) else 1), 2)))
+assert next(p for p in positions if p["account_id"] == "4471-AGI-GLEQ" and p["isin"] == "US67066G1040")["pending_receipts"] == 8000
 
+# ---------------- inquiries, inventory, stock loan, Goldman SSI book ----------------
 inquiries = []
 iq = 0
 for day in days:
-    for _ in range(random.randint(18, 30)):
+    for _ in range(random.randint(18, 30) if day != TODAY else random.randint(8, 14)):
         iq += 1
         disc = random.random() < 0.45
         cand = [i for i in instr if i["trade_date"] <= str(day)]
         rel = random.choice(cand) if cand else None
         acc = next(a for a in accounts if a["account_id"] == rel["client_account_id"]) if rel else random.choice(accounts)
         intent = random.choices(["TRANSACTION_STATUS","CORP_ACTION","TAX","OTHER"], weights=[0.55,0.2,0.12,0.13])[0]
-        inquiries.append(dict(inquiry_id=f"INQ-{day.strftime('%Y%m%d')}-{iq:05d}", received_ts_et=et(at(day, random.randint(7, 18), random.randint(0, 59))),
+        t = at(day, random.randint(7, 8), random.randint(0, 59)) if day == TODAY else at(day, random.randint(7, 18), random.randint(0, 59))
+        inquiries.append(dict(inquiry_id=f"INQ-{day.strftime('%Y%m%d')}-{iq:05d}", received_ts_et=et(t),
             client_short_code=acc["client_short_code"], channel=random.choice(["EMAIL","EMAIL","PORTAL","PHONE"]), intent=intent,
             related_instruction_id=rel["instruction_id"] if intent == "TRANSACTION_STATUS" and rel else "", draft_by="DISC" if disc and intent == "TRANSACTION_STATUS" else "HUMAN",
             response_seconds=random.randint(18, 35) if disc and intent == "TRANSACTION_STATUS" else random.randint(60, 140), reviewed_by=random.choice(analysts), status="CLOSED"))
@@ -483,78 +654,51 @@ for k in range(160):
     s = random.choice(eq_secs)
     stock_loan.append(dict(loan_id=f"SL-{2026}{k+1:05d}", isin=s["isin"], quantity=random.choice([5000, 10000, 25000, 50000]), counterparty=random.choice(other_clients + [b[0] for b in brokers[1:]]),
         direction=random.choice(["LEND", "BORROW"]), start_date=str(random.choice(days)), recall_status=random.choice(["NONE","NONE","NONE","RECALLED","RECALL_PENDING"])))
+bny_client_names = {a["client_legal_name"].replace(" (synthetic)", "") for a in accounts}
 gs_ssi = []
 for cn in sorted({t["client_name"] for t in gs_trades}):
-    cust = "The Bank of New York Mellon" if cn in [a["client_legal_name"].replace(" (synthetic)", "") for a in accounts] or cn.startswith("Allianz") else None
-    if cust is None:
-        cust, part = random.choice(other_custs)
-    else:
-        part = "0901"
+    cust, part = ("The Bank of New York Mellon", "0901") if cn in bny_client_names or cn.startswith("Allianz") else CUSTODIAN_OF[cn]
     gs_ssi.append(dict(ssi_ref=f"GSSSI-{len(gs_ssi)+1:05d}", custodian_name=cust, client_name=cn, market="US", dtc_participant=part, effective_date="2025-01-15", status="ACTIVE"))
 
 broker_list = [dict(broker_name=b, broker_lei=LEI[b], approved_markets="US;EU;UK", status="APPROVED") for b, _ in brokers]
 funds = [dict(fund_code=fc, fund_name=fn, domicile=dom, custodian="BNY", base_currency="USD" if fc.startswith("AGI-US") else "EUR") for fc, fn, dom in agi_funds]
 
-# superseded/duplicate noise rows
-dup = dict(random.choice([i for i in instr if i["status"] == "SETTLED"]))
-dup["instruction_id"] = dup["instruction_id"][:-3] + "999"; dup["status"] = "CANCELLED"; dup["amends_instruction_id"] = ""
+# superseded/duplicate noise row
+dup = dict(random.choice([i for i in instr if i["status"] == "SETTLED" and not i["dtc_reference"].startswith("DTC-DO-20261119")]))
+dup["instruction_id"] = dup["instruction_id"][:-3] + "999"; dup["status"] = "CANCELLED"; dup["amends_instruction_id"] = ""; dup["dtc_reference"] = ""
+dup["_status_t"] = dup["_recv"] + dt.timedelta(minutes=9)
 instr.append(dup)
 
-# ---------------- write ----------------
-_rq = defaultdict(int)
-for r in sorted(repair, key=lambda r: r["opened_ts_et"]):
-    if r["repair_id"] in ("RQ-20261118-0412", "RQ-20261118-0407"): continue
-    d = r["repair_id"][3:11]; _rq[d] += 1; r["repair_id"] = f"RQ-{d}-{380 + _rq[d]:04d}"
-NOTES = {
- ("LACK_OF_SECURITIES","RESOLVED"): ["cpty delivered late, settled S+1", "cpty arranged borrow, settled S+1", "partial delivery S, remainder S+1"],
- ("LACK_OF_SECURITIES","OPEN"): ["cpty says shares due from their own fail", "emailed cpty ops, no response yet", "cpty awaiting recall, ETA tomorrow"],
- ("SSI_MISMATCH","RESOLVED"): ["SSI corrected after call with cpty ops", "client resent instruction with correct SSI"],
- ("SSI_MISMATCH","OPEN"): ["called cpty ops, awaiting confirmation of their SSI", "emailed cpty ops, no response yet"],
- ("LATE_AFFIRMATION","RESOLVED"): ["client affirmed late in CTM, settled S+1"],
- ("LATE_AFFIRMATION","OPEN"): ["chased client middle office for affirmation"],
- ("DK_QTY_MISMATCH","RESOLVED"): ["client confirmed qty, instruction amended, cpty redelivered", "cpty corrected delivery qty and redelivered"],
- ("DK_QTY_MISMATCH","OPEN"): ["qty break vs cpty delivery, confirming with client", "emailed cpty ops, no response yet"],
- ("ON_HOLD","RESOLVED"): ["hold released after client cash confirmed"],
- ("ON_HOLD","OPEN"): ["held pending client cash confirmation"],
- ("CASH_SHORTFALL","RESOLVED"): ["client funded account, settled S+1"],
- ("CASH_SHORTFALL","OPEN"): ["client notified of shortfall, awaiting funding"]}
-_n19 = 0
-for i, r in enumerate(sorted(fails_bny, key=lambda r: r["detected_ts_et"])):
-    if r["exception_id"] == "EXC-20261119-0907": continue
-    if r["detected_ts_et"].startswith("2026-11-19"):
-        _n19 += 1
-        r["detected_ts_et"] = f"2026-11-19 {8 + (5 * _n19) // 60:02d}:{(5 * _n19) % 60:02d}:00"
-        r["status"], r["days_outstanding"], r["owner"] = "OPEN", 0, ""
-    opts = NOTES.get((r["fail_reason"], r["status"]), [""])
-    r["resolution_notes"] = "" if (r["status"] == "OPEN" and not r["owner"]) else opts[i % len(opts)]
+# ---------------- finalize ids and timestamps ----------------
+for i in instr:
+    i["received_ts_et"] = et(i["_recv"]); i["status_ts_et"] = et(i["_status_t"])
+for r in repair:
+    r["opened_ts_et"] = et(r["_opened"]); r["resolved_ts_et"] = et(r["_resolved"]) if r["_resolved"] else ""
 _ex = defaultdict(int)
-for r in sorted(fails_bny, key=lambda r: r["detected_ts_et"]):
-    if r["exception_id"] == "EXC-20261119-0907": continue
-    d = r["exception_id"][4:12]; _ex[d] += 1; r["exception_id"] = f"EXC-{d}-{880 + _ex[d]:04d}"
-# data ends 09:00 ET on 2026-11-19: pull early-morning instructions before the cut, drop later events
-_shift = {e["dtc_reference"] for e in dtc_all if e["event"] == "INSTRUCTED" and e["event_ts_et"].startswith("2026-11-19T") and e["event_ts_et"][11:16] >= "09:00"}
-for e in dtc_all:
-    if e["dtc_reference"] in _shift:
-        t = dt.datetime.fromisoformat(e["event_ts_et"]) - dt.timedelta(hours=3); e["event_ts_et"] = t.isoformat(timespec="seconds")
-dtc_all = [e for e in dtc_all if not (e["event_ts_et"].startswith("2026-11-19T") and e["event_ts_et"][11:16] >= "09:00")]
-_last, _instr = {}, {}
-for e in sorted(dtc_all, key=lambda e: e["event_ts_et"]):
-    _last[e["dtc_reference"]] = e
-    if e["event"] == "INSTRUCTED": _instr[e["dtc_reference"]] = e["event_ts_et"]
-for dv in gs_deliv:
-    ref = dv["dtc_reference"]
-    if ref in _instr and _instr[ref].startswith("2026-11-19"):
-        last = _last[ref]
-        dv["instructed_ts_utc"] = utc(dt.datetime.fromisoformat(_instr[ref]))
-        dv["status"] = {"INSTRUCTED": "DELIVERED", "SETTLED": "SETTLED", "PENDING": "PENDING", "DK": "DK"}[last["event"]]
-        dv["status_ts_utc"] = utc(dt.datetime.fromisoformat(last["event_ts_et"]))
-for r in instr:
-    if r["settlement_location"] == "FED" and r["status"] == "SENT_TO_DTC": r["status"] = "SENT_TO_FED"
-instr.sort(key=lambda r: r["received_ts_et"]); gs_fails.sort(key=lambda r: r["opened_ts_utc"]); fails_bny.sort(key=lambda r: r["detected_ts_et"]); repair.sort(key=lambda r: r["opened_ts_et"]); dtc_all.sort(key=lambda r: r["event_ts_et"]); gs_trades.sort(key=lambda r: r["exec_ts_utc"])
+for r in sorted(fails_bny, key=lambda r: r["_t"]):
+    r["detected_ts_et"] = et(r["_t"])
+    if r.get("exception_id") == "EXC-20261119-0907": continue
+    d = r["_t"].astimezone(ET).strftime("%Y%m%d"); _ex[d] += 1
+    n = 880 + _ex[d]
+    if d == "20261119" and n >= 907: n += 1
+    r["exception_id"] = f"EXC-{d}-{n:04d}"
+_gf = defaultdict(int)
+for r in sorted(gs_fails, key=lambda r: r["_t"]):
+    r["opened_ts_utc"] = utc(r["_t"])
+    if r.get("gs_fail_id") == "GS-FAIL-20261119-0091": continue
+    d = r["_t"].astimezone(ET).strftime("%Y%m%d"); _gf[d] += 1
+    n = 70 + _gf[d]
+    if d == "20261119" and n >= 91: n += 1
+    r["gs_fail_id"] = f"GS-FAIL-{d}-{n:04d}"
+for e in dtc_all: e["event_ts_et"] = dtc_ts(e["_t"])
+instr.sort(key=lambda r: r["_recv"]); gs_fails.sort(key=lambda r: r["_t"]); fails_bny.sort(key=lambda r: r["_t"]); repair.sort(key=lambda r: r["_opened"])
+dtc_all.sort(key=lambda r: (r["_t"], r["dtc_reference"])); gs_trades.sort(key=lambda r: r["exec_ts_utc"])
+
+# ---------------- write ----------------
 write("bny", "client_accounts", client_accounts, ["account_id","client_legal_name","client_short_code","fund_name","account_type","base_currency","client_tier","relationship_manager","service_executive","status","opened_date"])
 write("bny", "securities_master", securities, ["bny_sec_id","isin","cusip","ticker","issuer_name","asset_class","currency","primary_exchange","settlement_cycle","settlement_location","ref_price","id_source","status"])
 write("bny", "ssi_counterparties", ssi_bny, ["ssi_id","counterparty_name","counterparty_lei","market","asset_class","depository","dtc_participant","agent_bic","effective_date","end_date","verified_by","verification_date","status"])
-write("bny", "settlement_instructions", instr, ["instruction_id","received_ts_et","source_channel","client_account_id","client_ref","direction","isin","quantity","price","settlement_amount","currency","trade_date","settle_date","counterparty_name","cpty_dtc_participant","settlement_location","amends_instruction_id","status","status_ts_et"])
+write("bny", "settlement_instructions", instr, ["instruction_id","received_ts_et","source_channel","client_account_id","client_ref","direction","isin","quantity","price","settlement_amount","currency","trade_date","settle_date","counterparty_name","cpty_dtc_participant","settlement_location","amends_instruction_id","dtc_reference","status","status_ts_et"])
 write("bny", "repair_queue", repair, ["repair_id","instruction_id","opened_ts_et","repair_reason","routed_to","priority_score","cutoff_ts_et","trade_value_usd","assigned_to","resolution","resolved_ts_et","verified_by","comments"])
 write("bny", "positions", positions, ["as_of_date","account_id","isin","quantity","pending_receipts","pending_deliveries","market_value_usd"])
 write("bny", "cash_ledger", cash, ["entry_id","account_id","value_date","amount","currency","entry_type","related_instruction_id","status"])

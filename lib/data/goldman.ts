@@ -41,7 +41,8 @@ export const allocationConfirmSchema = z.object({
 });
 
 export const deliverySchema = z.object({
-  delivery_id: id(/^DEL-\d{8}-\d{6}$/),
+  // A block trade allocated to several accounts has one delivery per allocation: DEL-…-1, -2.
+  delivery_id: id(/^DEL-\d{8}-\d{6}(-\d+)?$/),
   gs_trade_ref: id(GS_TRADE),
   dtc_reference: id(DTC_REF),
   from_participant: id(PARTICIPANT),
@@ -57,9 +58,11 @@ export const deliverySchema = z.object({
 
 export const failSchema = z.object({
   gs_fail_id: id(/^GS-FAIL-\d{8}-\d{4}$/),
-  delivery_id: id(/^DEL-\d{8}-\d{6}$/),
+  delivery_id: id(/^DEL-\d{8}-\d{6}(-\d+)?$/),
   counterparty_custodian: text(),
-  fail_reason: z.enum(["SHORT_INVENTORY", "CPTY_SSI_MISMATCH", "UNAFFIRMED", "DK_BY_RECEIVER", "HELD", "CPTY_CASH"]),
+  // When Goldman delivers: SHORT_INVENTORY, DK_BY_RECEIVER, HELD, CPTY_CASH. When it receives:
+  // CPTY_FAILED_TO_DELIVER, DK_ISSUED (Goldman DK'd the delivery). Either way: CPTY_SSI_MISMATCH, UNAFFIRMED.
+  fail_reason: z.enum(["SHORT_INVENTORY", "CPTY_SSI_MISMATCH", "UNAFFIRMED", "DK_BY_RECEIVER", "HELD", "CPTY_CASH", "CPTY_FAILED_TO_DELIVER", "DK_ISSUED"]),
   opened_ts_utc: gsTs(),
   age_days: int(),
   exposure_usd: num(),

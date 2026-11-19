@@ -686,8 +686,8 @@ async function caseFlow(cs: CaseState) {
   run.clock.at(late ? "11:20:00" : "10:24:00");
   const fixTime = late ? "11:50 ET" : "11:15 ET";
   const reply = late
-    ? `Hi Daniel, sorry for the delay, I was in our morning call. You're right: our PM topped the order up to 10,000 last night and the amended instruction got stuck in our approval queue. I've checked with Goldman. I'll release the corrected MT541 by ${fixTime}. Emily`
-    : `Hi Daniel, thanks for flagging. You're right: our PM topped the order up to 10,000 last night and the amended instruction got stuck in our approval queue. I've checked with Goldman and 10,000 is correct. I'll send the corrected MT541 by ${fixTime}. Emily`;
+    ? `Hi Daniel, sorry for the delay, I was in our morning call. You're right: our PM raised the order to 10,000 before Goldman filled it, but our allocation went out at the old 8,000. We corrected it last night and the amended instruction got stuck in our approval queue. I've checked with Goldman. I'll release the corrected MT541 by ${fixTime}. Emily`
+    : `Hi Daniel, thanks for flagging. You're right: our PM raised the order to 10,000 before Goldman filled it, but our allocation went out at the old 8,000. We corrected it last night and the amended instruction got stuck in our approval queue. I've checked with Goldman and 10,000 is correct. I'll send the corrected MT541 by ${fixTime}. Emily`;
   step(cs, "bny", ACTORS.agiClient, `Email from ${CLIENT_CONTACT.name}: corrected instruction by ${fixTime}`, { desk: "bny-cs", detail: reply, flags: ["manual"] });
   notify(cs, "bny-cs", "action", `${CLIENT_CONTACT.name} replied: corrected instruction by ${fixTime}`, { channel: "email", from: CLIENT_CONTACT.name, detail: reply });
   audit(cs, ACTORS.agiClient, "client reply (email)", `will re-instruct by ${fixTime}`);
