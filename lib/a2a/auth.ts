@@ -41,6 +41,12 @@ export function issueToken(claims: Omit<TokenClaims, "iss" | "iat" | "exp">, ttl
   return `${body}.${sign(body, secret)}`;
 }
 
+/** How far in the future an iat may be before the token is rejected (clock drift between instances). */
+export const CLOCK_SKEW_SECONDS = 60;
+
+const isStr = (v: unknown) => typeof v === "string";
+const isNum = (v: unknown) => typeof v === "number" && Number.isFinite(v);
+
 export type VerifyResult = { ok: true; claims: TokenClaims } | { ok: false; reason: string; claims?: Partial<TokenClaims> };
 
 export function verifyToken(token: string): VerifyResult {
@@ -55,6 +61,12 @@ export function verifyToken(token: string): VerifyResult {
   const expected = sign(body, getSecret());
   if (sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected)))
     return { ok: false, reason: "signature not issued by network registry", claims };
+  // The signature only proves the registry signed this body; check it has the shape we rely on.
+  const c = claims as unknown as Record<string, unknown>;
+  const shapeOk =
+    c !== null && typeof c === "object" && isStr(c.sub) && isStr(c.clientId) && isStr(c.firm) && isStr(c.iss) && Array.isArray(c.scopes) && c.scopes.every(isStr) && isNum(c.iat) && isNum(c.exp);
+  if (!shapeOk) return { ok: false, reason: "malformed claims", claims };
+  if (claims.iat > Math.floor(Date.now() / 1000) + CLOCK_SKEW_SECONDS) return { ok: false, reason: "token issued in the future", claims };
   if (claims.iss !== ISSUER) return { ok: false, reason: `unknown issuer ${claims.iss}`, claims };
   if (claims.exp < Math.floor(Date.now() / 1000)) return { ok: false, reason: "token expired", claims };
   return { ok: true, claims };

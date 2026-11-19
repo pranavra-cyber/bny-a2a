@@ -38,3 +38,44 @@ describe("signing secret", () => {
     expect(verifyToken(issueToken(claims)).ok).toBe(true);
   });
 });
+
+describe("verifyToken claim checks", () => {
+  const now = () => Math.floor(Date.now() / 1000);
+  const forge = async (over: Record<string, unknown>) => {
+    g.__networkSecret = "claims-test-secret";
+    const { ISSUER } = await import("../lib/a2a/auth");
+    const crypto = await import("node:crypto");
+    const body = Buffer.from(JSON.stringify({ ...claims, iss: ISSUER, iat: now(), exp: now() + 600, ...over })).toString("base64url");
+    return `${body}.${crypto.createHmac("sha256", g.__networkSecret).update(body).digest("base64url")}`;
+  };
+  const verify = async (over: Record<string, unknown>) => {
+    const token = await forge(over);
+    return (await import("../lib/a2a/auth")).verifyToken(token);
+  };
+
+  afterEach(() => {
+    delete g.__networkSecret;
+  });
+
+  it("accepts a well-formed signed token", async () => {
+    expect((await verify({})).ok).toBe(true);
+  });
+
+  it("rejects scopes that is not an array of strings", async () => {
+    for (const scopes of ["settlement.status", { a: 1 }, null, [1]]) expect(await verify({ scopes })).toMatchObject({ ok: false, reason: "malformed claims" });
+  });
+
+  it("rejects iat or exp that are not numbers", async () => {
+    expect(await verify({ iat: "now" })).toMatchObject({ ok: false, reason: "malformed claims" });
+    expect(await verify({ exp: null })).toMatchObject({ ok: false, reason: "malformed claims" });
+  });
+
+  it("allows small clock skew but rejects an iat further in the future", async () => {
+    expect((await verify({ iat: now() + 30 })).ok).toBe(true);
+    expect(await verify({ iat: now() + 3600 })).toMatchObject({ ok: false, reason: "token issued in the future" });
+  });
+
+  it("still rejects expired tokens", async () => {
+    expect(await verify({ iat: now() - 7200, exp: now() - 3600 })).toMatchObject({ ok: false, reason: "token expired" });
+  });
+});
