@@ -30,7 +30,9 @@ function caseTerms(): string[] {
   const bny = scopeFor("bny");
   const instruction = bny.read("bny/settlement_instructions").find((i) => i.instruction_id === "BNYI-20261118-5527301");
   const account = instruction && bny.read("bny/client_accounts").find((a) => a.account_id === instruction.client_account_id);
-  return instruction ? sensitiveTerms({ instruction, account } as BnyCase) : [];
+  // An empty term list would let the outbound filter pass client data and report a false "contained".
+  if (!instruction || !account) throw new Error("attack console: BNY instruction BNYI-20261118-5527301 or its client account is missing from the synthetic data");
+  return sensitiveTerms({ instruction, account } as BnyCase);
 }
 
 function send(opts: { from: string; domain: string; token: string | null; skill: string; text: string; data: Record<string, unknown>; turns?: number; simulate?: Simulate }) {
