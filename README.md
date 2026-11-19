@@ -14,7 +14,11 @@ cp .env.example .env.local      # DEMO_MODE=replay works with no key
 npm run dev                     # http://localhost:3000
 ```
 
-`npm run dev` first runs `scripts/check-setup.ts`. It stops with a clear message if `.env.local` or any `/data` file is missing, or if `DEMO_MODE=live` is set without a key and prices. The layout shows the same problems on screen.
+`npm run dev` first runs `scripts/check-setup.ts`. It stops with a clear message if any `/data` file is missing, or if `DEMO_MODE=live` is set without a key and prices; a missing `.env.local` is only a warning, since every setting has a default (replay, no key). The layout shows the same problems on screen.
+
+### Deploying (Vercel)
+
+No `.env.local` is needed: set any variables in the project's Environment Variables (none are required for replay; `OPENAI_API_KEY` and the two `MODEL_*_USD_PER_1M` prices enable Live and model-answered questions). `next.config.ts` ships `data/` and `runs/*.json` with every server route, since they are read from disk at runtime. The file system is read-only there, so finished live runs aren't saved as recordings. Runs live in server memory: if the host spreads one viewer's requests over several instances, a case can be lost mid-way and the prototype starts a fresh one.
 
 ### Modes
 

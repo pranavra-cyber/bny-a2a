@@ -1,10 +1,16 @@
 // Runs before `npm run dev`: fails fast with a clear message if .env.local or
 // any /data file is missing, or if DEMO_MODE=live is set without key and prices.
+import fs from "node:fs";
+import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { liveProblems, getConfig, setupProblems } from "../lib/config";
 import { dataSetupProblems } from "../lib/consoles";
 
 loadEnvConfig(process.cwd());
+
+// Locally, a missing .env.local is worth a hint, not a stop: replay runs without one.
+if (!fs.existsSync(path.join(process.cwd(), ".env.local")))
+  console.warn("! No .env.local: running with defaults (DEMO_MODE=replay, no API key). Copy .env.example to .env.local to set a key or prices.");
 
 const problems = [...setupProblems(), ...dataSetupProblems()];
 const cfg = getConfig();

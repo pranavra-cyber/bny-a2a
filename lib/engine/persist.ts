@@ -40,10 +40,15 @@ export function toRecording(run: Run): Recording {
 
 export function persistRun(run: Run): string | null {
   if (run.mode === "replay" || !FINAL.has(run.status) || process.env.VITEST) return null;
-  fs.mkdirSync(RUNS_DIR, { recursive: true });
-  const file = path.join(RUNS_DIR, `${run.scenario}-${run.mode}-${run.id}.json`);
-  fs.writeFileSync(file, JSON.stringify(toRecording(run), null, 1));
-  return file;
+  // Hosts like Vercel have a read-only file system: there the run simply isn't saved.
+  try {
+    fs.mkdirSync(RUNS_DIR, { recursive: true });
+    const file = path.join(RUNS_DIR, `${run.scenario}-${run.mode}-${run.id}.json`);
+    fs.writeFileSync(file, JSON.stringify(toRecording(run), null, 1));
+    return file;
+  } catch {
+    return null;
+  }
 }
 
 export function listRecordings(): Recording[] {

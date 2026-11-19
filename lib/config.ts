@@ -1,8 +1,8 @@
-// Server-side configuration from .env.local. Prices are never hard-coded: they
-// must be set for the configured OPENAI_MODEL before live mode will start.
+// Server-side configuration from environment variables: .env.local on a laptop, the
+// project's environment variables on a host such as Vercel. Every setting has a
+// default (replay, no key needed). Prices are never hard-coded: they must be set
+// for the configured OPENAI_MODEL before live mode will start.
 import "server-only";
-import fs from "node:fs";
-import path from "node:path";
 
 export type DemoMode = "live" | "replay" | "mock";
 
@@ -60,18 +60,16 @@ export function getConfig(): AppConfig {
 /** Reasons a live request cannot start. Empty when live mode is usable. */
 export function liveProblems(cfg = getConfig()): string[] {
   const problems: string[] = [];
-  if (!cfg.apiKey) problems.push("OPENAI_API_KEY is not set in .env.local.");
+  if (!cfg.apiKey) problems.push("OPENAI_API_KEY is not set (in .env.local, or the host's environment variables).");
   if (!cfg.prices)
     problems.push(
-      `MODEL_INPUT_USD_PER_1M and MODEL_OUTPUT_USD_PER_1M must be set in .env.local to the current prices for ${cfg.model}.`,
+      `MODEL_INPUT_USD_PER_1M and MODEL_OUTPUT_USD_PER_1M must be set (in .env.local, or the host's environment variables) to the current prices for ${cfg.model}.`,
     );
   return problems;
 }
 
-/** Problems that stop the app from running at all (shown as a setup screen). */
+/** Problems that stop the app from running at all (shown as a setup screen). No env
+ *  file is required: hosts like Vercel inject variables directly, and replay needs none. */
 export function setupProblems(): string[] {
-  const problems: string[] = [];
-  if (!fs.existsSync(path.join(/*turbopackIgnore: true*/ process.cwd(), ".env.local")))
-    problems.push("`.env.local` is missing. Copy `.env.example` to `.env.local` (DEMO_MODE=replay works without a key).");
-  return problems;
+  return [];
 }
