@@ -74,19 +74,21 @@ export const INTAKE_SUGGESTIONS = [
 ];
 
 /** The six steps of the operations flow (from the deck). Done once its marker appears in the run. */
-export const STAGES: { label: string; seat: Seat; doneWhen: { checkpoint?: CheckpointId; approval?: string; status?: string } }[] = [
+export const STAGES: { label: string; seat: Seat; doneWhen: { checkpoint?: CheckpointId; approval?: string; status?: string; step?: string } }[] = [
   { label: "Find the cause", seat: "bny", doneWhen: { checkpoint: "handover" } },
   { label: "Hand over to Client Service", seat: "bny", doneWhen: { checkpoint: "contact" } },
-  { label: "Ask the client", seat: "bny-cs", doneWhen: { checkpoint: "client-reply" } },
+  { label: "Ask the client", seat: "bny-cs", doneWhen: { step: `Email from ${CLIENT_CONTACT.name}` } },
   { label: "Notify Goldman of the fix time", seat: "bny-cs", doneWhen: { checkpoint: "hold" } },
   { label: "Client re-instructs", seat: "bny", doneWhen: { approval: "gs-redelivery" } },
   { label: "Settle and close", seat: "goldman", doneWhen: { status: "settled" } },
 ];
 
 /** How far the guided case has come: the index of the first stage not yet done. */
-export function stageIndexOf(events: { kind: string; checkpoint?: { id: string }; decision?: { kind: string; outcome: string } }[], status: string): number {
+export function stageIndexOf(events: { kind: string; title?: string; checkpoint?: { id: string }; decision?: { kind: string; outcome: string } }[], status: string): number {
   const i = STAGES.findIndex(({ doneWhen: w }) =>
-    w.checkpoint
+    w.step
+      ? !events.some((e) => e.title?.startsWith(w.step!))
+      : w.checkpoint
       ? !events.some((e) => e.checkpoint?.id === w.checkpoint)
       : w.approval
         ? !events.some((e) => e.kind === "approval" && e.decision?.kind === w.approval && e.decision?.outcome === "approved")
@@ -94,3 +96,11 @@ export function stageIndexOf(events: { kind: string; checkpoint?: { id: string }
   );
   return i === -1 ? STAGES.length : i;
 }
+
+/** Daniel is told, not asked: the client's fix time goes to Goldman's agent on its own. */
+export const relayNoticeTitle = (fixTime: string) => `Sent to Goldman automatically: fix expected by ${fixTime}`;
+export const relayNoticeDetail = (late: boolean) =>
+  `The Settlement Ops Agent passed the client's time to Goldman's agent through the gateway and asked it to hold. Only approved fields crossed; no client details.${late ? " The instruction is after the 11:30 ET cutoff, so Priya will need to approve a late-instruction exception." : ""} Nothing for you to do.`;
+
+/** Recordings made before the relay was automatic hold a "client-reply" checkpoint; replay skips it. */
+export const AUTO_CHECKPOINTS: ReadonlySet<string> = new Set(["client-reply"]);

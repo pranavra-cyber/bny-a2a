@@ -2,6 +2,7 @@
 // for a click so the presenter drives the demo; the recorded cost is shown as-is.
 import "server-only";
 import { checkpoint } from "./chat";
+import { AUTO_CHECKPOINTS, relayNoticeDetail, relayNoticeTitle } from "./guide";
 import type { Recording } from "./persist";
 import type { Run } from "./run";
 
@@ -14,6 +15,8 @@ export async function replayRun(run: Run, rec: Recording): Promise<void> {
   let auditIdx = 0;
   let prevWall = 0;
   let lastBy = "";
+  // Set when a recorded "pass the time on" step is skipped: Daniel is told once the message goes.
+  let relayFrom: { actor: (typeof rec.events)[number]["actor"] } | null = null;
 
   const flushAudit = (emitted: number) => {
     while (auditIdx < rec.audit.length && rec.audit[auditIdx].afterSeq <= emitted) {
@@ -35,6 +38,11 @@ export async function replayRun(run: Run, rec: Recording): Promise<void> {
 
     if (ev.kind === "approval") continue; // re-emitted below with the actual approver
     if (ev.kind === "chat" || ev.modelCall?.agent.includes("Copilot")) continue; // chat happens live
+    if (ev.kind === "checkpoint" && ev.checkpoint && AUTO_CHECKPOINTS.has(ev.checkpoint.id)) {
+      relayFrom = { actor: ev.actor };
+      flushAudit(ev.seq);
+      continue;
+    }
     if (ev.kind === "checkpoint" && ev.checkpoint) {
       const primary = (ev.checkpoint.actions.find((a) => a.kind === "primary") ?? ev.checkpoint.actions[0]).id;
       const action = await checkpoint(run, ev.checkpoint);
@@ -66,6 +74,20 @@ export async function replayRun(run: Run, rec: Recording): Promise<void> {
     void _wall;
     run.emit(rest);
     flushAudit(ev.seq);
+    const fix = relayFrom && ev.kind === "message" && ev.lane === "goldman" && /^BNY: fix expected by (.+)$/.exec(ev.title);
+    if (relayFrom && fix) {
+      run.emit({
+        kind: "notification",
+        lane: "bny",
+        audience: ["bny"],
+        desk: "bny-cs",
+        actor: relayFrom.actor,
+        title: relayNoticeTitle(fix[1]),
+        detail: relayNoticeDetail(/1[2-9]:|11:[3-5]/.test(fix[1])),
+        notification: { seat: "bny-cs", level: "info", channel: "teams", from: "BNY Settlement Ops Agent" },
+      });
+      relayFrom = null;
+    }
 
     if (ev.kind === "approval-request" && ev.approval) {
       const recorded = rec.events.find((e) => e.kind === "approval" && e.decision?.kind === ev.approval!.kind);

@@ -8,13 +8,30 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BNY_CONNECTIONS, BNY_EMPLOYEES, type Connection, GS_CONNECTIONS, LIVE_CHAT_ID } from "@/lib/sideChats";
 import { PersonaDock } from "../proto/PersonaDock";
-import { useProto } from "../proto/Proto";
+import { store, useProto } from "../proto/Proto";
+import { NEW_CONNECTION_KEY, ONBOARDING_EVENT } from "./onboardingState";
 
-export type Notice = { id: string; title: string; detail?: string; from: string; channel: "teams" | "app" | "email"; at?: string; level?: "action" | "info" };
+export type Notice = { id: string; title: string; detail?: string; from: string; channel: "teams" | "app" | "email"; at?: string; level?: "action" | "info"; href?: string };
+
+export const ONBOARD_HREF = "/eliza/onboarding?new=1";
+
+/** Eliza's own notice to the onboarding lead while Goldman's request waits. */
+const CONNECTION_REQUEST: Notice = {
+  id: "gs-connection-request",
+  from: "Eliza · Network onboarding",
+  channel: "app",
+  at: "08:45 ET",
+  level: "action",
+  title: "New connection request: Goldman Sachs & Co. LLC",
+  detail: "GS Counterparty Outreach Agent applied to join BNY's agent network to ask about failed deliveries. Review it and onboard the agent.",
+  href: ONBOARD_HREF,
+};
 
 export function onboardingDone(): boolean {
   try {
-    return JSON.parse(localStorage.getItem("a2a.onboarding") ?? "{}").done === true;
+    // Only an onboarding David started and finished counts (older saved states don't).
+    const st = JSON.parse(localStorage.getItem("a2a.onboarding") ?? "{}");
+    return st.started === true && st.done === true;
   } catch {
     return false;
   }
@@ -23,10 +40,10 @@ export function onboardingDone(): boolean {
 function ElizaMark({ gs }: { gs: boolean }) {
   return gs ? (
     <span className="flex items-center gap-2">
-      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gs-dark font-serif text-sm text-white">GS</span>
+      <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-gs-sky font-serif text-sm font-semibold text-gs-dark">GS</span>
       <span className="leading-tight">
-        <span className="block font-serif text-[15px] text-gs-dark">Fails Assistant</span>
-        <span className="block text-[10px] text-muted">Goldman Sachs Operations</span>
+        <span className="block font-serif text-[15px] font-medium text-white">Fails Assistant</span>
+        <span className="block text-[10px] tracking-wide text-muted uppercase">Goldman Sachs Operations</span>
       </span>
     </span>
   ) : (
@@ -40,15 +57,34 @@ function ElizaMark({ gs }: { gs: boolean }) {
   );
 }
 
-function ConnectionGroup({ c, gs, chats }: { c: Connection; gs: boolean; chats: Connection["chats"] }) {
-  const [open, setOpen] = useState(c.id === "gs" || c.id === "bny");
+function ConnectionGroup({ c, gs, chats, fresh }: { c: Connection; gs: boolean; chats: Connection["chats"]; fresh?: boolean }) {
+  const [open, setOpen] = useState(c.id === "gs" || c.id === "bny" || c.id === "ms");
+  const [isNew, setIsNew] = useState(!!fresh);
+  const { snack } = useProto();
+  // Only the Goldman–BNY connection is part of the prototype.
+  const inScope = c.id === "gs" || c.id === "bny";
+  useEffect(() => {
+    const t = setTimeout(() => setIsNew(!!fresh), 0);
+    return () => clearTimeout(t);
+  }, [fresh]);
   const path = usePathname();
   const chatParam = useSearchParams().get("chat");
   return (
     <li>
-      <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-ink hover:bg-canvas">
+      <button
+        onClick={() => {
+          setOpen(!open);
+          if (isNew) {
+            setIsNew(false);
+            store.set(NEW_CONNECTION_KEY, null);
+          }
+        }}
+        aria-expanded={open}
+        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-ink hover:bg-canvas ${isNew ? "nav-new bg-teal-soft" : ""}`}
+      >
         <span className={`text-[10px] text-muted transition ${open ? "rotate-90" : ""}`}>▶</span>
         <span className="min-w-0 flex-1 truncate font-medium">{c.label}</span>
+        {isNew && <span className="rounded-full bg-teal px-1.5 text-[10px] font-semibold text-white">New</span>}
         <span className="h-1.5 w-1.5 rounded-full bg-ok" title="Connected" />
       </button>
       {open && (
@@ -59,17 +95,30 @@ function ConnectionGroup({ c, gs, chats }: { c: Connection; gs: boolean; chats: 
             const active = ch.id === LIVE_CHAT_ID ? path === "/eliza/case" : chatParam === ch.id;
             return (
               <li key={ch.id}>
-                <Link
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={`block rounded-md px-2 py-1.5 ${active ? (gs ? "bg-gs-soft" : "bg-teal-soft") : "hover:bg-canvas"}`}
-                >
-                  <span className="flex items-center gap-1.5 text-[13px] text-ink">
-                    {ch.status === "live" && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-warn" />}
-                    <span className="truncate">{ch.title}</span>
-                  </span>
-                  <span className="block truncate text-[11px] text-muted">{ch.meta}</span>
-                </Link>
+                {inScope ? (
+                  <Link
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    className={`block rounded-md px-2 py-1.5 ${active ? (gs ? "bg-gs-soft" : "bg-teal-soft") : "hover:bg-canvas"}`}
+                  >
+                    <span className="flex items-center gap-1.5 text-[13px] text-ink">
+                      {ch.status === "live" && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-warn" />}
+                      <span className="truncate">{ch.title}</span>
+                    </span>
+                    <span className="block truncate text-[11px] text-muted">{ch.meta}</span>
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => snack(`${ch.title} (${c.counterparty}) is out of scope for this prototype. The prototype follows the Goldman Sachs connection.`, "proto")}
+                    className="block w-full rounded-md px-2 py-1.5 text-left hover:bg-canvas"
+                  >
+                    <span className="flex items-center gap-1.5 text-[13px] text-ink">
+                      {ch.status === "live" && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-warn" />}
+                      <span className="truncate">{ch.title}</span>
+                    </span>
+                    <span className="block truncate text-[11px] text-muted">{ch.meta}</span>
+                  </button>
+                )}
               </li>
             );
           })}
@@ -81,19 +130,30 @@ function ConnectionGroup({ c, gs, chats }: { c: Connection; gs: boolean; chats: 
 
 function Sidebar({ gs, pulseOnboard }: { gs: boolean; pulseOnboard: boolean }) {
   const path = usePathname();
-  const { runId, summary } = useProto();
+  const { runId, summary, persona, snack } = useProto();
   const [onboarded, setOnboarded] = useState(false);
+  const [fresh, setFresh] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setOnboarded(onboardingDone()), 0);
-    return () => clearTimeout(t);
+    const read = () => {
+      setOnboarded(onboardingDone());
+      setFresh(store.get(NEW_CONNECTION_KEY) === "1");
+    };
+    const t = setTimeout(read, 0);
+    window.addEventListener(ONBOARDING_EVENT, read);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener(ONBOARDING_EVENT, read);
+    };
   }, [path]);
-  // BNY only has a Goldman connection once Goldman's agent is onboarded (or has already
-  // contacted BNY), and the live case appears only once Goldman's request has arrived.
+  // BNY only has a Goldman connection once Goldman's agent is onboarded. The onboarding
+  // lead sees it only after finishing; the case's people also see it once Goldman's
+  // agent has contacted BNY. The live case appears only once the request has arrived.
   const requestArrived = !!runId && !!summary && summary.turns > 0;
-  const connections = gs ? GS_CONNECTIONS : BNY_CONNECTIONS.filter((c) => c.id !== "gs" || onboarded || requestArrived);
+  const showGs = onboarded || (persona.id !== "chen" && requestArrived);
+  const connections = gs ? GS_CONNECTIONS : BNY_CONNECTIONS.filter((c) => c.id !== "gs" || showGs);
   const chatsOf = (c: Connection) => (!gs && c.id === "gs" ? c.chats.filter((ch) => ch.id !== LIVE_CHAT_ID || requestArrived) : c.chats);
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-line bg-white">
+    <aside className={`flex h-full w-64 shrink-0 flex-col border-r ${gs ? "gs-ui gs-side border-transparent" : "border-line bg-white"}`}>
       <div className="px-4 pt-4 pb-3">
         <Link href="/eliza" aria-label="Workspace home">
           <ElizaMark gs={gs} />
@@ -104,20 +164,20 @@ function Sidebar({ gs, pulseOnboard }: { gs: boolean; pulseOnboard: boolean }) {
           <div>
             <h2 className="px-2 text-[11px] font-semibold tracking-wide text-muted uppercase">Digital employees</h2>
             <ul className="mt-1 space-y-0.5">
-              {BNY_EMPLOYEES.map((d) => {
-                const href = d.id === "orchestrator" ? "/eliza/case" : d.id === "onboarding" ? "/eliza/onboarding" : `/eliza/chat?chat=${d.id}`;
-                return (
-                  <li key={d.id}>
-                    <Link href={href} className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-canvas">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-soft text-[10px] font-semibold text-navy">{d.name[0]}</span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-[13px] text-ink">{d.name}</span>
-                        <span className="block truncate text-[11px] text-muted">{d.line}</span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
+              {BNY_EMPLOYEES.map((d) => (
+                <li key={d.id}>
+                  <button
+                    onClick={() => snack(`${d.name} is out of scope for this prototype. The prototype covers onboarding, the live NVDA case and the A2A connections.`, "proto")}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-canvas"
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-soft text-[10px] font-semibold text-navy">{d.name[0]}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[13px] text-ink">{d.name}</span>
+                      <span className="block truncate text-[11px] text-muted">{d.line}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
         )}
@@ -125,7 +185,7 @@ function Sidebar({ gs, pulseOnboard }: { gs: boolean; pulseOnboard: boolean }) {
           <h2 className="px-2 text-[11px] font-semibold tracking-wide text-muted uppercase">{gs ? "Network connections" : "A2A connections"}</h2>
           <ul className="mt-1 space-y-0.5">
             {connections.map((c) => (
-              <ConnectionGroup key={c.id} c={c} gs={gs} chats={chatsOf(c)} />
+              <ConnectionGroup key={c.id} c={c} gs={gs} chats={chatsOf(c)} fresh={!gs && c.id === "gs" && fresh} />
             ))}
           </ul>
         </div>
@@ -133,7 +193,7 @@ function Sidebar({ gs, pulseOnboard }: { gs: boolean; pulseOnboard: boolean }) {
       {!gs && (
         <div className="border-t border-line p-3">
           <Link
-            href="/eliza/onboarding"
+            href={ONBOARD_HREF}
             className={`flex w-full items-center justify-center gap-2 rounded-md bg-navy px-3 py-2.5 text-sm font-semibold text-white hover:bg-teal ${pulseOnboard ? "halo" : ""}`}
           >
             <span aria-hidden>＋</span> Onboard new agent
@@ -183,7 +243,12 @@ function Bell({ items, gs }: { items: Notice[]; gs: boolean }) {
           {items.length ? (
             <ul className="max-h-[60vh] divide-y divide-line overflow-y-auto">
               {[...items].reverse().map((n) => (
-                <li key={n.id} className="px-4 py-3">
+                <li key={n.id} className={`relative px-4 py-3 ${n.href ? "hover:bg-canvas" : ""}`}>
+                  {n.href && (
+                    <Link href={n.href} onClick={() => setOpen(false)} className="absolute inset-0" aria-label={`Open: ${n.title}`}>
+                      <span className="sr-only">Open</span>
+                    </Link>
+                  )}
                   <div className="flex items-center gap-2 text-[11px] text-muted">
                     <ChannelIcon channel={n.channel} gs={gs} />
                     <span className="font-medium text-ink">{n.from}</span>
@@ -191,6 +256,7 @@ function Bell({ items, gs }: { items: Notice[]; gs: boolean }) {
                   </div>
                   <p className="mt-1 text-sm font-medium text-navy">{n.title}</p>
                   {n.detail && <p className="mt-0.5 line-clamp-3 text-xs text-ink">{n.detail}</p>}
+                  {n.href && <p className="mt-1 text-xs font-medium text-teal">Open →</p>}
                 </li>
               ))}
             </ul>
@@ -224,13 +290,32 @@ export function Shell({
   pulseOnboard?: boolean;
   children: React.ReactNode;
 }) {
-  const { persona } = useProto();
+  const { persona, hydrated } = useProto();
   const gs = persona.firm === "Goldman Sachs";
+  // Until David starts an onboarding, Goldman's request waits in his notifications on every page.
+  const [requestWaiting, setRequestWaiting] = useState(false);
+  useEffect(() => {
+    if (!hydrated) return;
+    const read = () => {
+      try {
+        setRequestWaiting(persona.id === "chen" && JSON.parse(localStorage.getItem("a2a.onboarding") ?? "{}").started !== true);
+      } catch {
+        setRequestWaiting(persona.id === "chen");
+      }
+    };
+    const t = setTimeout(read, 0);
+    window.addEventListener(ONBOARDING_EVENT, read);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener(ONBOARDING_EVENT, read);
+    };
+  }, [hydrated, persona.id]);
+  const allNotices = requestWaiting && !notices.some((n) => n.id === CONNECTION_REQUEST.id) ? [...notices, CONNECTION_REQUEST] : notices;
   return (
     <div className="flex h-svh overflow-hidden bg-canvas">
       <Sidebar gs={gs} pulseOnboard={pulseOnboard} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className={`flex shrink-0 items-center gap-4 border-b border-line bg-white px-5 py-2.5 ${gs ? "border-t-4 border-t-gs-sky" : ""}`}>
+      <div className={`flex min-w-0 flex-1 flex-col ${gs ? "gs-ui" : ""}`}>
+        <header className={`flex shrink-0 items-center gap-4 border-b border-line bg-white px-5 py-2.5 ${gs ? "border-b-2 border-b-gs" : ""}`}>
           <div className="min-w-0 flex-1">
             <h1 className={`truncate text-base font-semibold ${gs ? "font-serif text-gs-dark" : "text-navy"}`}>{title}</h1>
             {subtitle && <div className="truncate text-xs text-muted">{subtitle}</div>}
@@ -243,7 +328,7 @@ export function Shell({
               </svg>
             </Link>
           )}
-          <Bell items={notices} gs={gs} />
+          <Bell items={allNotices} gs={gs} />
           <div className="flex items-center gap-2 border-l border-line pl-3">
             <Image src={persona.photo} alt="" width={32} height={32} className="h-8 w-8 rounded-full" />
             <div className="hidden leading-tight sm:block">

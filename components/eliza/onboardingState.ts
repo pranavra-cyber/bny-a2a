@@ -6,6 +6,11 @@ import { APPROVALS, LIMITS, type LimitId, type OnboardingStage, PERMISSIONS, typ
 export type Upload = { file: string; size: string; at: string; name: string; sentBy: string; superseded?: boolean };
 
 export type OnboardingState = {
+  /** False until the onboarding lead names it and starts it. */
+  started: boolean;
+  /** The name the onboarding lead gave it. */
+  title: string;
+  startedAt?: string;
   results: Partial<Record<string, CheckResult>>;
   fixes: Problem[];
   asked: Problem[];
@@ -26,8 +31,13 @@ export type OnboardingState = {
 };
 
 export const ONBOARDING_KEY = "a2a.onboarding";
+export const ONBOARDING_EVENT = "a2a:onboarding";
+/** Set when onboarding finishes; cleared once the new connection is opened. */
+export const NEW_CONNECTION_KEY = "a2a.gsNew";
 
 export const initialOnboarding = (): OnboardingState => ({
+  started: false,
+  title: "",
   results: {},
   fixes: [],
   asked: [],
@@ -54,6 +64,8 @@ export function loadOnboarding(): OnboardingState {
 export function saveOnboarding(st: OnboardingState) {
   try {
     localStorage.setItem(ONBOARDING_KEY, JSON.stringify(st));
+    // The sidebar listens, so the new connection appears the moment onboarding ends.
+    window.dispatchEvent(new Event(ONBOARDING_EVENT));
   } catch {}
 }
 

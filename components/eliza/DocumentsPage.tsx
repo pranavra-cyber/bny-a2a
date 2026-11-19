@@ -30,7 +30,7 @@ export function DocumentsPage() {
         <div role="tablist" className="inline-flex rounded-md border border-line bg-white p-0.5 text-sm">
           {(
             [
-              ["onboarding", "Onboarding: Goldman Sachs"],
+              ["onboarding", `Onboarding: ${st?.title || "Goldman Sachs"}`],
               ["sources", "Data sources and versions"],
             ] as const
           ).map(([id, label]) => (
@@ -43,7 +43,7 @@ export function DocumentsPage() {
         {tab === "onboarding" ? (
           <div className="mt-5 space-y-6">
             <p className="text-sm text-muted">
-              {st?.done ? "Onboarding complete. Kept for audit with the agent's registry record." : "Onboarding in progress. Items appear here as each step is completed."}
+              {!st?.started ? "No onboarding started yet. Use Onboard new agent in the sidebar." : st.done ? "Onboarding complete. Kept for audit with the agent's registry record." : "Onboarding in progress. Items appear here as each step is completed."}
             </p>
             <section>
               <h2 className="text-sm font-semibold text-navy">Uploaded documents</h2>

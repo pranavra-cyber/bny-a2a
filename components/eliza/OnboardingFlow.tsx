@@ -1,21 +1,26 @@
 "use client";
 // Onboarding Goldman's agent: one security layer at a time, as steps (not a chat).
 // In each step the onboarding lead uploads what Goldman sent (mimicked), types in
-// the details from the application (one click each), runs the system's checks
+// the details from the application (click a box and it fills in), runs the system's checks
 // against BNY's reference data, and ticks off what only a person can check. When a
 // check finds a problem, the step shows how to resolve it and checks again.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { APPROVALS, FIXES, LAYERS, LIMITS, type LimitId, ONBOARDING_CONTACT, ONBOARDING_STAGES, PERMISSIONS, type Problem, REPLY_FIELDS, STAGE_WORK, type InputSpec, type UploadSpec } from "@/lib/onboardingGuide";
-import { useProto } from "../proto/Proto";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { store, useProto } from "../proto/Proto";
 import { Expandable, Pill } from "../ui";
 import { AgentCardOverlay } from "./AgentCardOverlay";
-import { initialOnboarding, loadOnboarding, nowStamp, type OnboardingState, saveOnboarding, type Upload } from "./onboardingState";
+import { initialOnboarding, loadOnboarding, NEW_CONNECTION_KEY, nowStamp, type OnboardingState, saveOnboarding, type Upload } from "./onboardingState";
 import { Shell } from "./Shell";
 
 const PASS_HOURS: Record<string, number> = { "24 hours": 24, "7 days": 168, "30 days": 720 };
 
 export function OnboardingFlow() {
   const { snack } = useProto();
+  const router = useRouter();
+  // "Onboard new agent" in the sidebar: start a new onboarding unless one is under way.
+  const wantsNew = useSearchParams().get("new") === "1";
   const [st, setSt] = useState<OnboardingState | null>(null);
   const [app, setApp] = useState<Record<string, string> | null>(null);
   const [busy, setBusy] = useState(false);
@@ -54,7 +59,47 @@ export function OnboardingFlow() {
     return () => clearTimeout(t);
   }, [result, revealed, stage.id, work.system.length]);
 
+  // Resuming an onboarding under way: drop ?new=1 so finishing shows the success screen.
+  useEffect(() => {
+    if (wantsNew && st?.started && !st.done) router.replace("/eliza/onboarding");
+  }, [wantsNew, st?.started, st?.done, router]);
+
+  // The system's checks start by themselves once the step's document is uploaded and its
+  // details are entered. Set limits is the exception: those are choices, so it waits for Save.
+  const runRef = useRef<() => void>(() => {});
+  const autoReady =
+    !!st &&
+    st.started &&
+    !st.done &&
+    shownIdx === st.current &&
+    !result &&
+    !busy &&
+    !err &&
+    stage.id !== "permissions" &&
+    (!work.upload || (st.uploads[stage.id] ?? []).some((u) => !u.superseded)) &&
+    (work.inputs ?? []).every((i) => !!st.inputs[i.id]);
+  useEffect(() => {
+    if (!autoReady) return;
+    const t = setTimeout(() => runRef.current(), 600);
+    return () => clearTimeout(t);
+  }, [autoReady, stage.id]);
+
   if (!st) return <Shell title="Onboard new agent">{null}</Shell>;
+  if (!st.started || (wantsNew && st.done))
+    return (
+      <Shell title="Onboard new agent" subtitle="Counterparty agent onboarding · BNY AI Hub">
+        <StartOnboarding
+          replacing={st.started && st.done}
+          onStart={(title) => {
+            store.set(NEW_CONNECTION_KEY, null);
+            save({ ...initialOnboarding(), started: true, title, startedAt: nowStamp() });
+            setView(null);
+            setRevealed({});
+            router.replace("/eliza/onboarding");
+          }}
+        />
+      </Shell>
+    );
   const isCurrent = shownIdx === st.current && !st.done;
   const uploads = st.uploads[stage.id] ?? [];
   const uploaded = !work.upload || uploads.some((u) => !u.superseded);
@@ -82,11 +127,13 @@ export function OnboardingFlow() {
       setBusy(false);
     }
   };
+  runRef.current = run;
   const next = () => {
     const last = st.current === ONBOARDING_STAGES.length - 1;
+    if (last) store.set(NEW_CONNECTION_KEY, "1");
     save({ ...st, current: last ? st.current : st.current + 1, done: last, completedAt: { ...st.completedAt, [stage.id]: nowStamp() } });
     setView(null);
-    if (last) snack("Goldman's agent is live: BNY ⇄ Goldman Sachs is now in your sidebar");
+    if (last) window.scrollTo?.(0, 0);
   };
   const ask = (p: Problem) => {
     save({ ...st, asked: [...st.asked, p] });
@@ -107,6 +154,7 @@ export function OnboardingFlow() {
     save({ ...st, uploads: { ...st.uploads, [stage.id]: [...list, u] } });
   };
   const restart = () => {
+    store.set(NEW_CONNECTION_KEY, null);
     save(initialOnboarding());
     setView(null);
     setRevealed({});
@@ -120,7 +168,7 @@ export function OnboardingFlow() {
   };
 
   return (
-    <Shell title="Onboard new agent · Goldman Sachs" subtitle="Network Onboarding Assistant · BNY AI Hub" right={<span className="hidden text-xs text-muted sm:block">{doneCount} of {ONBOARDING_STAGES.length} steps passed</span>}>
+    <Shell title={`Onboard new agent · ${st.title || "Goldman Sachs"}`} subtitle="Counterparty agent onboarding · BNY AI Hub" right={<span className="hidden text-xs text-muted sm:block">{doneCount} of {ONBOARDING_STAGES.length} steps passed</span>}>
       <div className="mx-auto grid max-w-6xl gap-6 px-5 py-6 pb-24 lg:grid-cols-[250px_minmax(0,1fr)]">
         <nav aria-label="Onboarding steps" className="lg:sticky lg:top-6 lg:self-start">
           <ol className="space-y-4">
@@ -166,23 +214,7 @@ export function OnboardingFlow() {
 
         <section className="min-w-0">
           {st.done && view === null ? (
-            <div className="rounded-xl border border-ok/30 bg-white p-6">
-              <Pill tone="ok">Live</Pill>
-              <h2 className="mt-3 text-2xl font-semibold text-navy">Goldman&apos;s fails agent is on the network</h2>
-              <p className="mt-2 text-ink">
-                Every layer checked: who they are, how they settle, their agent&apos;s identity, what it may do, and a tested link. <span className="font-medium">BNY ⇄ Goldman Sachs</span> now
-                appears under A2A connections in the sidebar; cases show there once Goldman&apos;s agent contacts BNY. The documents and details you entered are in Documents (the folder icon
-                at the top).
-              </p>
-              <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-                {ONBOARDING_STAGES.map((s) => (
-                  <li key={s.id} className="flex items-center gap-2">
-                    <span className="text-ok">✓</span> {s.label}
-                    {st.completedAt[s.id] && <span className="text-xs text-muted">· {st.completedAt[s.id]}</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <Success st={st} />
           ) : (
             <article className="rounded-xl border border-line bg-white">
               <header className="border-b border-line px-6 py-4">
@@ -214,7 +246,7 @@ export function OnboardingFlow() {
                   <Part n={work.upload ? 2 : 1} title="Enter the details from the application" done={inputsDone}>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {work.inputs.map((i) => (
-                        <ClickInput key={i.id} spec={i} value={st.inputs[i.id]} source={app?.[i.id]} locked={!isCurrent || !!result} onFill={(v) => save({ ...loadOnboarding(), inputs: { ...loadOnboarding().inputs, [i.id]: v } })} />
+                        <ClickInput key={i.id} spec={i} value={st.inputs[i.id]} source={app?.[i.id]} fixes={st.fixes} locked={!isCurrent || !!result} onFill={(v) => save({ ...loadOnboarding(), inputs: { ...loadOnboarding().inputs, [i.id]: v } })} />
                       ))}
                     </div>
                   </Part>
@@ -240,10 +272,24 @@ export function OnboardingFlow() {
                   </ul>
                   {isCurrent && !result && (
                     <div className="mt-3 flex flex-wrap items-center gap-3">
-                      <button onClick={run} disabled={busy || !ready} className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal disabled:opacity-50">
-                        {busy ? "Checking…" : stage.action}
-                      </button>
-                      {!ready && <span className="text-xs text-muted">{!uploaded ? "Upload the document first." : !inputsDone ? "Enter every detail first." : "Grant at least one permission."}</span>}
+                      {stage.id === "permissions" ? (
+                        <button onClick={run} disabled={busy || !ready} className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal disabled:opacity-50">
+                          {busy ? "Checking…" : stage.action}
+                        </button>
+                      ) : err ? (
+                        <button onClick={run} disabled={busy} className="rounded-md border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-canvas">
+                          Run the checks again
+                        </button>
+                      ) : busy || ready ? (
+                        <span role="status" className="flex items-center gap-2 text-sm text-ink">
+                          <span className="h-2 w-2 animate-pulse rounded-full bg-teal" /> Running the checks…
+                        </span>
+                      ) : null}
+                      {!ready && (
+                        <span className="text-xs text-muted">
+                          {!uploaded ? "The checks start once the document is uploaded." : !inputsDone ? "The checks start once every detail is entered." : "Grant at least one permission."}
+                        </span>
+                      )}
                     </div>
                   )}
                   {checksDone && result && (
@@ -404,31 +450,208 @@ const FileIcon = () => (
   </svg>
 );
 
-/** Empty until clicked; then the value from the application is typed in. */
-function ClickInput({ spec, value, source, locked, onFill }: { spec: InputSpec; value?: string; source?: string; locked: boolean; onFill: (v: string) => void }) {
+/** An ordinary empty text box. Clicking it fills in the value from Goldman's
+ *  application (synthetic), typed in as if by hand. */
+function ClickInput({ spec, value, source, fixes, locked, onFill }: { spec: InputSpec; value?: string; source?: string; fixes: Problem[]; locked: boolean; onFill: (v: string) => void }) {
   const [typing, setTyping] = useState<string | null>(null);
+  const [target, setTarget] = useState<string | null>(null);
   useEffect(() => {
-    if (typing === null || !source) return;
-    if (typing.length >= source.length) {
-      onFill(source);
+    if (typing === null || !target) return;
+    if (typing.length >= target.length) {
+      onFill(target);
       const t = setTimeout(() => setTyping(null), 0);
       return () => clearTimeout(t);
     }
-    const t = setTimeout(() => setTyping(source.slice(0, typing.length + Math.max(1, Math.ceil(source.length / 18)))), 30);
+    const t = setTimeout(() => setTyping(target.slice(0, typing.length + Math.max(1, Math.ceil(target.length / 18)))), 30);
     return () => clearTimeout(t);
-  }, [typing, source, onFill]);
-  const shown = typing ?? value ?? "";
+  }, [typing, target, onFill]);
+  const fill = async () => {
+    if (locked || value || typing !== null) return;
+    let v = source;
+    // The application may not have loaded yet: fetch it now rather than ignore the click.
+    if (!v) {
+      try {
+        const d = await (await fetch(`/api/onboarding/check?fixes=${fixes.join(",")}`)).json();
+        v = d?.[spec.id];
+      } catch {}
+    }
+    if (!v) return;
+    setTarget(v);
+    setTyping("");
+  };
+  const id = `in-${spec.id}`;
   return (
     <div>
-      <label className="text-xs font-medium text-muted">{spec.label}</label>
-      <button
-        type="button"
-        disabled={locked || !!value || !source || typing !== null}
-        onClick={() => setTyping("")}
-        className={`mt-1 flex h-10 w-full items-center rounded-md border px-3 text-left text-sm ${shown ? "border-line bg-white text-ink" : "border-dashed border-teal/60 bg-teal-soft/30 text-muted hover:bg-teal-soft/60"} ${spec.mono ? "font-mono text-[13px]" : ""}`}
-      >
-        {shown ? <span className={typing !== null ? "caret truncate" : "truncate"}>{shown}</span> : <span>Click to enter from the {spec.source}</span>}
-      </button>
+      <label htmlFor={id} className="text-xs font-medium text-muted">
+        {spec.label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        readOnly
+        value={typing ?? value ?? ""}
+        onClick={fill}
+        onFocus={fill}
+        disabled={locked && !value}
+        className={`mt-1 h-10 w-full rounded-md border border-line bg-white px-3 text-sm text-ink outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 disabled:bg-canvas ${!value && !locked ? "cursor-text" : ""} ${spec.mono ? "font-mono text-[13px]" : ""}`}
+      />
+    </div>
+  );
+}
+
+const SUGGESTED_TITLE = "Goldman Sachs · US equity fails agent";
+
+/** The first screen of a new onboarding: pick the application, name it, start. */
+function StartOnboarding({ replacing, onStart }: { replacing: boolean; onStart: (title: string) => void }) {
+  const [picked, setPicked] = useState(false);
+  const [title, setTitle] = useState("");
+  return (
+    <div className="mx-auto max-w-3xl px-5 py-8 pb-24">
+      <p className="text-xs font-semibold tracking-wide text-teal uppercase">New agent onboarding</p>
+      <h2 className="mt-1 text-2xl font-semibold text-navy">Connect another firm&apos;s agent to BNY&apos;s network</h2>
+      <p className="mt-2 text-ink">
+        You&apos;ll go through it one layer at a time: who they are, how they settle, their agent&apos;s identity, what it may do, and a tested link. The agent can&apos;t reach BNY until
+        every step passes.
+      </p>
+      {replacing && (
+        <p className="mt-4 rounded-md border border-warn/30 bg-warn-soft px-4 py-3 text-sm text-ink">
+          Goldman&apos;s agent was onboarded earlier in this browser. Starting again takes <span className="font-medium">BNY ⇄ Goldman Sachs</span> out of the sidebar until this
+          onboarding finishes.
+        </p>
+      )}
+
+      <section className="mt-6 rounded-xl border border-line bg-white p-5">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-navy">
+          <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${picked ? "bg-ok text-white" : "bg-canvas text-muted"}`}>{picked ? "✓" : 1}</span>
+          Choose the application
+        </h3>
+        <p className="mt-1 text-xs text-muted">Applications waiting for review, from the network portal.</p>
+        <button
+          onClick={() => setPicked(true)}
+          aria-pressed={picked}
+          className={`mt-3 flex w-full items-start gap-3 rounded-lg border p-4 text-left transition ${picked ? "border-teal bg-teal-soft/50 ring-2 ring-teal/20" : "border-line hover:border-teal"}`}
+        >
+          <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${picked ? "border-teal" : "border-line"}`}>
+            {picked && <span className="h-2 w-2 rounded-full bg-teal" />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-semibold text-navy">Goldman Sachs &amp; Co. LLC</span>
+              <span className="text-xs text-muted">GS Counterparty Outreach Agent</span>
+            </span>
+            <span className="mt-1 block text-sm text-ink">Wants to ask BNY about failed and rejected deliveries, agent to agent.</span>
+            <span className="mt-1 block text-xs text-muted">Submitted 18 Nov, 08:12 ET · contact: {ONBOARDING_CONTACT} · referred by Rachel Okafor</span>
+          </span>
+          <Pill tone="warn">Awaiting review</Pill>
+        </button>
+      </section>
+
+      <section className={`mt-4 rounded-xl border border-line bg-white p-5 ${picked ? "" : "opacity-50"}`}>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-navy">
+          <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${title.trim() ? "bg-ok text-white" : "bg-canvas text-muted"}`}>{title.trim() ? "✓" : 2}</span>
+          Name this onboarding
+        </h3>
+        <label htmlFor="ob-title" className="mt-3 block text-xs font-medium text-muted">
+          Title
+        </label>
+        <input
+          id="ob-title"
+          type="text"
+          value={title}
+          disabled={!picked}
+          onChange={(e) => setTitle(e.target.value)}
+          onClick={() => !title && setTitle(SUGGESTED_TITLE)}
+          maxLength={80}
+          className="mt-1 h-10 w-full rounded-md border border-line bg-white px-3 text-sm text-ink outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 disabled:bg-canvas"
+        />
+        <p className="mt-1 text-xs text-muted">Shown on the onboarding, in Documents and in the audit trail.</p>
+      </section>
+
+      <div className="mt-6 flex items-center gap-3">
+        <button
+          onClick={() => onStart(title.trim())}
+          disabled={!picked || !title.trim()}
+          className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal disabled:opacity-50"
+        >
+          Start onboarding →
+        </button>
+        {(!picked || !title.trim()) && <span className="text-xs text-muted">{!picked ? "Choose the application first." : "Give the onboarding a title."}</span>}
+      </div>
+    </div>
+  );
+}
+
+const CONFETTI = ["#2b9cae", "#00243e", "#1f7a4d", "#f0b429", "#7399c6", "#e3f3f6"];
+
+/** The end of onboarding: a moment worth marking. */
+function Success({ st }: { st: OnboardingState }) {
+  const problems = st.fixes.length;
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-ok/30 bg-white p-8 shadow-sm">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        {Array.from({ length: 42 }, (_, i) => (
+          <span
+            key={i}
+            className="confetti"
+            style={{
+              left: `${(i * 37) % 100}%`,
+              background: CONFETTI[i % CONFETTI.length],
+              animationDelay: `${(i % 7) * 0.12}s`,
+              animationDuration: `${2.2 + (i % 5) * 0.35}s`,
+              width: i % 3 ? 8 : 6,
+              height: i % 3 ? 12 : 6,
+              borderRadius: i % 3 ? 2 : 999,
+            }}
+          />
+        ))}
+      </div>
+      <div className="relative">
+        <div className="success-pop flex h-16 w-16 items-center justify-center rounded-full bg-ok text-3xl text-white shadow-lg shadow-ok/30">✓</div>
+        <p className="mt-5 text-sm font-semibold tracking-wide text-ok uppercase">Onboarding complete{st.title ? ` · ${st.title}` : ""}</p>
+        <h2 className="mt-1 text-3xl font-semibold text-navy">Goldman Sachs is on the network</h2>
+        <p className="mt-3 max-w-2xl text-ink">
+          Goldman&apos;s fails agent passed every check: who they are, how they settle, the agent&apos;s identity, what it may do, and a tested link.
+          {problems > 0 && ` You caught and resolved ${problems === 1 ? "one problem" : `${problems} problems`} along the way.`}
+        </p>
+        <dl className="mt-6 grid max-w-xl grid-cols-3 gap-3">
+          {[
+            [String(ONBOARDING_STAGES.length), "steps passed"],
+            [String(problems), problems === 1 ? "problem resolved" : "problems resolved"],
+            [String(st.skills.length), st.skills.length === 1 ? "permission granted" : "permissions granted"],
+          ].map(([n, l]) => (
+            <div key={l} className="rounded-lg bg-canvas px-4 py-3">
+              <dt className="sr-only">{l}</dt>
+              <dd className="text-2xl font-semibold text-navy tabular">{n}</dd>
+              <dd className="text-xs text-muted">{l}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-6 flex items-start gap-3 rounded-lg border border-teal/30 bg-teal-soft/60 px-4 py-3 text-sm text-ink">
+          <span aria-hidden className="text-lg leading-none text-teal">←</span>
+          <span>
+            <span className="font-semibold text-navy">BNY ⇄ Goldman Sachs</span>{" "}is now in your sidebar under A2A connections. Cases appear there when Goldman&apos;s agent contacts BNY.
+          </span>
+        </div>
+        <details className="mt-5 text-sm">
+          <summary className="cursor-pointer text-muted hover:text-ink">What was checked</summary>
+          <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
+            {ONBOARDING_STAGES.map((s) => (
+              <li key={s.id} className="flex items-center gap-2">
+                <span className="text-ok">✓</span> {s.label}
+                {st.completedAt[s.id] && <span className="text-xs text-muted">· {st.completedAt[s.id]}</span>}
+              </li>
+            ))}
+          </ul>
+        </details>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/eliza" className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal">
+            Back to home
+          </Link>
+          <Link href="/eliza/documents" className="rounded-md border border-line px-5 py-2.5 text-sm font-medium text-ink hover:bg-canvas">
+            See the documents and details
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

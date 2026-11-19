@@ -66,16 +66,19 @@ function Dashboard({ runId, seat, title }: { runId: string; seat: Seat; title: s
         )
       }
     >
-      <div className="grid h-full min-h-0 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px]">
+      {/* Goldman's assistant is a plain chat: the case dashboard is BNY's. */}
+      <div className={`grid h-full min-h-0 grid-cols-1 ${seat === "goldman" ? "" : "xl:grid-cols-[minmax(0,1fr)_380px]"}`}>
         <div className="flex min-h-0 flex-col">
           {error && <ErrorNote error={error} className="mx-5 mt-3" />}
           <div className="min-h-0 flex-1">
             <ChatThread runId={runId} seat={seat} summary={summary} events={events} />
           </div>
         </div>
-        <aside className="hidden min-h-0 overflow-y-auto border-l border-line bg-canvas p-4 pb-24 xl:block">
-          <CaseRail seat={seat} summary={summary} events={events} />
-        </aside>
+        {seat !== "goldman" && (
+          <aside className="hidden min-h-0 overflow-y-auto border-l border-line bg-canvas p-4 pb-24 xl:block">
+            <CaseRail seat={seat} summary={summary} events={events} />
+          </aside>
+        )}
       </div>
     </Shell>
   );

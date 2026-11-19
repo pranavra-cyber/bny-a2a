@@ -48,9 +48,9 @@ describe("guided case", () => {
     await submitChat(run, "bny-cs", { action: "draft" });
     await atApproval(run, "bny-client-message");
     run.decide("bny-client-message", "approved", "Daniel Kim");
-    await atCheckpoint(run, "client-reply");
-    await submitChat(run, "bny-cs", { action: "relay" });
+    // The client's fix time goes to Goldman on its own; Daniel is only told.
     await atCheckpoint(run, "hold");
+    expect(run.events.some((e) => e.kind === "notification" && e.desk === "bny-cs" && e.title.startsWith("Sent to Goldman automatically"))).toBe(true);
     await submitChat(run, "goldman", { action: "hold" });
     await atApproval(run, "gs-redelivery");
     run.decide("gs-redelivery", "approved", "Michael Torres");
@@ -67,7 +67,6 @@ describe("guided case", () => {
       "chat: investigate",
       "chat: handover",
       "chat: contact",
-      "chat: client-reply",
       "chat: hold",
     ]);
   });
@@ -126,7 +125,7 @@ describe("guided case", () => {
   it("unguided runs record checkpoints that a guided replay waits on", async () => {
     const original = await runToEnd("golden");
     const cps = original.events.filter((e) => e.kind === "checkpoint").map((e) => e.checkpoint!.id);
-    expect(cps).toEqual(["request", "send", "investigate", "handover", "contact", "client-reply", "hold"]);
+    expect(cps).toEqual(["request", "send", "investigate", "handover", "contact", "hold"]);
     const replay = new Run("golden", "replay", "n/a", new Budget(0.2, "replay"));
     replay.fast = true;
     replay.guided = true;

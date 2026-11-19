@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { toRecording } from "../lib/engine/persist";
+import { submitChat } from "../lib/engine/chat";
+import { findRecording, toRecording } from "../lib/engine/persist";
 import { replayRun } from "../lib/engine/replay";
 import { Run } from "../lib/engine/run";
 import { Budget } from "../lib/llm/budget";
@@ -20,4 +21,33 @@ describe("replay", () => {
     expect(replay.clock.iso).toBe(original.clock.iso);
     expect(replay.audit.length).toBe(original.audit.length);
   });
+});
+
+describe("replay of saved recordings", () => {
+  it("passes the client's fix time to Goldman without stopping, and tells Daniel", async () => {
+    const rec = findRecording("golden");
+    expect(rec).not.toBeNull();
+    const run = new Run("golden", "replay", "n/a", new Budget(0.2, "replay"));
+    run.fast = true;
+    run.guided = true;
+    const stops: string[] = [];
+    const unsub = run.subscribe(() =>
+      queueMicrotask(() => {
+        run.pendingApprovals.forEach((k) => run.decide(k, "approved", "Presenter"));
+        const cp = run.pendingCheckpoint;
+        if (cp && !stops.includes(cp.def.id)) {
+          stops.push(cp.def.id);
+          const primary = (cp.def.actions.find((a) => a.kind === "primary") ?? cp.def.actions[0]).id;
+          void submitChat(run, cp.def.seat, { action: primary }).catch(() => {});
+        }
+      }),
+    );
+    await replayRun(run, rec!);
+    unsub();
+    expect(run.status).toBe("settled");
+    expect(stops).not.toContain("client-reply");
+    expect(run.events.some((e) => e.kind === "checkpoint" && e.checkpoint?.id === "client-reply")).toBe(false);
+    const notice = run.events.find((e) => e.kind === "notification" && e.desk === "bny-cs" && e.title.startsWith("Sent to Goldman automatically"));
+    expect(notice?.title).toMatch(/fix expected by 11:15 ET$/);
+  }, 20000);
 });

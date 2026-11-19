@@ -59,7 +59,7 @@ npm run lint         # includes the firm-boundary and callModel import rules
 
 ## The prototype, screen by screen
 
-Anything that belongs to the prototype rather than the product is dark navy: the overview page and the **Prototype** button in the bottom-right corner. Everything else is the product: BNY's Eliza workspace, or Goldman's own assistant for Michael.
+Anything that belongs to the prototype rather than the product is dark navy: the overview page and the **Prototype** button in the bottom-right corner. Everything else is the product: BNY's Eliza workspace, or Goldman's own assistant for Michael. Goldman's is deliberately a different product: green, IBM Plex type, squarer corners and a dark sidebar, and a plain chat without BNY's case dashboard.
 
 1. **Prototype overview** (`/`). Sets the scene and the cast, in three parts, each with the task's title and one sentence:
    - Onboarding: David Chen.
@@ -68,7 +68,7 @@ Anything that belongs to the prototype rather than the product is dark navy: the
    - Security tests: an unknown external attacker, and Jordan Blake, a rogue Goldman insider.
 
    **Start prototype** opens Eliza as David. Clicking a person opens their workspace.
-2. **Eliza home, David Chen** (`/eliza`). A Teams message from the relationship manager slides in as a desktop notification (bottom right), asking him to onboard Goldman's agent. **Onboard new agent** at the bottom of the sidebar is the entry point. Until onboarding is finished, there is no BNY ⇄ Goldman Sachs connection in the sidebar.
+2. **Eliza home, David Chen** (`/eliza`). Goldman's connection request reaches him twice: a Teams message from Rachel Okafor (relationship manager) slides in as a desktop notification, and Eliza's own notification bell shows *New connection request: Goldman Sachs & Co. LLC* on every page. Clicking either opens the onboarding. Both go once he starts it. The page is an assistant prompt, *What would you like to do today, David?*, with suggestions; asking to onboard Goldman opens the onboarding, as does **Onboard new agent** at the bottom of the sidebar. Until onboarding is finished, there is no BNY ⇄ Goldman Sachs connection in the sidebar.
 3. **Onboarding** (`/eliza/onboarding`). Step by step, one security layer at a time:
    - application and firm agreement;
    - company (LEI) and DTC account;
@@ -77,23 +77,25 @@ Anything that belongs to the prototype rather than the product is dark navy: the
    - limits and access pass;
    - link test and go live.
 
-   Each step has up to three parts: upload the document Goldman sent (simulated; nothing is read from your computer) or enter the application's details with a click; **system checks** that run against BNY's reference data; and **your checks**, which only a person can do (read the document, confirm with someone). The certificate step shows Goldman's Agent Card and takes the certificate request. **Set limits** covers permissions, rate, open cases, hours, pass lifetime, turns per case, what a BNY person must approve, and which fields replies may carry.
+   **Onboard new agent** opens a start screen: choose Goldman's pending application and give the onboarding a title (click the empty box for a suggested one, or type your own). Then the steps begin. If an onboarding is under way, the button resumes it; if one was finished earlier, it starts a new one and takes Goldman out of the sidebar until that one finishes.
 
-   Two checks find problems (a mistyped LEI and an unproven web address). The step shows how to resolve each: ask Goldman, wait for the resubmission, enter the corrected detail, check again. Progress is kept, so leaving and coming back resumes where you were. Once finished, BNY ⇄ Goldman Sachs appears in the sidebar; its case appears there when Goldman's agent first contacts BNY.
-4. **The live case** (`/eliza/case`). Each person has the same dashboard: their assistant chat on the left; on the right, the two agents (click either to see its full Agent Card), the case record, safety and analytics summaries, and **Examine A2A interaction**. Teams and Outlook messages arrive as desktop notifications at the bottom right, and stay in the bell at the top right.
+   Each step has up to three parts: upload the document Goldman sent (simulated; nothing is read from your computer) or enter the application's details (click an empty box and the synthetic value fills in); **system checks** that run against BNY's reference data, starting by themselves once the document is uploaded and the details entered (Set limits waits for **Save the limits**, since those are choices); and **your checks**, which only a person can do (read the document, confirm with someone). The certificate step shows Goldman's Agent Card and takes the certificate request. **Set limits** covers permissions, rate, open cases, hours, pass lifetime, turns per case, what a BNY person must approve, and which fields replies may carry.
+
+   Two checks find problems (a mistyped LEI and an unproven web address). The step shows how to resolve each: ask Goldman, wait for the resubmission, enter the corrected detail, check again. Progress is kept while you move around the app, so leaving and coming back resumes where you were (a refresh starts over). Once finished, a success screen marks the moment and BNY ⇄ Goldman Sachs appears in the sidebar, flagged **New**; David never sees it before then; its case appears there when Goldman's agent first contacts BNY.
+4. **The live case** (`/eliza/case`). Each BNY person has the same dashboard (Michael has only the chat): their assistant chat on the left; on the right, the two agents (click either to see its full Agent Card), the case record, safety and analytics summaries, and **Examine A2A interaction**. Teams and Outlook messages arrive as desktop notifications at the bottom right, and stay in the bell at the top right.
    - **Michael Torres (Goldman):** asks his GS Fails Assistant about the DK and sends the inquiry. Later he holds while BNY's client fixes its side, then approves the redelivery.
    - **Priya Sharma (BNY Settlement Ops):** the Settlement Fails Orchestrator shows the verified inquiry. The Settlement Ops Agent compares the details, finds that the client's side differs, and Priya hands the case to Client Service.
-   - **Daniel Kim (BNY Client Service):** **Draft the request to the client**: the Client Team Agent drafts it, and the approval arrives in the chat as a message from the Orchestrator. **Send email to Emily Carter** sends it, a confirmation snackbar appears, and Goldman's agent is told to hold (no client details cross). About five seconds later Emily's reply arrives as an Outlook notification; Daniel passes the time on, and Goldman is told the fix time automatically. When the client re-instructs, Goldman is told what changed and to redeliver before DTC closes at 15:10 ET.
+   - **Daniel Kim (BNY Client Service):** **Draft the request to the client**: the Client Team Agent drafts it, and the approval arrives in the chat as a message from the Orchestrator. **Send email to Emily Carter** sends it, a confirmation snackbar appears, and Goldman's agent is told to hold (no client details cross). About five seconds later Emily's reply arrives as an Outlook notification; the Settlement Ops Agent sends the fix time to Goldman's agent on its own (only approved fields cross), and Daniel gets a Teams notification that it has gone. When the client re-instructs, Goldman is told what changed and to redeliver before DTC closes at 15:10 ET.
    - The Prototype panel opens by itself only the first time you become someone. When the case moves to someone else, a small **Switch** hint appears beside the Prototype button instead.
 5. **Examine A2A interaction** (`/eliza/a2a`). It has two views:
    - **Security view (case tracker):** who holds the ball, the journey across firms, every cross-firm message with its gateway result, what crossed the boundary, each firm's ID for the trade, and guardrails.
    - **Technical view (conversation trace):** a filterable transcript, a map of who talked to whom, and each message's envelope (records behind it, fields shared and withheld, gateway checks, why the agent sent it, raw A2A).
-6. **Safety and audit, Sarah Nguyen** (`/eliza/audit`). The full audit log of the case, filterable, with CSV export.
+6. **Safety and audit, Sarah Nguyen** (`/eliza/audit`). Two views. **Security view**: where the case is now (who holds the ball, time to cutoff, value at risk), the step-by-step journey across the firms, and the full audit log, filterable, with CSV export. **Technical view**: the conversation trace, the map of who talked to whom, and each message's envelope.
 7. **Attack console** (`/attack`, dark: it is a prototype stage). As the external attacker or the rogue Goldman insider, pick a preset attack, launch it, and watch BNY's real gateway code respond step by step: what was sent, each gateway check, what BNY's agent received, and what came back. See *Attack console* below.
 8. **Documents** (folder icon, top right, BNY only; `/eliza/documents`). Documents uploaded and details entered during onboarding, what was granted, and every data source with the version in use and its history.
 9. **Analytics** (`/eliza/analytics`). Where this case's time went (most of it waiting on the client by hand), and the benchmark: manual vs single agent vs A2A.
 
-The sidebar lists Eliza's digital employees and the A2A connections. Morgan Stanley and J.P. Morgan show read-only example chats; Goldman Sachs appears only after onboarding, and holds only the live case.
+The sidebar lists Eliza's digital employees (Settlement Fails Orchestrator, Reference Data, Cash Reconciliation, Corporate Actions) and the A2A connections. The digital employees, and the Morgan Stanley and J.P. Morgan connections, are out of scope: clicking one shows a dark prototype note instead of opening it. Goldman Sachs appears only after onboarding, and holds only the live case.
 
 ### Questions in the chat
 
@@ -122,7 +124,7 @@ lib/tools/           deterministic tools: Goldman/BNY lookups, mock settlement s
 lib/agents/          LLM steps with structured outputs (JSON schema), each with a scripted mock decision
 lib/engine/          run state, checkpoints + assistant chat, faq.ts, scenario (golden + FP1–FP8), replay, benchmark, projection
 lib/personas.ts      the people; lib/sideChats.ts: the sidebar's example chats
-components/proto/    prototype layer: overview, persona dock, remembered state
+components/proto/    prototype layer: overview, persona dock, session state
 components/eliza/    Eliza shell, case dashboard, onboarding, audit, analytics
 components/a2a/      Examine A2A interaction (security and technical views)
 app/eliza/…          routes; app/api/… start, SSE stream, approvals, chat, audit, onboarding checks
@@ -215,5 +217,5 @@ Most of the A2A time is the wait for the client's email.
 - **State changes** live in the run's in-memory overlay. **The data files are never modified at run time.**
 - **Data change for the new story.** AllianzGI's amended allocation is `NOT_SENT` in its OMS (its approval queue closed for the night). BNY has no amendment or repair item for this trade. BNY's ops chat and AllianzGI's OMS log were rewritten to match.
 - **Benchmark.** The manual baseline is assumed from interviews and the ops chat (settled around 13:40 ET). The single agent's email waits are assumed; its tool calls, tokens and disclosed fields are measured. The A2A row comes from the latest golden recording.
-- **Remembered state.** The person you are playing, the open case, the mode and onboarding progress are kept in this browser (localStorage). Runs live in server memory, so restarting the server clears an unsaved case; the prototype then starts a fresh one.
+- **Session state, reset on refresh.** The person you are playing, the open case, the mode, onboarding progress and which notifications you've seen are kept while you move around the app (localStorage, `a2a.*` keys). Any full page load (refresh, new tab, typed URL) clears them and the prototype starts from the beginning. Runs live in server memory; an abandoned run is simply forgotten.
 - **Fonts.** `next/font` fetches Google Sans Flex when the server starts; offline it falls back to Inter or the system font.

@@ -1,12 +1,16 @@
 "use client";
 // Safety and audit (Sarah Nguyen, Compliance): were approvals given, and was only
-// permitted data shared? The full audit log of the case. Attacks on the gateway
-// are staged separately, in the attack console.
-import { useEffect, useState } from "react";
+// permitted data shared? Two views. Security: where the case is now, its journey
+// across the firms step by step, and the full audit log. Technical: the
+// conversation trace. Attacks on the gateway are staged in the attack console.
+import { useEffect, useMemo, useState } from "react";
 import type { AuditEntry, RunSummary } from "@/lib/engine/types";
 import { fmtEt } from "@/lib/time";
 import { useProto } from "../proto/Proto";
+import { CaseJourney, TechnicalView } from "../a2a/A2AView";
+import { buildTrace } from "../a2a/model";
 import { ErrorNote, TypeBadge } from "../ui";
+import { useRun } from "../useRun";
 import { Shell } from "./Shell";
 
 export function AuditPage() {
@@ -14,6 +18,10 @@ export function AuditPage() {
   const [data, setData] = useState<{ summary: RunSummary; audit: AuditEntry[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [tab, setTab] = useState<"security" | "technical">("security");
+  const [selected, setSelected] = useState<string | null>(null);
+  const run = useRun(runId, "network");
+  const trace = useMemo(() => buildTrace(run.events), [run.events]);
 
   useEffect(() => {
     if (!runId) return;
@@ -38,7 +46,33 @@ export function AuditPage() {
   const rows = audit.filter((a) => !filter || JSON.stringify(a).toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <Shell title="Safety and audit" subtitle="BNY Compliance · every step, message and approval" right={runId && <a href={`/api/runs/${runId}/audit?format=csv`} download className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas">Export CSV</a>}>
+    <Shell
+      title="Safety and audit"
+      subtitle="BNY Compliance · every step, message and approval"
+      right={
+        runId && (
+          <div className="flex items-center gap-3">
+            <div role="tablist" aria-label="View" className="inline-flex rounded-md bg-canvas p-0.5 text-sm">
+              {(["security", "technical"] as const).map((t) => (
+                <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`rounded px-3 py-1.5 font-medium ${tab === t ? "bg-white text-navy shadow-sm" : "text-muted hover:text-ink"}`}>
+                  {t === "security" ? "Security view" : "Technical view"}
+                </button>
+              ))}
+            </div>
+            {tab === "security" && (
+              <a href={`/api/runs/${runId}/audit?format=csv`} download className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas">
+                Export CSV
+              </a>
+            )}
+          </div>
+        )
+      }
+    >
+      {runId && tab === "technical" ? (
+        <TechnicalView trace={trace} selected={selected} setSelected={setSelected} />
+      ) : (
+      <>
+      {runId && <CaseJourney s={run.summary} events={run.events} />}
       <div className="mx-auto max-w-6xl space-y-8 px-5 py-6 pb-24">
         {!runId && (
           <p className="text-sm text-muted">
@@ -117,6 +151,8 @@ export function AuditPage() {
           </section>
         )}
       </div>
+      </>
+      )}
     </Shell>
   );
 }

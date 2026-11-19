@@ -104,7 +104,7 @@ export const GS_CONNECTIONS: Connection[] = [
 
 export const BNY_EMPLOYEES = [
   { id: "orchestrator", name: "Settlement Fails Orchestrator", line: "Settlement fails across counterparties" },
-  { id: "onboarding", name: "Network Onboarding Assistant", line: "Onboard counterparty agents" },
+  { id: "ssi", name: "Reference Data Assistant", line: "SSIs and counterparty static data" },
   { id: "recon", name: "Cash Reconciliation Assistant", line: "Breaks in cash ledgers" },
   { id: "corp-actions", name: "Corporate Actions Assistant", line: "Elections and entitlements" },
 ];

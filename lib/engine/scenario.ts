@@ -22,7 +22,7 @@ import { type GsCase, findOpenDkFails, loadGsCase } from "../tools/goldman";
 import { validateFindings, type Finding } from "../tools/grounding";
 import type { ToolCtx } from "../tools/common";
 import { checkpoint, say } from "./chat";
-import { type Checkpoint, CLIENT_CONTACT, firmOfSeat, GREETING, INTAKE_SUGGESTIONS, type Seat, SEATS } from "./guide";
+import { type Checkpoint, CLIENT_CONTACT, firmOfSeat, GREETING, INTAKE_SUGGESTIONS, relayNoticeDetail, relayNoticeTitle, type Seat, SEATS } from "./guide";
 import { persistRun } from "./persist";
 import { CUTOFF, type Run } from "./run";
 import type { Actor, ApprovalRequest, EscalationReason, Firm, Lane, ResolvedRecord } from "./types";
@@ -692,17 +692,8 @@ async function caseFlow(cs: CaseState) {
   notify(cs, "bny-cs", "action", `${CLIENT_CONTACT.name} replied: corrected instruction by ${fixTime}`, { channel: "email", from: CLIENT_CONTACT.name, detail: reply });
   audit(cs, ACTORS.agiClient, "client reply (email)", `will re-instruct by ${fixTime}`);
 
-  await gate(cs, {
-    id: "client-reply",
-    seat: "bny-cs",
-    prompt:
-      `${CLIENT_CONTACT.name} replied${late ? " late" : ""}: 10,000 is correct and the corrected instruction will come by ${fixTime}.` +
-      `${late ? " That is after the 11:30 ET cutoff, so it will need a late-instruction exception from Priya." : ""} Shall I pass the expected time to Settlement Ops, which tells Goldman's agent automatically?`,
-    actions: [{ id: "relay", label: "Pass the time on", kind: "primary", keywords: ["pass", "relay", "tell", "share", "update", "notify", "goldman", "yes"] }],
-    questions: ["What happens if this misses the cutoff?", "What will Goldman be told?"],
-  });
-
-  // 7. Notify: the expected time goes to Settlement Ops and, automatically, to Goldman (A2A).
+  // 7. Notify: the expected time goes to Settlement Ops and on to Goldman (A2A) with no
+  // one in between: only allowlisted fields cross, so there is nothing for Daniel to approve.
   run.clock.at(late ? "11:22:00" : "10:26:00");
   step(cs, "bny", ACTORS.bnyClientTeamRule, `Expected fix time passed to Settlement Ops: ${fixTime}`, { desk: "bny-cs" });
   notify(cs, "bny", "info", `Client expects to re-instruct by ${fixTime}`, { detail: `${CLIENT_CONTACT.name} confirmed 10,000. Goldman is being told to hold.`, from: "BNY Client Team Agent" });
@@ -724,6 +715,7 @@ async function caseFlow(cs: CaseState) {
     blocked,
   );
   const fixOut = await sendToGoldman(cs, { text: fixMsg.message, data: fixFields, state: "input-required", title: `fix expected by ${fixTime}` });
+  notify(cs, "bny-cs", "info", relayNoticeTitle(fixTime), { channel: "teams", from: "BNY Settlement Ops Agent", detail: relayNoticeDetail(late) });
 
   // ===== Goldman: Michael Torres =====
   notify(cs, "goldman", "action", `BNY expects a fix by ${fixTime}: hold our side`, { channel: "teams", from: "GS Fails Assistant", detail: fixOut.text });

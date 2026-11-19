@@ -61,20 +61,14 @@ export function A2AView() {
 
 const WHO_DOT = { goldman: "bg-gs", bny: "bg-teal", client: "bg-muted", exception: "bg-bad" } as const;
 
-function SecurityView({ s, events, trace, onOpen }: { s: RunSummary | null; events: RunEvent[]; trace: TraceItem[]; onOpen: (key: string) => void }) {
+/** Where the case is now, and the step-by-step journey across the firms. Shared with Safety and audit. */
+export function CaseJourney({ s, events }: { s: RunSummary | null; events: RunEvent[] }) {
   const ms = milestones(events, s?.status ?? "");
   const current = ms.findIndex((m) => !m.done);
   const toCutoff = s ? new Date(s.cutoff).getTime() - new Date(s.clock).getTime() : 0;
   const last = [...events].reverse().find((e) => e.kind !== "model-call" && e.kind !== "notification" && e.kind !== "chat" && e.kind !== "checkpoint");
-  const cross = trace.filter((t) => t.kind === "cross");
-  const outs = cross.filter((t) => t.dir === "out");
-  const shared = new Set(outs.flatMap((t) => Object.keys(t.fields ?? {})));
-  const withheld = new Set(outs.flatMap((t) => t.withheld ?? []));
-  const requested = events.filter((e) => e.kind === "approval-request").length;
-  const obtained = events.filter((e) => e.kind === "approval" && e.decision?.outcome === "approved").length;
-  const corrected = events.some((e) => e.title.startsWith("Client's corrected instruction received"));
   return (
-    <div className="flex min-h-full flex-col">
+    <>
       <section className="flex flex-wrap items-end justify-between gap-6 border-b border-line bg-white px-6 py-5">
         <div className="min-w-0">
           <p className="text-xs text-muted">Now</p>
@@ -124,6 +118,21 @@ function SecurityView({ s, events, trace, onOpen }: { s: RunSummary | null; even
         </p>
       </section>
 
+    </>
+  );
+}
+
+function SecurityView({ s, events, trace, onOpen }: { s: RunSummary | null; events: RunEvent[]; trace: TraceItem[]; onOpen: (key: string) => void }) {
+  const cross = trace.filter((t) => t.kind === "cross");
+  const outs = cross.filter((t) => t.dir === "out");
+  const shared = new Set(outs.flatMap((t) => Object.keys(t.fields ?? {})));
+  const withheld = new Set(outs.flatMap((t) => t.withheld ?? []));
+  const requested = events.filter((e) => e.kind === "approval-request").length;
+  const obtained = events.filter((e) => e.kind === "approval" && e.decision?.outcome === "approved").length;
+  const corrected = events.some((e) => e.title.startsWith("Client's corrected instruction received"));
+  return (
+    <div className="flex min-h-full flex-col">
+      <CaseJourney s={s} events={events} />
       <div className="grid flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="space-y-3 px-6 pt-5 pb-24">
           <div className="flex justify-between text-xs font-semibold tracking-wide text-muted uppercase">
@@ -156,7 +165,7 @@ function SecurityView({ s, events, trace, onOpen }: { s: RunSummary | null; even
             if (t.kind === "human")
               return (
                 <div key={t.key} className={`flex flex-wrap items-center gap-3 rounded-lg px-4 py-2.5 text-sm ${t.side === "client" || t.event.flags?.includes("manual") ? "border border-dashed border-line bg-white" : "bg-warn-soft"}`}>
-                  <span className="text-[11px] font-semibold tracking-wide text-warn uppercase">{t.event.flags?.includes("manual") ? "Manual · Teams / email" : "Human decision"}</span>
+                  <span className="text-[11px] font-semibold tracking-wide text-warn uppercase">{t.event.flags?.includes("manual") ? "Manual · email" : "Human decision"}</span>
                   <span className="text-ink">{t.title}</span>
                   <span className="ml-auto text-xs text-muted tabular">{hhmm(t.at)} ET</span>
                 </div>
@@ -234,7 +243,7 @@ const FILTERS: { id: "all" | Kind; label: string }[] = [
   { id: "human", label: "Human" },
 ];
 
-function TechnicalView({ trace, selected, setSelected }: { trace: TraceItem[]; selected: string | null; setSelected: (k: string) => void }) {
+export function TechnicalView({ trace, selected, setSelected }: { trace: TraceItem[]; selected: string | null; setSelected: (k: string) => void }) {
   const [filter, setFilter] = useState<"all" | Kind>("all");
   const shown = trace.filter((t) => filter === "all" || t.kind === filter);
   const sel = trace.find((t) => t.key === selected) ?? trace.find((t) => t.kind === "cross");
@@ -351,7 +360,7 @@ function TraceMap({ trace, selected }: { trace: TraceItem[]; selected?: TraceIte
           </text>
         </g>
       ))}
-      <text x="185" y="452" className="fill-muted text-[10px]">Teams / email</text>
+      <text x="185" y="452" className="fill-muted text-[10px]">email</text>
     </svg>
   );
 }

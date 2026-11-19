@@ -10,6 +10,18 @@ import type { DemoConfig } from "@/lib/demoConfig";
 import type { RunMode, RunSummary } from "@/lib/engine/types";
 import { type Persona, type PersonaId, personaById, PERSONAS } from "@/lib/personas";
 
+// A full page load (refresh, new tab, typed URL) starts the prototype from the beginning:
+// no person, case, onboarding or seen notifications carried over. This runs once when
+// the module first loads in the browser, before any page reads the saved state; moving
+// between pages inside the app doesn't reload it, so nothing resets mid-session.
+if (typeof window !== "undefined") {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("a2a."))
+      .forEach((k) => localStorage.removeItem(k));
+  } catch {}
+}
+
 export const store = {
   get(k: string) {
     try {
@@ -34,7 +46,7 @@ export const store = {
   },
 };
 
-type Snack = { id: number; text: string };
+type Snack = { id: number; text: string; tone: "ok" | "proto" };
 
 /** A notification from another app on the person's computer. */
 export type Toast = {
@@ -45,6 +57,8 @@ export type Toast = {
   title: string;
   body?: string;
   href?: string;
+  /** Show again on each visit (still never twice on screen at once). */
+  repeat?: boolean;
 };
 
 type Ctx = {
@@ -56,12 +70,15 @@ type Ctx = {
   summary: RunSummary | null;
   mode: RunMode;
   setMode: (m: RunMode) => void;
-  snack: (text: string) => void;
+  /** "proto" is the prototype's own voice (dark), not the product's. */
+  snack: (text: string, tone?: "ok" | "proto") => void;
   toast: (t: Toast, delayMs?: number) => void;
   /** Bumped when you become someone for the first time, so the dock can introduce them. */
   introKey: number;
   dockOpen: boolean;
   setDockOpen: (open: boolean) => void;
+  /** True once the remembered person and case are restored (after mount). */
+  hydrated: boolean;
 };
 
 const ProtoCtx = createContext<Ctx | null>(null);
@@ -89,6 +106,7 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [introKey, setIntroKey] = useState(0);
   const [dockOpen, setDockOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const queued = useRef<Toast[]>([]);
 
   /** The first time you become someone, the dock introduces them. Never again after that. */
@@ -114,6 +132,7 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
       }
       if (r) setRun(r);
       if (m && (m === "replay" || (m === "live" && !cfg.liveProblems.length))) setModeState(m);
+      setHydrated(true);
     }, 0);
     return () => clearTimeout(t);
   }, [cfg.liveProblems.length, introduce]);
@@ -141,9 +160,9 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
     setModeState(m);
     store.set("a2a.mode", m);
   }, []);
-  const snack = useCallback((text: string) => {
+  const snack = useCallback((text: string, tone: "ok" | "proto" = "ok") => {
     const id = Date.now() + Math.random();
-    setSnacks((s) => [...s, { id, text }]);
+    setSnacks((s) => [...s.filter((x) => x.text !== text), { id, text, tone }]);
     setTimeout(() => setSnacks((s) => s.filter((x) => x.id !== id)), 4500);
   }, []);
 
@@ -154,9 +173,11 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
   const dockOpenRef = useRef(false);
   const toast = useCallback(
     (t: Toast, delayMs = 600) => {
-      const done = store.list(TOASTED);
-      if (done.includes(t.key)) return;
-      store.set(TOASTED, JSON.stringify([...done, t.key].slice(-300)));
+      if (!t.repeat) {
+        const done = store.list(TOASTED);
+        if (done.includes(t.key)) return;
+        store.set(TOASTED, JSON.stringify([...done, t.key].slice(-300)));
+      }
       setTimeout(() => {
         // Wait while the prototype dock is open, so the two never overlap.
         if (dockOpenRef.current) queued.current.push(t);
@@ -197,20 +218,27 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
   }, [runId, setRunId]);
 
   const value = useMemo<Ctx>(
-    () => ({ cfg, persona: personaById(personaId) ?? PERSONAS[0], setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen, setDockOpen }),
-    [cfg, personaId, setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen],
+    () => ({ cfg, persona: personaById(personaId) ?? PERSONAS[0], setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen, setDockOpen, hydrated }),
+    [cfg, personaId, setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen, hydrated],
   );
 
   return (
     <ProtoCtx.Provider value={value}>
       {children}
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex flex-col items-center gap-2 px-4">
-        {snacks.map((s) => (
-          <div key={s.id} role="status" className="snack pointer-events-auto flex items-center gap-3 rounded-lg bg-ink px-4 py-3 text-sm text-white shadow-lg">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ok text-[11px]">✓</span>
-            {s.text}
-          </div>
-        ))}
+        {snacks.map((s) =>
+          s.tone === "proto" ? (
+            <div key={s.id} role="status" className="snack pointer-events-auto flex max-w-md items-start gap-3 rounded-xl border border-white/10 bg-[#0b1622] px-4 py-3 text-sm text-white shadow-2xl">
+              <span className="mt-0.5 shrink-0 font-mono text-[10px] font-semibold tracking-[0.14em] text-teal uppercase">Prototype</span>
+              <span>{s.text}</span>
+            </div>
+          ) : (
+            <div key={s.id} role="status" className="snack pointer-events-auto flex items-center gap-3 rounded-lg bg-ink px-4 py-3 text-sm text-white shadow-lg">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-ok text-[11px]">✓</span>
+              {s.text}
+            </div>
+          ),
+        )}
       </div>
       <div aria-live="polite" aria-label="Notifications" className="pointer-events-none fixed right-4 bottom-20 z-50 flex w-[22rem] max-w-[calc(100vw-2rem)] flex-col gap-2">
         {toasts.map((t) => (
