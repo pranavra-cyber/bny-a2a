@@ -119,7 +119,7 @@ export const ONBOARDING_STAGES: StageCopy[] = [
     label: "Issue credentials",
     owner: "AI Hub, Security",
     what: "Register Goldman's agent with BNY's auth server: a client ID tied to the certificate from step 8. The agent then fetches its own short-lived access pass whenever it calls.",
-    why: "A pass expires in minutes, so none is handed over here. It only proves who is calling; what the agent may do is read from the registry on every request, so a change or revocation applies at once.",
+    why: "In production a pass is short-lived and fetched per call, so none is handed over here (the prototype's demo token for Goldman's agent lasts 24 hours so a run cannot expire mid-demo). It only proves who is calling; what the agent may do is read from the registry on every request, so a change or revocation applies at once.",
     action: "Register credentials",
   },
   {
@@ -292,7 +292,7 @@ export const LIMITS = {
     label: "Access pass lifetime",
     options: ["5 min", "10 min", "15 min"],
     default: "10 min",
-    note: "The agent fetches a fresh pass from BNY's auth server before each call; it expires after this long.",
+    note: "The agent fetches a fresh pass from BNY's auth server before each call; it expires after this long. In this prototype the setting applies to the onboarding test pass; the demo token lasts 24 hours.",
   },
   turns: { label: "Messages per case before people take over", options: ["6", "10", "15"], default: "10", note: "Also caps model cost per case." },
 } as const;
