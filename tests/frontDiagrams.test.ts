@@ -1,7 +1,7 @@
-import { existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { AGENT_CARDS, HUMANS } from "../lib/a2a/registry";
-import { IN_CAPTIONS, IN_ZONES, INSIDE, INSIDE_HEIGHT, layoutInside, OUT_HOPS, OUT_NODES, OUT_ZONES, ONBOARDING, ONBOARDING_CHIPS } from "../lib/frontDiagrams";
+import { IN_CAPTIONS, IN_ZONES, INSIDE_HEIGHT, layoutInside, TOOLS, OUT_HOPS, OUT_NODES, OUT_ZONES, ONBOARDING, ONBOARDING_CHIPS } from "../lib/frontDiagrams";
 
 const inside = (b: { x: number; y: number; w: number; h: number }, o: { x: number; y: number; w: number; h: number }) => b.x >= o.x && b.y >= o.y && b.x + b.w <= o.x + o.w && b.y + b.h <= o.y + o.h;
 const touches = ([x, y]: [number, number], b: { x: number; y: number; w: number; h: number }) => x >= b.x - 1 && x <= b.x + b.w + 1 && y >= b.y - 1 && y <= b.y + b.h + 1;
@@ -27,7 +27,7 @@ describe("outside diagram", () => {
 
 describe("inside diagram", () => {
   const l = layoutInside();
-  const boxes = [l.gs, l.edge, l.gate, l.outbound, l.orch, ...l.groups.flatMap((g) => [g.agent, ...g.items.map((i) => i.box)])];
+  const boxes = [l.gs, l.edge, l.gate, l.outbound, l.orch, l.hub, ...l.tools.map((t) => t.box)];
   it("every box sits inside a zone, inside the canvas, and no two overlap", () => {
     for (const b of boxes) {
       expect(IN_ZONES.some((z) => inside(b, z)), JSON.stringify(b)).toBe(true);
@@ -38,30 +38,36 @@ describe("inside diagram", () => {
   it("has a caption for each of the eight numbered hops", () => {
     expect(IN_CAPTIONS).toHaveLength(8);
   });
-  it("every agent the diagram names is in the registry, and reads only what the registry says it may", () => {
-    for (const g of INSIDE.filter((x) => x.agentId)) {
-      const card = AGENT_CARDS.find((c) => c["x-prototype"].id === g.agentId);
-      expect(card, g.agentId).toBeDefined();
-      for (const it of g.items.filter((x) => x.kind === "read"))
-        for (const src of it.sources ?? []) if (!src.startsWith("docs/") && src !== "bny/ssi_counterparties") expect(card!["x-prototype"].canRead.join("|"), it.title).toContain(src);
+  it("tool ids are unique", () => {
+    expect(new Set(TOOLS.map((t) => t.id)).size).toBe(TOOLS.length);
+  });
+  it("every function the diagram points at exists in the prototype", () => {
+    for (const t of TOOLS.filter((x) => x.fn)) {
+      const src = readFileSync(t.fn!.file, "utf8");
+      expect(src, t.id).toMatch(new RegExp(`function ${t.fn!.name}\\b`));
+      if (t.fn!.logged) expect(src, `${t.id} logs ${t.fn!.logged}`).toContain(`"${t.fn!.logged}"`);
     }
   });
-  it("the data every row names exists in the prototype", () => {
-    for (const it of INSIDE.flatMap((g) => g.items))
-      for (const src of it.sources ?? []) {
-        const [dir, name] = src.split("/");
-        expect(existsSync(dir === "docs" ? `data/bny/docs/${name}` : `data/${dir}/${name}.csv`), src).toBe(true);
-      }
+  it("tools shown working are backed by a function, and ones not built say so", () => {
+    for (const t of TOOLS.filter((x) => x.status === "working")) expect(t.fn, t.id).toBeDefined();
+    for (const t of TOOLS.filter((x) => x.status === "described" || x.status === "addable")) expect(t.prototype, t.id).toMatch(/not built|no call|no agent|not something|exists in the prototype/i);
   });
-  it("the people named as approvers are in the registry, and match what it says they do", () => {
+  it("every value in an example call or response is in the prototype's data", () => {
+    for (const t of TOOLS) for (const [file, value] of t.facts ?? []) expect(readFileSync(file, "utf8"), `${t.id}: ${value}`).toContain(value);
+  });
+  it("tools shown working read tables the registry lets their agent read, and the approvers are the registry's people", () => {
+    const table: Record<string, string> = { instruction: "bny/settlement_instructions", dtc: "dtc/settlement_activity", exception: "bny/fails_exceptions", ssi: "bny/ssi_counterparties", client: "bny/client_accounts" };
+    const readable = AGENT_CARDS.filter((c) => ["bny-settlement-agent", "bny-client-team"].includes(c["x-prototype"].id))
+      .flatMap((c) => c["x-prototype"].canRead)
+      .join("|");
+    for (const [id, t] of Object.entries(table)) expect(readable, id).toContain(t);
     const names = HUMANS.map((h) => h.name);
     expect(names).toContain("Daniel Kim");
     expect(names).toContain("Priya Sharma");
     expect(HUMANS.find((h) => h.name === "Daniel Kim")!.canDo).toMatch(/approve and send messages to the client/i);
     expect(HUMANS.find((h) => h.name === "Priya Sharma")!.canDo).toMatch(/approve late-instruction exceptions/i);
-    expect(AGENT_CARDS.find((c) => c["x-prototype"].id === "bny-settlement-system")!.skills[0].description).toMatch(/approved instruction/i);
   });
   it("exactly the client email, the release and late exceptions wait for a person", () => {
-    expect(INSIDE.flatMap((g) => g.items).filter((i) => i.kind === "person").map((i) => i.title)).toEqual(["Client email", "Release to DTC", "Late exceptions"]);
+    expect(TOOLS.filter((t) => t.human.by === "person").map((t) => t.title)).toEqual(["Client email", "Release to DTC", "Late exceptions"]);
   });
 });

@@ -1,7 +1,9 @@
+"use client";
 // The front page's two diagrams, in the prototype's navy and teal. Arrows always flow (dashes travel
 // along each line); nothing to press. One: how trust is established with an outside firm. Two: what
 // happens inside BNY once it is, with the databases, tools and the steps that wait for a person.
-import { IN_CAPTIONS, IN_ZONES, INSIDE_HEIGHT, layoutInside, ONBOARDING, ONBOARDING_BAND, ONBOARDING_CHIPS, OUT_HOPS, OUT_NODES, OUT_ZONES, type Box, type Hop } from "@/lib/frontDiagrams";
+import { useState } from "react";
+import { type Box, CONNECTOR_LABEL, type Connector, IN_CAPTIONS, IN_ZONES, INSIDE_HEIGHT, layoutInside, ONBOARDING, ONBOARDING_BAND, ONBOARDING_CHIPS, OUT_HOPS, OUT_NODES, OUT_ZONES, type Hop, type PlacedTool, TOOL_STATUS_LABEL } from "@/lib/frontDiagrams";
 
 const TEAL = "#2b9cae";
 const TEAL_SOFT = "#bfe6ee";
@@ -135,49 +137,95 @@ function Badge({ x, y, n, tone = TEAL }: { x: number; y: number; n: number; tone
 /** A curve from a box's right edge to the left edge of another, so a fan of them reads as one hand-off. */
 const link = (from: [number, number], to: [number, number]) => `M${from[0]},${from[1]} C${from[0] + 22},${from[1]} ${to[0] - 22},${to[1]} ${to[0]},${to[1]}`;
 
-function PersonNode({ b, title, sub }: { b: Box; title: string; sub: string }) {
+const CONNECTOR_COLOUR: Record<Connector, string> = { mcp: TEAL, api: "#7fb2ff", mail: "#c9a7ff" };
+
+function ToolCard({ t, on, onSelect }: { t: PlacedTool; on: boolean; onSelect: () => void }) {
+  const person = t.human.by === "person";
+  const addable = t.status === "addable";
+  const stroke = person ? AMBER : addable ? "#8aa0b3" : TEAL;
+  const b = t.box;
   return (
-    <g>
-      <rect {...R(b)} rx={8} fill="#3a2d10" fillOpacity={0.9} stroke={AMBER} strokeWidth={1.6} />
-      <g transform={`translate(${b.x + 17},${b.y + b.h / 2 + 1})`} fill="none" stroke={AMBER} strokeWidth={1.5}>
-        <circle cy={-4} r={3.4} />
-        <path d="M-5.6,6 a5.6,5.6 0 0 1 11.2,0" />
-      </g>
-      <text x={b.x + 34} y={b.y + 15} fontSize={12} fontWeight={600} fill="white">
-        {title}
+    <g onClick={onSelect} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onSelect())} role="button" tabIndex={0} aria-pressed={on} aria-label={`${t.title}: ${CONNECTOR_LABEL[t.connector]}`} className="cursor-pointer outline-none">
+      <rect {...R(b)} rx={8} fill={person ? "#3a2d10" : "#06314f"} fillOpacity={on ? 1 : 0.9} stroke={stroke} strokeWidth={on ? 2.8 : 1.4} strokeDasharray={addable ? "5 4" : undefined} />
+      {on && <rect {...R({ x: b.x - 4, y: b.y - 4, w: b.w + 8, h: b.h + 8 })} rx={11} fill="none" stroke={stroke} strokeOpacity={0.35} strokeWidth={2} />}
+      <rect x={b.x + 8} y={b.y + 9} width={36} height={18} rx={4} fill={CONNECTOR_COLOUR[t.connector]} />
+      <text x={b.x + 26} y={b.y + 22} textAnchor="middle" fontSize={9.5} fontWeight={800} fill="#00243e">
+        {t.connector === "mail" ? "MAIL" : t.connector.toUpperCase()}
       </text>
-      <text x={b.x + 34} y={b.y + 28} fontSize={9.5} fill="#ffd58a" fillOpacity={0.85}>
-        {sub}
+      <text x={b.x + 54} y={b.y + 16} fontSize={12} fontWeight={600} fill="white">
+        {t.title}
       </text>
+      <text x={b.x + 54} y={b.y + 29} fontSize={9.5} fill={person ? "#ffd58a" : TEAL_SOFT} fillOpacity={0.75}>
+        {t.sub}
+      </text>
+      {person && (
+        <g transform={`translate(${b.x + b.w - 18},${b.y + b.h / 2 + 1})`} fill="none" stroke={AMBER} strokeWidth={1.5}>
+          <circle cy={-4} r={3.2} />
+          <path d="M-5.2,6 a5.2,5.2 0 0 1 10.4,0" />
+        </g>
+      )}
     </g>
   );
 }
 
-function DataNode({ b, title, sub, addable }: { b: Box; title: string; sub: string; addable?: boolean }) {
+const Code = ({ children }: { children: string }) => <pre className="overflow-x-auto rounded-md bg-black/35 p-3 font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-white/85">{children}</pre>;
+
+function ToolDetail({ t }: { t: PlacedTool }) {
+  const person = t.human.by === "person";
+  const tone = person ? AMBER : t.status === "addable" ? "#8aa0b3" : TEAL;
   return (
-    <g>
-      <rect {...R(b)} rx={8} fill="#06314f" fillOpacity={0.9} stroke={addable ? "#8aa0b3" : TEAL} strokeWidth={1.5} strokeDasharray={addable ? "5 4" : undefined} />
-      <text x={b.x + 12} y={b.y + 15} fontSize={12} fontWeight={600} fill="white">
-        {title}
-      </text>
-      <text x={b.x + 12} y={b.y + 28} fontSize={9.5} fill={TEAL_SOFT} fillOpacity={0.65}>
-        {sub}
-      </text>
-    </g>
+    <div className="mt-4 rounded-xl border border-white/10 bg-[#06314f]/60 p-5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h3 className="text-lg font-semibold text-white">{t.title}</h3>
+        <span className="rounded px-2 py-0.5 text-[11px] font-bold text-[#00243e]" style={{ background: CONNECTOR_COLOUR[t.connector] }}>
+          {CONNECTOR_LABEL[t.connector]}
+        </span>
+        <span className="rounded px-2 py-0.5 text-[11px] font-semibold" style={{ background: `${tone}30`, color: person ? "#ffd58a" : TEAL_SOFT }}>
+          {person ? `${t.human.by === "person" ? t.human.who : ""} approves first` : "Automatic"}
+        </span>
+        <span className="text-xs text-white/55">{TOOL_STATUS_LABEL[t.status]}</span>
+        <span className="ml-auto text-xs text-white/55">Used by {t.usedBy}</span>
+      </div>
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div>
+          <p className="mb-1.5 text-[11px] font-semibold tracking-wider text-white/50 uppercase">A call, as it would look on the wire</p>
+          <Code>{t.call}</Code>
+        </div>
+        <div>
+          <p className="mb-1.5 text-[11px] font-semibold tracking-wider text-white/50 uppercase">What comes back (the prototype&apos;s synthetic data)</p>
+          <Code>{t.returns}</Code>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-x-8 gap-y-3 text-sm leading-relaxed text-white/75 md:grid-cols-3">
+        <p>
+          <span className="block text-[11px] font-semibold tracking-wider text-white/50 uppercase">Access</span>
+          {t.access}
+        </p>
+        <p>
+          <span className="block text-[11px] font-semibold tracking-wider text-white/50 uppercase">In the prototype</span>
+          {t.prototype}
+        </p>
+        <p>
+          <span className="block text-[11px] font-semibold tracking-wider text-white/50 uppercase">In production</span>
+          {t.production}
+        </p>
+      </div>
+    </div>
   );
 }
 
 export function InsideDiagram() {
   const id = "in";
   const l = layoutInside();
+  const [sel, setSel] = useState(l.tools[0].id);
+  const tool = l.tools.find((t) => t.id === sel)!;
   const tone = { goldman: GS, bny: TEAL };
-  const right = (b: Box): [number, number] => [b.x + b.w, b.y + b.h / 2];
-  const left = (b: Box): [number, number] => [b.x, b.y + b.h / 2];
-  const ops = l.groups[0];
-  const client = l.groups[1];
+  const hubR: [number, number] = [l.hub.x + l.hub.w, l.cy];
+  const firstPerson = l.tools.find((t) => t.human.by === "person")!;
+  const firstRead = l.tools[1];
   return (
     <figure>
-      <svg viewBox={`0 0 1000 ${INSIDE_HEIGHT}`} className="w-full" role="img" aria-label="What happens inside BNY after trust is established: agents, databases and the steps that need a person">
+      <svg viewBox={`0 0 1000 ${INSIDE_HEIGHT}`} className="w-full" role="group" aria-label="What happens inside BNY after trust is established: the orchestrator, one tool layer, and the systems it connects to">
         <Defs id={id} />
         {IN_ZONES.map((z) => (
           <g key={z.id}>
@@ -188,45 +236,41 @@ export function InsideDiagram() {
           </g>
         ))}
 
-        {/* The way in, as in the first diagram */}
         <Arrow id={id} tone="g" path={[[142, 195], [180, 195]]} />
         <Arrow id={id} path={[[270, 230], [270, l.gate.y]]} />
         <Arrow id={id} path={[[360, l.cy], [405, l.cy]]} />
-        {/* The way back out */}
         <Arrow id={id} path={[[l.orch.x + 40, l.orch.y + l.orch.h], [l.orch.x + 40, 505], [360, 505]]} />
         <Arrow id={id} tone="g" path={[[180, 505], [85, 505], [85, 240]]} />
+        <Arrow id={id} path={[[l.orch.x + l.orch.w, l.cy], [l.hub.x, l.cy]]} />
 
-        {/* The orchestrator hands the case to each agent */}
-        {l.groups.map((g) => (
-          <path key={g.group.id} d={link(right(l.orch), left(g.agent))} fill="none" stroke={g.group.state === "addable" ? "#8aa0b3" : TEAL} strokeWidth={2} className="flow" markerEnd={`url(#${id}-t)`} />
-        ))}
-        {/* Each agent reaches its databases, or waits for a person */}
-        {l.groups.map((g) =>
-          g.items.map((it) => (
-            <path key={it.title} d={link(right(g.agent), left(it.box))} fill="none" stroke={it.kind === "person" ? AMBER : it.kind === "addable" ? "#8aa0b3" : TEAL} strokeWidth={1.8} className="flow" markerEnd={`url(#${id}-${it.kind === "person" ? "a" : "t"})`} />
-          )),
-        )}
+        {l.tools.map((t) => {
+          const person = t.human.by === "person";
+          return <path key={t.id} d={link(hubR, [t.box.x, t.box.y + t.box.h / 2])} fill="none" stroke={person ? AMBER : t.status === "addable" ? "#8aa0b3" : TEAL} strokeWidth={sel === t.id ? 2.6 : 1.7} className="flow" markerEnd={`url(#${id}-${person ? "a" : "t"})`} />;
+        })}
 
         <Node b={l.gs} title="Goldman's agent" sub="outside BNY" stroke={GS} size={12.5} />
         <Node b={l.edge} title="mTLS edge" sub="encrypted, identified" dashed />
         <Node b={l.gate} title="Intake Gateway" sub="six checks, no model" />
         <Node b={l.outbound} title="Outbound filter" sub="approved fields only" />
-        <Node b={l.orch} title={["Settlement", "Fails", "Orchestrator"]} sub="routes the case" size={12.5} fill="#0a4a6e" />
-        {l.groups.map((g) => (
-          <Node key={g.group.id} b={g.agent} title={g.group.title} sub={g.group.sub} dashed={g.group.state === "addable"} stroke={g.group.state === "addable" ? "#8aa0b3" : TEAL} size={12} />
+        <Node b={l.orch} title={["Settlement", "Fails", "Orchestrator"]} sub="with its agents" size={12.5} fill="#0a4a6e" />
+        <Node b={l.hub} title={["Tool", "layer"]} sub="scoped, logged" size={12.5} fill="#0a4a6e" />
+        {l.tools.map((t) => (
+          <ToolCard key={t.id} t={t} on={sel === t.id} onSelect={() => setSel(t.id)} />
         ))}
-        {l.groups.flatMap((g) => g.items).map((it) => (it.kind === "person" ? <PersonNode key={it.title} b={it.box} title={it.title} sub={it.sub} /> : <DataNode key={it.title} b={it.box} title={it.title} sub={it.sub} addable={it.kind === "addable"} />))}
 
         <Badge x={161} y={195} n={1} tone={GS} />
         <Badge x={270} y={(230 + l.gate.y) / 2} n={2} />
         <Badge x={382} y={l.cy} n={3} />
-        <Badge x={545} y={l.cy} n={4} />
-        <Badge x={722} y={(right(ops.agent)[1] + left(ops.items[1].box)[1]) / 2 + 2} n={5} />
-        <Badge x={722} y={(right(client.agent)[1] + left(client.items[1].box)[1]) / 2 + 2} n={6} tone={AMBER} />
+        <Badge x={(l.orch.x + l.orch.w + l.hub.x) / 2} y={l.cy} n={4} />
+        <Badge x={684} y={(l.cy + firstRead.box.y + firstRead.box.h / 2) / 2} n={5} />
+        <Badge x={684} y={(l.cy + firstPerson.box.y + firstPerson.box.h / 2) / 2} n={6} tone={AMBER} />
         <Badge x={l.orch.x + 40} y={(l.orch.y + l.orch.h + 505) / 2} n={7} />
         <Badge x={85} y={380} n={8} tone={GS} />
       </svg>
-      <figcaption className="mt-3 grid gap-x-6 gap-y-1.5 text-sm text-white/75 sm:grid-cols-2 lg:grid-cols-3">
+
+      <ToolDetail t={tool} />
+
+      <figcaption className="mt-5 grid gap-x-6 gap-y-1.5 text-sm text-white/75 sm:grid-cols-2 lg:grid-cols-3">
         {IN_CAPTIONS.map((c, i) => (
           <p key={c} className="flex gap-2">
             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold text-white" style={{ borderColor: i === 5 ? AMBER : i === 0 || i === 7 ? GS : TEAL }}>
@@ -236,17 +280,22 @@ export function InsideDiagram() {
           </p>
         ))}
       </figcaption>
-      <p className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-white/60">
-        <span className="flex items-center gap-2">
-          <span className="h-3 w-5 rounded-sm border" style={{ borderColor: TEAL }} /> Reads on its own
-        </span>
+      <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-white/60">
+        {(Object.keys(CONNECTOR_LABEL) as Connector[]).map((c) => (
+          <span key={c} className="flex items-center gap-1.5">
+            <span className="rounded px-1.5 py-px text-[9px] font-extrabold text-[#00243e]" style={{ background: CONNECTOR_COLOUR[c] }}>
+              {c.toUpperCase()}
+            </span>
+            {CONNECTOR_LABEL[c]}
+          </span>
+        ))}
         <span className="flex items-center gap-2">
           <span className="h-3 w-5 rounded-sm border" style={{ borderColor: AMBER, background: `${AMBER}30` }} /> A named person approves first
         </span>
         <span className="flex items-center gap-2">
-          <span className="h-3 w-5 rounded-sm border border-dashed border-white/50" /> Could be connected next
+          <span className="h-3 w-5 rounded-sm border border-dashed border-white/50" /> Could be added next
         </span>
-        <span>Every step is written to the audit log.</span>
+        <span>Every call is written to the audit log. Click a tool to see how it connects.</span>
       </p>
     </figure>
   );
