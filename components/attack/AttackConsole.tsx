@@ -5,6 +5,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { hasStory, type StoryLine, storyFor } from "@/lib/attackNarration";
 import { type AttackId, type AttackPreset, type AttackResult, type AttackStep, attacksBy, type Attacker } from "@/lib/attackCatalog";
 import { PersonaDock } from "../proto/PersonaDock";
 import { useProto } from "../proto/Proto";
@@ -14,9 +15,11 @@ const WHO: Record<Attacker, { label: string; line: string }> = {
   insider: { label: "From inside Goldman", line: "Drives Goldman's real, registered agent: identity checks pass, so the limits must hold." },
 };
 
-export function AttackConsole() {
+/** `embedded` runs it inside the Eliza workspace: the workspace frame supplies the header and the prototype dock, and the attacker is chosen here rather than by switching person. */
+export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
   const { persona, setPersona } = useProto();
-  const who: Attacker = persona.id === "insider" ? "insider" : "hacker";
+  const [embeddedWho, setEmbeddedWho] = useState<Attacker>("hacker");
+  const who: Attacker = embedded ? embeddedWho : persona.id === "insider" ? "insider" : "hacker";
   const list = attacksBy(who);
   const [sel, setSel] = useState<AttackId>(list[0].id);
   const [results, setResults] = useState<Partial<Record<AttackId, AttackResult>>>({});
@@ -60,7 +63,8 @@ export function AttackConsole() {
 
   const other: Attacker = who === "hacker" ? "insider" : "hacker";
   return (
-    <div className="proto min-h-svh bg-[#0b0d12] font-sans text-[#d7dde8]">
+    <div className={`proto bg-[#0b0d12] font-sans text-[#d7dde8] ${embedded ? "min-h-full" : "min-h-svh"}`}>
+      {!embedded && (
       <header className="flex flex-wrap items-center gap-4 border-b border-white/10 px-6 py-3">
         <span className="font-mono text-sm font-semibold tracking-wide text-[#e0484c]">attack-console</span>
         <span className="text-xs text-white/40">Prototype stage · runs BNY&apos;s real gateway code · no real systems</span>
@@ -68,9 +72,15 @@ export function AttackConsole() {
           Target: <span className="font-mono text-white/80">bny.example/a2a/gateway</span>
         </span>
       </header>
+      )}
 
-      <div className="grid min-h-[calc(100svh-49px)] lg:grid-cols-[300px_minmax(0,1fr)]">
+      <div className={`grid lg:grid-cols-[300px_minmax(0,1fr)] ${embedded ? "min-h-full" : "min-h-[calc(100svh-49px)]"}`}>
         <aside className="border-r border-white/10 bg-white/[0.02] p-4 pb-24">
+          {embedded ? (
+            <p className="text-xs text-white/50">
+              Target: <span className="font-mono text-white/80">bny.example/a2a/gateway</span> · BNY&apos;s real gateway code, synthetic data
+            </p>
+          ) : (
           <div className="flex items-center gap-3">
             <Image src={persona.photo} alt="" width={40} height={40} className="h-10 w-10 rounded-full ring-2 ring-[#e0484c]/60" />
             <div className="min-w-0">
@@ -78,6 +88,7 @@ export function AttackConsole() {
               <p className="truncate text-xs text-white/50">{persona.role}</p>
             </div>
           </div>
+          )}
           <p className="mt-3 text-[11px] font-semibold tracking-[0.14em] text-[#e0484c] uppercase">{WHO[who].label}</p>
           <p className="mt-1 text-xs text-white/55">{WHO[who].line}</p>
           <ul className="mt-4 space-y-1">
@@ -100,12 +111,14 @@ export function AttackConsole() {
               );
             })}
           </ul>
-          <button onClick={() => setPersona(other)} className="mt-6 w-full rounded-md border border-white/10 px-3 py-2 text-left text-xs text-white/60 hover:border-white/30 hover:text-white">
+          <button onClick={() => (embedded ? setEmbeddedWho(other) : setPersona(other))} className="mt-6 w-full rounded-md border border-white/10 px-3 py-2 text-left text-xs text-white/60 hover:border-white/30 hover:text-white">
             Try it {other === "insider" ? "from inside Goldman instead (rogue insider)" : "from outside the network instead (attacker)"} →
           </button>
-          <Link href="/" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
-            Prototype overview
-          </Link>
+          {!embedded && (
+            <Link href="/" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
+              Prototype overview
+            </Link>
+          )}
         </aside>
 
         <main className="min-w-0 p-6 pb-28">
@@ -120,7 +133,7 @@ export function AttackConsole() {
           {result && (
             <section aria-live="polite" className="mt-6 space-y-3">
               {result.steps.slice(0, shown).map((s, i) => (
-                <StepView key={i} s={s} />
+                <StepView key={i} s={s} story={storyFor(s, preset.envelope, result.steps.slice(i + 1))} />
               ))}
               {shown > result.steps.length && (
                 <div className="dock-in rounded-lg border border-[#3fbf7f]/40 bg-[#3fbf7f]/10 px-4 py-3">
@@ -133,7 +146,7 @@ export function AttackConsole() {
           )}
         </main>
       </div>
-      <PersonaDock />
+      {!embedded && <PersonaDock />}
     </div>
   );
 }
@@ -182,7 +195,39 @@ const KIND: Record<AttackStep["kind"], { label: string; cls: string }> = {
   returned: { label: "response", cls: "text-[#c9a7ff]" },
 };
 
-function StepView({ s }: { s: AttackStep }) {
+function StepView({ s, story }: { s: AttackStep; story: StoryLine[] }) {
+  const card = <StepCard s={s} />;
+  if (!hasStory(s) || !story.length) return card;
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
+      {card}
+      <Story lines={story} />
+    </div>
+  );
+}
+
+/** The story beside a gateway result: scripted narration, with the real registry result in its place. */
+function Story({ lines }: { lines: StoryLine[] }) {
+  return (
+    <ol aria-label="What happens at the gateway" className="dock-in space-y-1.5 border-l border-white/10 pl-3">
+      {lines.map((l, i) =>
+        l.kind === "narration" ? (
+          <li key={i} className="text-[12px] leading-snug text-white/45 italic">
+            <span className="mr-1.5 rounded bg-white/5 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-white/40 uppercase not-italic">narration</span>
+            {l.text}
+          </li>
+        ) : (
+          <li key={i} className="rounded-md border border-white/15 bg-white/[0.05] px-2.5 py-1.5 text-[12px] leading-snug">
+            <span className="mr-1.5 rounded bg-[#7fb2ff]/15 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-[#7fb2ff] uppercase">real check</span>
+            <span className={l.ok ? "text-[#3fbf7f]" : "text-[#ff6b6e]"}>{l.ok ? "✓" : "✗"}</span> <span className="font-medium text-white/90">{l.label}</span> <span className="text-white/70">{l.text}</span>
+          </li>
+        ),
+      )}
+    </ol>
+  );
+}
+
+function StepCard({ s }: { s: AttackStep }) {
   const k = KIND[s.kind];
   return (
     <article className="dock-in rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3">

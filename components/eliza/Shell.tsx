@@ -327,6 +327,11 @@ export function Shell({
               Supervision
             </Link>
           )}
+          {hydrated && persona.firm === "BNY" && (
+            <Link href="/eliza/attack" className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas">
+              Attack console
+            </Link>
+          )}
           {!gs && (
             <Link href="/eliza/documents" aria-label="Documents and data sources" title="Documents and data sources" className="flex h-9 w-9 items-center justify-center rounded-full text-ink hover:bg-canvas">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
