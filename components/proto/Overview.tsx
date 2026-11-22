@@ -73,6 +73,18 @@ export function Overview() {
             </button>
             <span className="text-sm text-white/60">About 8 minutes · synthetic data · no setup needed</span>
           </div>
+          <Link
+            href="/journey"
+            className="group mt-5 flex max-w-xl items-center gap-4 rounded-lg bg-[#3fbf7f]/[0.1] px-4 py-3 ring-1 ring-[#3fbf7f]/35 transition hover:bg-[#3fbf7f]/[0.18] hover:ring-[#3fbf7f]/70 short:mt-3"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-white">The A2A journey: how this plays out in the real world</span>
+              <span className="block text-xs text-white/65">The setup before day one, where trust sits, a case as an A2A task, what goes wrong, and what BNY has to build.</span>
+            </span>
+            <span aria-hidden className="text-lg text-[#3fbf7f] transition group-hover:translate-x-0.5">
+              →
+            </span>
+          </Link>
         </section>
 
         <section aria-label="Who you'll be" className="space-y-4 short:space-y-2">

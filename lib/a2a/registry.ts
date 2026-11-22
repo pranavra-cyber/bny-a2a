@@ -246,9 +246,11 @@ export function registry(): Registry {
  * Network-operator control: a suspended firm's valid, unexpired credentials stop working on the next
  * message. The token is not revoked at the issuer; the gateway checks the registry on every call.
  */
-export const suspendFirm = (firm: MembershipRecord["firm"]) => void registry().suspended.add(firm);
-export const reinstateFirm = (firm: MembershipRecord["firm"]) => void registry().suspended.delete(firm);
-export const isSuspended = (firm: MembershipRecord["firm"]) => registry().suspended.has(firm);
+// A registry built by an older copy of this module (a hot reload in dev) has no set yet.
+const suspendedSet = () => (registry().suspended ??= new Set());
+export const suspendFirm = (firm: MembershipRecord["firm"]) => void suspendedSet().add(firm);
+export const reinstateFirm = (firm: MembershipRecord["firm"]) => void suspendedSet().delete(firm);
+export const isSuspended = (firm: MembershipRecord["firm"]) => suspendedSet().has(firm);
 
 export function membershipFor(agentId: string): { member: MembershipRecord; agent: MembershipRecord["agents"][number] } | null {
   for (const member of registry().members) {
