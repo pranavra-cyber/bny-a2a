@@ -46,3 +46,23 @@ describe("attack console story", () => {
     expect(r.steps.some((s) => s.kind === "gateway" && !hasStory(s))).toBe(true);
   });
 });
+
+describe("attack console chat", () => {
+  it("puts the attacker's messages on the right and BNY's on the left, with the story around the real check list", async () => {
+    const { chatFor } = await import("../lib/attackNarration");
+    for (const a of ATTACKS) {
+      const r = runAttack(a.id);
+      const chat = chatFor(a, r.steps);
+      expect(chat.filter((b) => b.kind === "sent").every((b) => b.side === "right"), a.id).toBe(true);
+      expect(chat.filter((b) => b.kind !== "sent").every((b) => b.side === "left"), a.id).toBe(true);
+      // Every step of the real result appears, in order.
+      expect(chat.flatMap((b) => ("step" in b ? [b.step] : []))).toEqual(r.steps);
+      // The real registry bubble is the gateway's identity result, and comes before that gateway's check list.
+      chat.forEach((b, i) => {
+        if (b.kind !== "real") return;
+        const gate = chat.slice(i).find((x) => x.kind === "gateway") as { step: { checks: { id: string; detail: string }[] } };
+        expect(b.text).toBe(gate.step.checks.find((c) => c.id === "identity")!.detail);
+      });
+    }
+  });
+});

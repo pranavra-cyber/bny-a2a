@@ -1,11 +1,12 @@
 "use client";
 // The attack console: a prototype stage, not a product screen. The external
 // attacker and the rogue Goldman insider each pick a preset way to slip past BNY's
-// gateway, launch it, and watch the real gateway code respond step by step.
+// gateway, launch it, and watch the real gateway code respond, as a chat: the attacker
+// on the right, BNY's gateway and agents on the left.
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { hasStory, type StoryLine, storyFor } from "@/lib/attackNarration";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type AttackBubble, chatFor } from "@/lib/attackNarration";
 import { type AttackId, type AttackPreset, type AttackResult, type AttackStep, attacksBy, type Attacker } from "@/lib/attackCatalog";
 import { PersonaDock } from "../proto/PersonaDock";
 import { useProto } from "../proto/Proto";
@@ -15,11 +16,9 @@ const WHO: Record<Attacker, { label: string; line: string }> = {
   insider: { label: "From inside Goldman", line: "Drives Goldman's real, registered agent: identity checks pass, so the limits must hold." },
 };
 
-/** `embedded` runs it inside the Eliza workspace: the workspace frame supplies the header and the prototype dock, and the attacker is chosen here rather than by switching person. */
-export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
+export function AttackConsole() {
   const { persona, setPersona } = useProto();
-  const [embeddedWho, setEmbeddedWho] = useState<Attacker>("hacker");
-  const who: Attacker = embedded ? embeddedWho : persona.id === "insider" ? "insider" : "hacker";
+  const who: Attacker = persona.id === "insider" ? "insider" : "hacker";
   const list = attacksBy(who);
   const [sel, setSel] = useState<AttackId>(list[0].id);
   const [results, setResults] = useState<Partial<Record<AttackId, AttackResult>>>({});
@@ -37,12 +36,17 @@ export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
     return () => clearTimeout(t);
   }, [who]);
 
-  // Reveal the gateway's response one step at a time.
+  // The conversation, revealed one bubble at a time: the next speaker "types" first.
+  const bubbles = useMemo(() => (result ? chatFor(preset, result.steps) : []), [preset, result]);
   useEffect(() => {
-    if (!result || shown >= result.steps.length + 1) return;
-    const t = setTimeout(() => setShown((n) => n + 1), shown === 0 ? 250 : 650);
+    if (!result || shown > bubbles.length) return;
+    const t = setTimeout(() => setShown((n) => n + 1), shown === bubbles.length ? 900 : pauseFor(bubbles[shown]));
     return () => clearTimeout(t);
-  }, [result, shown]);
+  }, [result, bubbles, shown]);
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [shown]);
 
   const launch = async () => {
     setBusy(true);
@@ -63,8 +67,7 @@ export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
 
   const other: Attacker = who === "hacker" ? "insider" : "hacker";
   return (
-    <div className={`proto bg-[#0b0d12] font-sans text-[#d7dde8] ${embedded ? "min-h-full" : "min-h-svh"}`}>
-      {!embedded && (
+    <div className="proto min-h-svh bg-[#0b0d12] font-sans text-[#d7dde8]">
       <header className="flex flex-wrap items-center gap-4 border-b border-white/10 px-6 py-3">
         <span className="font-mono text-sm font-semibold tracking-wide text-[#e0484c]">attack-console</span>
         <span className="text-xs text-white/40">Prototype stage · runs BNY&apos;s real gateway code · no real systems</span>
@@ -72,15 +75,9 @@ export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
           Target: <span className="font-mono text-white/80">bny.example/a2a/gateway</span>
         </span>
       </header>
-      )}
 
-      <div className={`grid lg:grid-cols-[300px_minmax(0,1fr)] ${embedded ? "min-h-full" : "min-h-[calc(100svh-49px)]"}`}>
+      <div className="grid min-h-[calc(100svh-49px)] lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="border-r border-white/10 bg-white/[0.02] p-4 pb-24">
-          {embedded ? (
-            <p className="text-xs text-white/50">
-              Target: <span className="font-mono text-white/80">bny.example/a2a/gateway</span> · BNY&apos;s real gateway code, synthetic data
-            </p>
-          ) : (
           <div className="flex items-center gap-3">
             <Image src={persona.photo} alt="" width={40} height={40} className="h-10 w-10 rounded-full ring-2 ring-[#e0484c]/60" />
             <div className="min-w-0">
@@ -88,7 +85,6 @@ export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
               <p className="truncate text-xs text-white/50">{persona.role}</p>
             </div>
           </div>
-          )}
           <p className="mt-3 text-[11px] font-semibold tracking-[0.14em] text-[#e0484c] uppercase">{WHO[who].label}</p>
           <p className="mt-1 text-xs text-white/55">{WHO[who].line}</p>
           <ul className="mt-4 space-y-1">
@@ -97,7 +93,7 @@ export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
               return (
                 <li key={a.id}>
                   <button
-                    onClick={() => (setSel(a.id), setShown(r ? r.steps.length + 1 : 0))}
+                    onClick={() => (setSel(a.id), setShown(r ? chatFor(a, r.steps).length + 1 : 0))}
                     aria-current={a.id === preset.id ? "true" : undefined}
                     className={`w-full rounded-md px-3 py-2 text-left transition ${a.id === preset.id ? "bg-white/10 ring-1 ring-[#e0484c]/50" : "hover:bg-white/5"}`}
                   >
@@ -111,14 +107,12 @@ export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
               );
             })}
           </ul>
-          <button onClick={() => (embedded ? setEmbeddedWho(other) : setPersona(other))} className="mt-6 w-full rounded-md border border-white/10 px-3 py-2 text-left text-xs text-white/60 hover:border-white/30 hover:text-white">
+          <button onClick={() => setPersona(other)} className="mt-6 w-full rounded-md border border-white/10 px-3 py-2 text-left text-xs text-white/60 hover:border-white/30 hover:text-white">
             Try it {other === "insider" ? "from inside Goldman instead (rogue insider)" : "from outside the network instead (attacker)"} →
           </button>
-          {!embedded && (
-            <Link href="/" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
-              Prototype overview
-            </Link>
-          )}
+          <Link href="/" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
+            Prototype overview
+          </Link>
         </aside>
 
         <main className="min-w-0 p-6 pb-28">
@@ -131,22 +125,30 @@ export function AttackConsole({ embedded = false }: { embedded?: boolean }) {
           </div>
 
           {result && (
-            <section aria-live="polite" className="mt-6 space-y-3">
-              {result.steps.slice(0, shown).map((s, i) => (
-                <StepView key={i} s={s} story={storyFor(s, preset.envelope, result.steps.slice(i + 1))} />
-              ))}
-              {shown > result.steps.length && (
-                <div className="dock-in rounded-lg border border-[#3fbf7f]/40 bg-[#3fbf7f]/10 px-4 py-3">
+            <section aria-live="polite" aria-label="The attack, as a conversation" className="mt-6">
+              <div className="flex justify-between px-1 font-mono text-[10px] tracking-[0.14em] text-white/35 uppercase">
+                <span>BNY</span>
+                <span>Attacker</span>
+              </div>
+              <div className="mt-2 space-y-2.5">
+                {bubbles.slice(0, shown).map((b, i) => (
+                  <Bubble key={i} b={b} />
+                ))}
+                {shown < bubbles.length && <Typing side={bubbles[shown].side} />}
+              </div>
+              {shown > bubbles.length && (
+                <div className="dock-in mt-4 rounded-lg border border-[#3fbf7f]/40 bg-[#3fbf7f]/10 px-4 py-3">
                   <p className="font-mono text-xs font-semibold tracking-wide text-[#3fbf7f] uppercase">Attack stopped · {result.stoppedBy}</p>
                   <p className="mt-1 text-sm text-white">{result.outcome}</p>
                   <p className="mt-1 text-xs text-white/50">BNY&apos;s gateway logged the attempt for Compliance.</p>
                 </div>
               )}
+              <div ref={endRef} />
             </section>
           )}
         </main>
       </div>
-      {!embedded && <PersonaDock />}
+      <PersonaDock />
     </div>
   );
 }
@@ -195,72 +197,79 @@ const KIND: Record<AttackStep["kind"], { label: string; cls: string }> = {
   returned: { label: "response", cls: "text-[#c9a7ff]" },
 };
 
-function StepView({ s, story }: { s: AttackStep; story: StoryLine[] }) {
-  const card = <StepCard s={s} />;
-  if (!hasStory(s) || !story.length) return card;
+/** How long the next speaker types before its bubble appears. */
+const pauseFor = (b: AttackBubble) => (b.kind === "sent" ? 400 : b.kind === "narration" ? 1100 : 850);
+
+function Typing({ side }: { side: "left" | "right" }) {
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
-      {card}
-      <Story lines={story} />
+    <div aria-hidden className={`dock-in flex ${side === "right" ? "justify-end" : ""}`}>
+      <span className={`flex gap-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3.5 py-3 ${side === "right" ? "rounded-tr-sm" : "rounded-tl-sm"}`}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/40" style={{ animationDelay: `${i * 160}ms` }} />
+        ))}
+      </span>
     </div>
   );
 }
 
-/** The story beside a gateway result: scripted narration, with the real registry result in its place. */
-function Story({ lines }: { lines: StoryLine[] }) {
-  return (
-    <ol aria-label="What happens at the gateway" className="dock-in space-y-1.5 border-l border-white/10 pl-3">
-      {lines.map((l, i) =>
-        l.kind === "narration" ? (
-          <li key={i} className="text-[12px] leading-snug text-white/45 italic">
-            <span className="mr-1.5 rounded bg-white/5 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-white/40 uppercase not-italic">narration</span>
-            {l.text}
-          </li>
-        ) : (
-          <li key={i} className="rounded-md border border-white/15 bg-white/[0.05] px-2.5 py-1.5 text-[12px] leading-snug">
-            <span className="mr-1.5 rounded bg-[#7fb2ff]/15 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-[#7fb2ff] uppercase">real check</span>
-            <span className={l.ok ? "text-[#3fbf7f]" : "text-[#ff6b6e]"}>{l.ok ? "✓" : "✗"}</span> <span className="font-medium text-white/90">{l.label}</span> <span className="text-white/70">{l.text}</span>
-          </li>
-        ),
-      )}
-    </ol>
-  );
-}
-
-function StepCard({ s }: { s: AttackStep }) {
+function Bubble({ b }: { b: AttackBubble }) {
+  const right = b.side === "right";
+  const wrap = `dock-in flex ${right ? "justify-end" : ""}`;
+  const shape = `max-w-[88%] rounded-2xl px-4 py-2.5 ${right ? "rounded-tr-sm" : "rounded-tl-sm"}`;
+  if (b.kind === "narration")
+    return (
+      <div className={wrap}>
+        <p className={`${shape} border border-dashed border-white/15 text-[12px] leading-snug text-white/45 italic`}>
+          <span className="mr-1.5 rounded bg-white/5 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-white/40 uppercase not-italic">narration</span>
+          {b.text}
+        </p>
+      </div>
+    );
+  if (b.kind === "real")
+    return (
+      <div className={wrap}>
+        <p className={`${shape} border border-white/15 bg-white/[0.06] text-[12px] leading-snug`}>
+          <span className="mr-1.5 rounded bg-[#7fb2ff]/15 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-[#7fb2ff] uppercase">real check</span>
+          <span className={b.ok ? "text-[#3fbf7f]" : "text-[#ff6b6e]"}>{b.ok ? "✓" : "✗"}</span> <span className="font-medium text-white/90">{b.label}</span> <span className="text-white/70">{b.text}</span>
+        </p>
+      </div>
+    );
+  const s = b.step;
   const k = KIND[s.kind];
   return (
-    <article className="dock-in rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3">
-      <p className="flex items-center gap-2 font-mono text-[11px]">
-        <span className={`font-semibold tracking-wide uppercase ${k.cls}`}>{k.label}</span>
-        {s.ok === false && <span className="rounded bg-[#e0484c]/20 px-1.5 text-[#ff8a8d]">blocked</span>}
-      </p>
-      <h3 className="mt-1 text-sm font-semibold text-white">{s.title}</h3>
-      {s.text && <pre className="mt-2 max-h-48 overflow-auto rounded bg-black/40 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-white/80">{s.text}</pre>}
-      {s.fields && Object.keys(s.fields).length > 0 && (
-        <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-0.5 font-mono text-[11px]">
-          {Object.entries(s.fields).map(([f, v]) => (
-            <div key={f} className="contents">
-              <dt className="text-white/40">{f}</dt>
-              <dd className="break-all text-white/80">{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {s.checks && (
-        <ul className="mt-2 space-y-0.5 font-mono text-[11px]">
-          {s.checks.map((c) => {
-            const flag = !c.ok && (c.id === "injection" || c.id === "fields" || c.id === "disclosure");
-            return (
-              <li key={c.id} className="flex gap-2">
-                <span className={c.ok ? "text-[#3fbf7f]" : flag ? "text-[#f0c674]" : "text-[#ff6b6e]"}>{c.ok ? "✓" : flag ? "⚑" : "✗"}</span>
-                <span className="text-white/85">{c.label}</span>
-                <span className="text-white/45">{c.detail}</span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </article>
+    <div className={wrap}>
+      <article className={`${shape} border ${right ? "border-[#e0484c]/35 bg-[#e0484c]/10" : "border-white/10 bg-white/[0.04]"}`}>
+        <p className="flex items-center gap-2 font-mono text-[11px]">
+          <span className={`font-semibold tracking-wide uppercase ${k.cls}`}>{k.label}</span>
+          {s.ok === false && <span className="rounded bg-[#e0484c]/20 px-1.5 text-[#ff8a8d]">blocked</span>}
+        </p>
+        <h3 className="mt-1 text-sm font-semibold text-white">{s.title}</h3>
+        {s.text && <pre className="mt-2 max-h-48 overflow-auto rounded bg-black/40 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-white/80">{s.text}</pre>}
+        {s.fields && Object.keys(s.fields).length > 0 && (
+          <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-0.5 font-mono text-[11px]">
+            {Object.entries(s.fields).map(([f, v]) => (
+              <div key={f} className="contents">
+                <dt className="text-white/40">{f}</dt>
+                <dd className="break-all text-white/80">{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {s.checks && (
+          <ul className="mt-2 space-y-0.5 font-mono text-[11px]">
+            {s.checks.map((c) => {
+              const flag = !c.ok && (c.id === "injection" || c.id === "fields" || c.id === "disclosure");
+              return (
+                <li key={c.id} className="flex gap-2">
+                  <span className={c.ok ? "text-[#3fbf7f]" : flag ? "text-[#f0c674]" : "text-[#ff6b6e]"}>{c.ok ? "✓" : flag ? "⚑" : "✗"}</span>
+                  <span className="text-white/85">{c.label}</span>
+                  <span className="text-white/45">{c.detail}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </article>
+    </div>
   );
 }

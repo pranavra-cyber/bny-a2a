@@ -27,3 +27,23 @@ export function storyFor(step: AttackStep, envelope: AttackPreset["envelope"], l
   } else if (identity.ok) lines.push({ kind: "narration", text: "Identity passed, so the gateway goes on to the checks below." });
   return lines;
 }
+
+/** One chat bubble in the console: the attacker's messages on the right, BNY's gateway and agents on the left. */
+export type AttackBubble =
+  | { side: "right" | "left"; kind: AttackStep["kind"]; step: AttackStep }
+  | { side: "left"; kind: "narration"; text: string }
+  | { side: "left"; kind: "real"; ok: boolean; label: string; text: string };
+
+/** Lays an attack result out as a conversation: the story lines come before and after the gateway's own check list, in order. */
+export function chatFor(preset: AttackPreset, steps: AttackStep[]): AttackBubble[] {
+  const out: AttackBubble[] = [];
+  steps.forEach((step, i) => {
+    const story = storyFor(step, preset.envelope, steps.slice(i + 1));
+    const asBubble = (l: StoryLine): AttackBubble => (l.kind === "narration" ? { side: "left", kind: "narration", text: l.text } : { side: "left", kind: "real", ok: l.ok, label: l.label, text: l.text });
+    const real = story.findIndex((l) => l.kind === "real");
+    if (real >= 0) story.slice(0, real + 1).forEach((l) => out.push(asBubble(l)));
+    out.push({ side: step.kind === "sent" ? "right" : "left", kind: step.kind, step });
+    if (real >= 0) story.slice(real + 1).forEach((l) => out.push(asBubble(l)));
+  });
+  return out;
+}

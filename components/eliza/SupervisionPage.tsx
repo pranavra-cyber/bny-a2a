@@ -16,17 +16,18 @@ type Speed = (typeof SPEEDS)[number];
 const words = (t = "") => (t ? t.split(" ") : []);
 /** How many steps a bubble reveals in: a run bubble appears whole; narration streams word by word, then its tool list one by one, then its closing line. */
 const unitsOf = (m: ChatMessage) => (m.source === "run" ? 1 : words(m.text).length + (m.candidates?.length ?? 0) + words(m.footer).length);
-/** Milliseconds to wait before revealing the next step of a bubble. */
+/** Milliseconds to wait before revealing the next step of a bubble: the reasoning is slow on purpose, so it can be followed. */
 const unitDelay = (m: ChatMessage, unit: number) => {
   const tw = words(m.text).length;
-  return unit > tw && unit <= tw + (m.candidates?.length ?? 0) ? 450 : 65;
+  return unit > tw && unit <= tw + (m.candidates?.length ?? 0) ? 750 : 100;
 };
 const isThinking = (m: ChatMessage) => m.source === "narration" && m.speaker === "orchestrator";
 /** How long the next speaker "types" first: the orchestrator thinks longest, with nothing on screen. */
-const pauseFor = (m: ChatMessage) => (isThinking(m) ? (m.step === "thinking" ? 2200 : 1600) : m.speaker === "tool" ? 1000 : 650);
-const HOLD_MS = 450;
+const pauseFor = (m: ChatMessage) => (isThinking(m) ? (m.step === "thinking" ? 3200 : 2400) : m.speaker === "tool" ? 1700 : 800);
+const HOLD_MS = 800;
 
-const sideOf = (m: ChatMessage) => (m.speaker === "goldman" ? "left" : "right");
+/** The orchestrator is the one talking on the right; Goldman, the gateway and the tools it calls answer from the left. */
+const sideOf = (m: ChatMessage) => (m.speaker === "orchestrator" ? "right" : "left");
 
 export function SupervisionPage() {
   const { persona, summary, hydrated } = useProto();
@@ -140,8 +141,8 @@ function Chat({ readOnly, initial }: { readOnly: boolean; initial: SupervisedSce
       </div>
 
       <div className="mt-2 flex justify-between px-1 text-[11px] font-semibold tracking-wide text-muted uppercase">
-        <span>Goldman</span>
-        <span>BNY</span>
+        <span>Goldman · gateway · tools</span>
+        <span>Orchestrator</span>
       </div>
       <ol role="log" aria-label="Supervision conversation" className="mt-2 space-y-2.5">
         {script.slice(0, shown).map((m) => (
