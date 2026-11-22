@@ -6,7 +6,7 @@
 // (they show the user experience of those controls; no real crypto runs).
 import "server-only";
 import { verifyToken } from "./auth";
-import { membershipFor } from "./registry";
+import { isSuspended, membershipFor } from "./registry";
 import type { GatewayCheck, Message, Part } from "./types";
 
 export const MAX_TURNS = 10;
@@ -130,6 +130,7 @@ export function inbound(req: InboundRequest): InboundResult {
   const { member } = membership;
   const identityProblems = [
     token.claims.sub !== req.fromAgentId && "token subject does not match sender",
+    isSuspended(member.firm) && `${member.legalName} is suspended by the network operator`,
     member.kycStatus !== "VERIFIED" && `KYC ${member.kycStatus}`,
     member.domainAttestation !== "ATTESTED" && "domain not attested",
     member.domain !== req.fromDomain && `sender domain ${req.fromDomain} does not match attested ${member.domain}`,
