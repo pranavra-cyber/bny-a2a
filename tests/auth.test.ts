@@ -24,11 +24,30 @@ describe("signing secret", () => {
     expect(verifyToken(issueToken(claims)).ok).toBe(true);
   });
 
-  it("throws in production when NETWORK_SIGNING_SECRET is unset", async () => {
+  it("uses the same fixed demo secret in production when none is set, so separate instances agree", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NETWORK_SIGNING_SECRET", "");
-    const { issueToken } = await freshAuth();
-    expect(() => issueToken(claims)).toThrow(/NETWORK_SIGNING_SECRET/);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const first = await freshAuth();
+    const token = first.issueToken(claims);
+    delete g.__networkSecret; // another instance, started separately
+    const second = await freshAuth();
+    expect(second.verifyToken(token).ok).toBe(true);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("fixed demo secret"));
+    warn.mockRestore();
+  });
+
+  it("a configured secret replaces the demo one, and tokens signed with the demo one stop working", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NETWORK_SIGNING_SECRET", "");
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const demo = await freshAuth();
+    const demoToken = demo.issueToken(claims);
+    delete g.__networkSecret;
+    vi.stubEnv("NETWORK_SIGNING_SECRET", "a-real-secret");
+    const real = await freshAuth();
+    expect(real.verifyToken(demoToken).ok).toBe(false);
+    expect(real.verifyToken(real.issueToken(claims)).ok).toBe(true);
   });
 
   it("uses the configured secret in production", async () => {

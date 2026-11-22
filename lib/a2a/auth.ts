@@ -9,17 +9,25 @@ export const ISSUER = "bny-a2a-network-registry";
 const g = globalThis as unknown as { __networkSecret?: string };
 
 /**
- * The registry's signing secret. Local dev and tests may fall back to a random per-process
- * secret. In production that would silently break verification across instances (a token
- * issued by one is rejected by another), so an unset NETWORK_SIGNING_SECRET throws instead.
- * Resolved on first use, not at import, so `next build` doesn't need the secret.
+ * Fixed signing secret for the hosted demo, used when NETWORK_SIGNING_SECRET is not set. It is
+ * written in the source, so it protects nothing: anyone who reads it can mint a token the demo
+ * gateway accepts. That is acceptable only because the gateway guards synthetic data. A random
+ * secret would break on a host that runs several instances (a token issued by one would be
+ * rejected by another), so production uses this fixed one instead. Set NETWORK_SIGNING_SECRET to
+ * replace it; do that before pointing this gateway at anything real.
+ */
+const DEMO_SECRET = "bny-a2a-demo-signing-key-synthetic-data-only";
+
+/**
+ * The registry's signing secret. NETWORK_SIGNING_SECRET wins when set. Otherwise production uses
+ * the fixed demo secret above (and says so once), and local dev and tests use a random
+ * per-process secret. Resolved on first use, not at import.
  */
 function getSecret(): string {
   if (g.__networkSecret) return g.__networkSecret;
   const fromEnv = process.env.NETWORK_SIGNING_SECRET;
-  if (!fromEnv && process.env.NODE_ENV === "production")
-    throw new Error("NETWORK_SIGNING_SECRET is not set. Set it in the deployment environment; production never invents a signing secret.");
-  return (g.__networkSecret = fromEnv || crypto.randomBytes(32).toString("hex"));
+  if (!fromEnv && process.env.NODE_ENV === "production") console.warn("NETWORK_SIGNING_SECRET is not set: signing tokens with the fixed demo secret (synthetic data only).");
+  return (g.__networkSecret = fromEnv || (process.env.NODE_ENV === "production" ? DEMO_SECRET : crypto.randomBytes(32).toString("hex")));
 }
 
 export type TokenClaims = {
