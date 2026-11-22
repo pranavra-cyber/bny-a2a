@@ -110,7 +110,7 @@ export function AttackConsole() {
           <button onClick={() => setPersona(other)} className="mt-6 w-full rounded-md border border-white/10 px-3 py-2 text-left text-xs text-white/60 hover:border-white/30 hover:text-white">
             Try it {other === "insider" ? "from inside Goldman instead (rogue insider)" : "from outside the network instead (attacker)"} →
           </button>
-          <Link href="/" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
+          <Link href="/prototype" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
             Prototype overview
           </Link>
         </aside>

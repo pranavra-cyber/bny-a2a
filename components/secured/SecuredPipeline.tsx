@@ -70,10 +70,7 @@ export function SecuredPipeline() {
       <header className="flex flex-wrap items-center gap-4 border-b border-white/10 px-6 py-3">
         <span className="font-mono text-sm font-semibold tracking-wide text-[#3fbf7f]">secured</span>
         <span className="text-xs text-white/40">Prototype stage · a legitimate connection, established and secured end to end</span>
-        <Link href="/journey" className="ml-auto text-xs text-white/50 hover:text-white/80">
-          The A2A journey
-        </Link>
-        <Link href="/" className="text-xs text-white/50 hover:text-white/80">
+        <Link href="/prototype" className="ml-auto text-xs text-white/50 hover:text-white/80">
           Prototype overview
         </Link>
       </header>
