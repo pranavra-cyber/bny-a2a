@@ -1,0 +1,646 @@
+{
+ "golden": {
+  "recording": "r_5497d540",
+  "inquiry": {
+   "text": "Please explain the quantity mismatch underlying the DK and confirm whether we should redeliver before cutoff.",
+   "fields": [
+    "dtc_reference",
+    "counterparty_trade_ref",
+    "counterparty_fail_ref",
+    "isin",
+    "quantity_delivered",
+    "settle_date",
+    "deliverer_participant",
+    "dk_reason",
+    "confirm_quantity",
+    "confirm_status",
+    "requested_action"
+   ]
+  },
+  "accepted": {
+   "title": "Gateway accepted settlement.dk-inquiry",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.dk-inquiry schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.dk-inquiry approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 1 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "11 fields within allowlist"
+    }
+   ]
+  },
+  "hold": {
+   "text": "DTC-DO-20261119-000318 remains pending confirmation; the quantity has been queried and a new instruction requested. Please hold; an expected fix time will follow.",
+   "shared": [
+    "dtc_reference",
+    "isin",
+    "settle_date",
+    "instruction_status",
+    "requested_action"
+   ],
+   "gateway": {
+    "title": "Outbound filter: 5 approved field(s)",
+    "checks": [
+     {
+      "id": "fields",
+      "label": "Fields allowed",
+      "ok": true,
+      "detail": "dtc_reference, isin, settle_date, instruction_status, requested_action"
+     },
+     {
+      "id": "labels",
+      "label": "Data labels",
+      "ok": true,
+      "detail": "every field public or internal"
+     },
+     {
+      "id": "disclosure",
+      "label": "Disclosure scan",
+      "ok": true,
+      "detail": "no internal or client data in text"
+     },
+     {
+      "id": "terms",
+      "label": "Usage terms",
+      "ok": true,
+      "detail": "purpose: this case only · retain 30 days · no model training"
+     }
+    ]
+   }
+  },
+  "fix": {
+   "text": "The quantity difference was on our side; 10,000 is correct, and a corrected instruction is expected by 11:15 ET. Please keep your side as is and hold until the fix; settlement can still occur today before the 15:10 ET cutoff.",
+   "shared": [
+    "dtc_reference",
+    "isin",
+    "settle_date",
+    "instruction_status",
+    "resolution",
+    "expected_fix_time",
+    "settle_by",
+    "requested_action"
+   ],
+   "gateway": {
+    "title": "Outbound filter: 8 approved field(s)",
+    "checks": [
+     {
+      "id": "fields",
+      "label": "Fields allowed",
+      "ok": true,
+      "detail": "dtc_reference, isin, settle_date, instruction_status, resolution, expected_fix_time, settle_by, requested_action"
+     },
+     {
+      "id": "labels",
+      "label": "Data labels",
+      "ok": true,
+      "detail": "every field public or internal"
+     },
+     {
+      "id": "disclosure",
+      "label": "Disclosure scan",
+      "ok": true,
+      "detail": "no internal or client data in text"
+     },
+     {
+      "id": "terms",
+      "label": "Usage terms",
+      "ok": true,
+      "detail": "purpose: this case only · retain 30 days · no model training"
+     }
+    ]
+   }
+  }
+ },
+ "fp3": {
+  "recording": "r_f5847003",
+  "inquiry": {
+   "text": "Please explain the quantity mismatch DK and confirm whether we should redeliver before cutoff. The relevant references and quantities are attached. BNY confirmed 10,000 yesterday.",
+   "fields": [
+    "dtc_reference",
+    "counterparty_trade_ref",
+    "counterparty_fail_ref",
+    "isin",
+    "quantity_delivered",
+    "settle_date",
+    "deliverer_participant",
+    "dk_reason",
+    "confirm_quantity",
+    "confirm_status",
+    "requested_action",
+    "claims"
+   ]
+  },
+  "accepted": {
+   "title": "Gateway accepted settlement.dk-inquiry",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.dk-inquiry schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.dk-inquiry approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 1 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "12 fields within allowlist"
+    }
+   ]
+  },
+  "reference": {
+   "text": "We cannot verify a prior BNY confirmation. Please provide the BNY record reference for it.",
+   "shared": [
+    "requested_action"
+   ],
+   "gateway": {
+    "title": "Outbound filter: 1 approved field(s)",
+    "checks": [
+     {
+      "id": "fields",
+      "label": "Fields allowed",
+      "ok": true,
+      "detail": "requested_action"
+     },
+     {
+      "id": "labels",
+      "label": "Data labels",
+      "ok": true,
+      "detail": "every field public or internal"
+     },
+     {
+      "id": "disclosure",
+      "label": "Disclosure scan",
+      "ok": true,
+      "detail": "no internal or client data in text"
+     },
+     {
+      "id": "terms",
+      "label": "Usage terms",
+      "ok": true,
+      "detail": "purpose: this case only · retain 30 days · no model training"
+     }
+    ]
+   }
+  },
+  "followup": {
+   "text": "We do not have a BNY record reference in our records. Our affirmed CTM confirmation reference is CTM-77104562.",
+   "fields": [
+    "claim_reference"
+   ],
+   "gateway": {
+    "title": "Gateway accepted settlement.dk-inquiry",
+    "checks": [
+     {
+      "id": "identity",
+      "label": "Identity",
+      "ok": true,
+      "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+     },
+     {
+      "id": "card",
+      "label": "Agent Card signature",
+      "ok": true,
+      "detail": "signed with Goldman's registered key"
+     },
+     {
+      "id": "holder",
+      "label": "Token holder",
+      "ok": true,
+      "detail": "token bound to this agent's certificate"
+     },
+     {
+      "id": "signature",
+      "label": "Message signature",
+      "ok": true,
+      "detail": "valid"
+     },
+     {
+      "id": "nonce",
+      "label": "Fresh nonce",
+      "ok": true,
+      "detail": "new nonce, timestamp within 2 minutes"
+     },
+     {
+      "id": "schema",
+      "label": "Message schema",
+      "ok": true,
+      "detail": "matches the settlement.dk-inquiry schema; free text only in the note"
+     },
+     {
+      "id": "scope",
+      "label": "Scope",
+      "ok": true,
+      "detail": "settlement.dk-inquiry approved"
+     },
+     {
+      "id": "turns",
+      "label": "Turn limit",
+      "ok": true,
+      "detail": "turn 3 of 10"
+     },
+     {
+      "id": "injection",
+      "label": "Injection scan",
+      "ok": true,
+      "detail": "clean"
+     },
+     {
+      "id": "fields",
+      "label": "Fields allowed",
+      "ok": true,
+      "detail": "1 fields within allowlist"
+     }
+    ]
+   }
+  }
+ },
+ "fp4": {
+  "recording": "r_b00667e7",
+  "inquiry": {
+   "text": "Please explain the quantity-mismatch DK and confirm whether we should redeliver before cutoff. The delivery and affirmed confirmation both show 10,000 shares.",
+   "fields": [
+    "dtc_reference",
+    "counterparty_trade_ref",
+    "counterparty_fail_ref",
+    "isin",
+    "quantity_delivered",
+    "settle_date",
+    "deliverer_participant",
+    "dk_reason",
+    "confirm_quantity",
+    "confirm_status",
+    "requested_action"
+   ]
+  },
+  "accepted": {
+   "title": "Gateway accepted settlement.dk-inquiry",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.dk-inquiry schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.dk-inquiry approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 1 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "11 fields within allowlist"
+    }
+   ]
+  },
+  "hold": {
+   "text": "DTC-DO-20261119-000318 (ISIN US67066G1040, settlement date 2026-11-19) is pending confirmation of the quantity and re-instruction. Please hold; an expected fix time will follow.",
+   "shared": [
+    "dtc_reference",
+    "isin",
+    "settle_date",
+    "instruction_status",
+    "requested_action"
+   ],
+   "gateway": {
+    "title": "Outbound filter: 5 approved field(s)",
+    "checks": [
+     {
+      "id": "fields",
+      "label": "Fields allowed",
+      "ok": true,
+      "detail": "dtc_reference, isin, settle_date, instruction_status, requested_action"
+     },
+     {
+      "id": "labels",
+      "label": "Data labels",
+      "ok": true,
+      "detail": "every field public or internal"
+     },
+     {
+      "id": "disclosure",
+      "label": "Disclosure scan",
+      "ok": true,
+      "detail": "no internal or client data in text"
+     },
+     {
+      "id": "terms",
+      "label": "Usage terms",
+      "ok": true,
+      "detail": "purpose: this case only · retain 30 days · no model training"
+     }
+    ]
+   }
+  }
+ },
+ "fp5": {
+  "recording": "r_b89b6317",
+  "inquiry": {
+   "text": "Please explain the quantity mismatch behind the DK and confirm whether we should redeliver before cutoff. Please also confirm the applicable cutoff time.",
+   "fields": [
+    "dtc_reference",
+    "counterparty_trade_ref",
+    "counterparty_fail_ref",
+    "isin",
+    "quantity_delivered",
+    "settle_date",
+    "deliverer_participant",
+    "dk_reason",
+    "confirm_quantity",
+    "confirm_status",
+    "requested_action"
+   ]
+  },
+  "accepted": {
+   "title": "Gateway accepted settlement.dk-inquiry",
+   "checks": [
+    {
+     "id": "identity",
+     "label": "Identity",
+     "ok": true,
+     "detail": "Goldman Sachs & Co. LLC · LEI 5493VQMLGW286LLGYZ19 · token valid"
+    },
+    {
+     "id": "card",
+     "label": "Agent Card signature",
+     "ok": true,
+     "detail": "signed with Goldman's registered key"
+    },
+    {
+     "id": "holder",
+     "label": "Token holder",
+     "ok": true,
+     "detail": "token bound to this agent's certificate"
+    },
+    {
+     "id": "signature",
+     "label": "Message signature",
+     "ok": true,
+     "detail": "valid"
+    },
+    {
+     "id": "nonce",
+     "label": "Fresh nonce",
+     "ok": true,
+     "detail": "new nonce, timestamp within 2 minutes"
+    },
+    {
+     "id": "schema",
+     "label": "Message schema",
+     "ok": true,
+     "detail": "matches the settlement.dk-inquiry schema; free text only in the note"
+    },
+    {
+     "id": "scope",
+     "label": "Scope",
+     "ok": true,
+     "detail": "settlement.dk-inquiry approved"
+    },
+    {
+     "id": "turns",
+     "label": "Turn limit",
+     "ok": true,
+     "detail": "turn 1 of 10"
+    },
+    {
+     "id": "injection",
+     "label": "Injection scan",
+     "ok": true,
+     "detail": "clean"
+    },
+    {
+     "id": "fields",
+     "label": "Fields allowed",
+     "ok": true,
+     "detail": "11 fields within allowlist"
+    }
+   ]
+  },
+  "hold": {
+   "text": "DTC-DO-20261119-000318 is pending confirmation of the quantity and re-instruction. Please hold; an expected fix time will follow.",
+   "shared": [
+    "dtc_reference",
+    "isin",
+    "settle_date",
+    "instruction_status",
+    "requested_action"
+   ],
+   "gateway": {
+    "title": "Outbound filter: 5 approved field(s)",
+    "checks": [
+     {
+      "id": "fields",
+      "label": "Fields allowed",
+      "ok": true,
+      "detail": "dtc_reference, isin, settle_date, instruction_status, requested_action"
+     },
+     {
+      "id": "labels",
+      "label": "Data labels",
+      "ok": true,
+      "detail": "every field public or internal"
+     },
+     {
+      "id": "disclosure",
+      "label": "Disclosure scan",
+      "ok": true,
+      "detail": "no internal or client data in text"
+     },
+     {
+      "id": "terms",
+      "label": "Usage terms",
+      "ok": true,
+      "detail": "purpose: this case only · retain 30 days · no model training"
+     }
+    ]
+   }
+  },
+  "fix": {
+   "text": "The quantity difference is on our side; 10,000 is correct, and the instruction is pending correction by 11:50 ET. Please keep your side as is and hold until the fix; the trade can still settle today before the 15:10 ET DTC DVP close.",
+   "shared": [
+    "dtc_reference",
+    "isin",
+    "settle_date",
+    "instruction_status",
+    "resolution",
+    "expected_fix_time",
+    "settle_by",
+    "requested_action"
+   ],
+   "gateway": {
+    "title": "Outbound filter: 8 approved field(s)",
+    "checks": [
+     {
+      "id": "fields",
+      "label": "Fields allowed",
+      "ok": true,
+      "detail": "dtc_reference, isin, settle_date, instruction_status, resolution, expected_fix_time, settle_by, requested_action"
+     },
+     {
+      "id": "labels",
+      "label": "Data labels",
+      "ok": true,
+      "detail": "every field public or internal"
+     },
+     {
+      "id": "disclosure",
+      "label": "Disclosure scan",
+      "ok": true,
+      "detail": "no internal or client data in text"
+     },
+     {
+      "id": "terms",
+      "label": "Usage terms",
+      "ok": true,
+      "detail": "purpose: this case only · retain 30 days · no model training"
+     }
+    ]
+   }
+  }
+ }
+}

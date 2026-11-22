@@ -11,7 +11,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "record": "tsx --conditions=react-server scripts/record.ts",
-    "predev": "tsx --conditions=react-server scripts/check-setup.ts"
+    "predev": "tsx --conditions=react-server scripts/check-setup.ts",
+    "supervision:snapshot": "tsx --conditions=react-server scripts/supervision-snapshot.ts"
   },
   "dependencies": {
     "next": "16.2.4",
