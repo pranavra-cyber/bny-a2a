@@ -38,7 +38,7 @@ export function Landing() {
           <OutsideDiagram />
         </Section>
 
-        <Section n={2} label="Inside BNY, once trust is established" title="Inside, BNY's agents use scoped tools and databases, and people approve what matters." lead="The orchestrator hands work to agents. Reading is automatic. Sending to the client, releasing an instruction and making an exception wait for a named person. Everything is logged.">
+        <Section n={2} label="Inside BNY, once trust is established" title="Inside, BNY's agents read BNY's own systems, and people approve what matters." lead="The orchestrator hands the case to agents. Reading is automatic; sending to the client, releasing an instruction and making an exception wait for a named person. Everything is logged.">
           <InsideDiagram />
         </Section>
 

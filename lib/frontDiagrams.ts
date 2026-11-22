@@ -4,7 +4,6 @@
 // Geometry is in SVG units. Text and data only: safe for client components.
 
 export type Box = { x: number; y: number; w: number; h: number };
-const mid = (b: Box): [number, number] => [b.x + b.w / 2, b.y + b.h / 2];
 
 // ---------------------------------------------------------------------------------------------
 // 1. Connecting to the outside world
@@ -25,7 +24,6 @@ export const OUT_NODES: OutNode[] = [
   { id: "registry", title: "Registry", sub: "who may ask what", x: 540, y: 330, w: 140, h: 70, side: "bny" },
   { id: "inside", title: "BNY's agents", sub: "cleaned request goes inward", x: 745, y: 190, w: 210, h: 90, side: "bny" },
 ];
-const out = (id: string) => OUT_NODES.find((n) => n.id === id)!;
 
 export type Hop = { n?: number; path: [number, number][]; caption?: string };
 export const OUT_HOPS: Hop[] = [
@@ -45,103 +43,102 @@ export const ONBOARDING_BAND: Box = { x: 330, y: 418, w: 655, h: 82 };
 export const ONBOARDING_CHIPS: Box[] = ONBOARDING.map((_, i) => ({ x: 342 + i * 106, y: 452, w: 96, h: 34 }));
 
 // ---------------------------------------------------------------------------------------------
-// 2. Inside BNY
+// 2. Inside BNY: the same map as the first, with the BNY internal zone opened up
 
-export type Human = { by: "auto" } | { by: "person"; who: string };
-export type Row = {
-  tool: string;
-  data: { title: string; sub: string };
-  human: Human;
-  /** "built": in the prototype. "addable": could be connected next. */
-  state: "built" | "addable";
-  /** Table or document in the prototype's data this row reads, if any. */
-  source?: string;
+export type Item = {
+  title: string;
+  sub: string;
+  /** read: the agent reads it on its own. person: a named person approves first. addable: could be connected next. */
+  kind: "read" | "person" | "addable";
+  /** Tables or documents in the prototype's data this reads. */
+  sources?: string[];
 };
-export type Group = { id: string; agentId?: string; title: string; sub: string; state: "built" | "addable"; rows: Row[] };
+export type Group = { id: string; agentId?: string; title: string[]; sub: string; state: "built" | "addable"; items: Item[] };
 
 export const INSIDE: Group[] = [
   {
     id: "ops",
     agentId: "bny-settlement-agent",
-    title: "Settlement Ops Agent",
+    title: ["Settlement", "Ops Agent"],
     sub: "finds the cause",
     state: "built",
-    rows: [
-      { tool: "Find the DK'd instruction", data: { title: "Settlement instructions", sub: "what BNY expects to receive" }, human: { by: "auto" }, state: "built", source: "bny/settlement_instructions" },
-      { tool: "Check DTC activity", data: { title: "DTC activity feed", sub: "what the depository shows" }, human: { by: "auto" }, state: "built", source: "dtc/settlement_activity" },
-      { tool: "Look up fail & exception", data: { title: "Fails & exceptions log", sub: "open fails and deadlines" }, human: { by: "auto" }, state: "built", source: "bny/fails_exceptions" },
-      { tool: "Check receiving details", data: { title: "SSI reference data", sub: "counterparty settlement details" }, human: { by: "auto" }, state: "built", source: "bny/ssi_counterparties" },
-      { tool: "Search the procedures", data: { title: "Procedures library", sub: "runbooks and policies" }, human: { by: "auto" }, state: "built", source: "docs/settlement_operations_procedures.md" },
+    items: [
+      { kind: "read", title: "Settlement instructions", sub: "what BNY expects to receive", sources: ["bny/settlement_instructions"] },
+      { kind: "read", title: "DTC activity feed", sub: "what the depository shows", sources: ["dtc/settlement_activity"] },
+      { kind: "read", title: "Fails & exceptions log", sub: "open fails and deadlines", sources: ["bny/fails_exceptions"] },
+      { kind: "read", title: "Procedures & SSI data", sub: "runbooks, counterparty details", sources: ["docs/settlement_operations_procedures.md", "bny/ssi_counterparties"] },
     ],
   },
   {
     id: "client",
     agentId: "bny-client-team",
-    title: "Client Team Agent",
+    title: ["Client Team", "Agent"],
     sub: "drafts for the client",
     state: "built",
-    rows: [
-      { tool: "Look up client & terms", data: { title: "Client accounts", sub: "service terms and contacts" }, human: { by: "auto" }, state: "built", source: "bny/client_accounts" },
-      { tool: "Draft the client email", data: { title: "Email to the client", sub: "Daniel Kim approves each one" }, human: { by: "person", who: "Daniel Kim" }, state: "built" },
+    items: [
+      { kind: "read", title: "Client accounts", sub: "terms and contacts", sources: ["bny/client_accounts"] },
+      { kind: "person", title: "Client email", sub: "Daniel Kim approves each one" },
     ],
   },
   {
     id: "system",
     agentId: "bny-settlement-system",
-    title: "Settlement system",
+    title: ["Settlement", "system"],
     sub: "no model, releases to DTC",
     state: "built",
-    rows: [
-      { tool: "Release the instruction", data: { title: "Settlement system → DTC", sub: "an analyst approves the release" }, human: { by: "person", who: "an analyst" }, state: "built" },
-      { tool: "Request a late exception", data: { title: "Exceptions queue", sub: "Priya Sharma approves" }, human: { by: "person", who: "Priya Sharma" }, state: "built" },
+    items: [
+      { kind: "person", title: "Release to DTC", sub: "an analyst approves" },
+      { kind: "person", title: "Late exceptions", sub: "Priya Sharma approves" },
     ],
   },
   {
     id: "more",
-    title: "Any agent, once connected",
+    title: ["Any agent,", "once connected"],
     sub: "could be added next",
     state: "addable",
-    rows: [
-      { tool: "Check cash & positions", data: { title: "Cash ledger & positions", sub: "already in BNY's dataset" }, human: { by: "auto" }, state: "addable", source: "bny/cash_ledger" },
-      { tool: "Check the repair queue", data: { title: "Repair queue", sub: "already in BNY's dataset" }, human: { by: "auto" }, state: "addable", source: "bny/repair_queue" },
-      { tool: "Screen the counterparty", data: { title: "Sanctions & watchlists", sub: "a new connection" }, human: { by: "auto" }, state: "addable" },
+    items: [
+      { kind: "addable", title: "Cash ledger & positions", sub: "already in BNY's dataset", sources: ["bny/cash_ledger", "bny/positions"] },
+      { kind: "addable", title: "Sanctions screening", sub: "a new connection" },
     ],
   },
 ];
 
-export const IN = { row: 40, top: 125, groupGap: 16, boxH: 32 };
-export type Placed = { group: Group; agent: Box; band: Box; rows: (Row & { y: number; tool_: Box; pill: Box; data_: Box })[] };
+export const IN_ZONES: (Box & { id: string; label: string; tone: "goldman" | "bny" })[] = [
+  { id: "counterparty", label: "Counterparty", x: 15, y: 30, w: 140, h: 550, tone: "goldman" },
+  { id: "edge", label: "BNY edge", x: 165, y: 30, w: 210, h: 550, tone: "bny" },
+  { id: "internal", label: "BNY internal", x: 385, y: 30, w: 605, h: 550, tone: "bny" },
+];
+const ITEM = { x: 745, w: 240, h: 34, step: 44, top: 55, groupGap: 24 };
 
-/** Positions every box. Rows run top to bottom with a gap between groups. */
-export function layoutInside(): { groups: Placed[]; orch: Box; gateway: Box; outbound: Box; audit: Box } {
+export type PlacedGroup = { group: Group; agent: Box; items: (Item & { box: Box })[] };
+export function layoutInside() {
   let k = 0;
-  const groups = INSIDE.map((g, gi): Placed => {
-    const ys = g.rows.map(() => IN.top + k++ * IN.row + gi * IN.groupGap);
-    const first = ys[0];
-    const last = ys[ys.length - 1];
-    return {
-      group: g,
-      agent: { x: 295, y: first - 20, w: 135, h: last - first + 40 },
-      band: { x: 285, y: first - 26, w: 710, h: last - first + 52 },
-      rows: g.rows.map((r, i) => ({
-        ...r,
-        y: ys[i],
-        tool_: { x: 460, y: ys[i] - IN.boxH / 2, w: 180, h: IN.boxH },
-        pill: { x: 650, y: ys[i] - 10, w: 108, h: 20 },
-        data_: { x: 762, y: ys[i] - IN.boxH / 2, w: 225, h: IN.boxH },
-      })),
-    };
+  const groups = INSIDE.map((g, gi): PlacedGroup => {
+    const items = g.items.map((it) => ({ ...it, box: { x: ITEM.x, y: ITEM.top + k++ * ITEM.step + gi * ITEM.groupGap, w: ITEM.w, h: ITEM.h } }));
+    const cy = (items[0].box.y + items.at(-1)!.box.y + ITEM.h) / 2;
+    return { group: g, agent: { x: 565, y: cy - 40, w: 135, h: 80 }, items };
   });
-  const lastY = groups.at(-1)!.rows.at(-1)!.y;
-  const cy = (IN.top + lastY) / 2;
+  const cy = groups.reduce((a, g) => a + g.agent.y + g.agent.h / 2, 0) / groups.length;
   return {
     groups,
-    orch: { x: 150, y: cy - 66, w: 115, h: 132 },
-    gateway: { x: 10, y: cy - 40, w: 100, h: 80 },
-    outbound: { x: 295, y: 25, w: 135, h: 50 },
-    audit: { x: 150, y: lastY + 38, w: 845, h: 36 },
+    cy,
+    gs: { x: 28, y: 150, w: 114, h: 90 } as Box,
+    edge: { x: 180, y: 160, w: 180, h: 70 } as Box,
+    gate: { x: 180, y: cy - 40, w: 180, h: 80 } as Box,
+    outbound: { x: 180, y: 470, w: 180, h: 70 } as Box,
+    orch: { x: 405, y: cy - 65, w: 120, h: 130 } as Box,
   };
 }
-export const INSIDE_HEIGHT = layoutInside().audit.y + 36 + 20;
-export { mid };
-export const outNode = out;
+
+/** Numbered hops of the second diagram, with the sentence under the diagram. */
+export const IN_CAPTIONS = [
+  "Goldman's agent opens the mTLS connection",
+  "The edge passes the request to the gateway",
+  "The gateway admits a cleaned request, nothing else",
+  "The orchestrator hands the case to BNY's agents",
+  "Agents read BNY's systems on their own",
+  "Sending to the client, releasing an instruction or making an exception waits for a named person",
+  "The reply is drafted and passed to the outbound filter",
+  "Only approved fields leave, back to Goldman",
+];
+export const INSIDE_HEIGHT = 600;

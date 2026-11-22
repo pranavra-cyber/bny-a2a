@@ -1,7 +1,7 @@
 // The front page's two diagrams, in the prototype's navy and teal. Arrows always flow (dashes travel
 // along each line); nothing to press. One: how trust is established with an outside firm. Two: what
 // happens inside BNY once it is, with the databases, tools and the steps that wait for a person.
-import { INSIDE_HEIGHT, layoutInside, ONBOARDING, ONBOARDING_BAND, ONBOARDING_CHIPS, OUT_HOPS, OUT_NODES, OUT_ZONES, type Box, type Hop, type Placed } from "@/lib/frontDiagrams";
+import { IN_CAPTIONS, IN_ZONES, INSIDE_HEIGHT, layoutInside, ONBOARDING, ONBOARDING_BAND, ONBOARDING_CHIPS, OUT_HOPS, OUT_NODES, OUT_ZONES, type Box, type Hop } from "@/lib/frontDiagrams";
 
 const TEAL = "#2b9cae";
 const TEAL_SOFT = "#bfe6ee";
@@ -121,62 +121,48 @@ export function OutsideDiagram() {
   );
 }
 
-function Pill({ b, person }: { b: Box; person: boolean }) {
-  const c = person ? AMBER : TEAL;
+function Badge({ x, y, n, tone = TEAL }: { x: number; y: number; n: number; tone?: string }) {
   return (
-    <g>
-      <rect {...R(b)} rx={10} fill="#00243e" />
-      <rect {...R(b)} rx={10} fill={c} fillOpacity={0.2} stroke={c} strokeWidth={1.2} />
-      {person && (
-        <g transform={`translate(${b.x + 11},${b.y + 11})`} fill="none" stroke={AMBER} strokeWidth={1.4}>
-          <circle cy={-2} r={2.6} />
-          <path d="M-4.2,5 a4.2,4.2 0 0 1 8.4,0" />
-        </g>
-      )}
-      <text x={b.x + (person ? 63 : b.w / 2)} y={b.y + 14} textAnchor="middle" fontSize={10} fontWeight={700} fill={person ? "#ffd58a" : TEAL_SOFT}>
-        {person ? "Person approves" : "Automatic"}
+    <g transform={`translate(${x},${y})`}>
+      <circle r={10} fill="#00243e" stroke={tone} strokeWidth={1.6} />
+      <text textAnchor="middle" y={4} fontSize={11} fontWeight={700} fill="white">
+        {n}
       </text>
     </g>
   );
 }
 
-/** Breaks a long title over two lines at the word nearest its middle. */
-function wrap(t: string): string[] {
-  if (t.length <= 14) return [t];
-  const words = t.split(" ");
-  let best = 1;
-  for (let i = 1; i < words.length; i++) if (Math.abs(words.slice(0, i).join(" ").length - t.length / 2) < Math.abs(words.slice(0, best).join(" ").length - t.length / 2)) best = i;
-  return [words.slice(0, best).join(" "), words.slice(best).join(" ")];
-}
+/** A curve from a box's right edge to the left edge of another, so a fan of them reads as one hand-off. */
+const link = (from: [number, number], to: [number, number]) => `M${from[0]},${from[1]} C${from[0] + 22},${from[1]} ${to[0] - 22},${to[1]} ${to[0]},${to[1]}`;
 
-function Group({ g, id }: { g: Placed; id: string }) {
-  const addable = g.group.state === "addable";
+function PersonNode({ b, title, sub }: { b: Box; title: string; sub: string }) {
   return (
     <g>
-      <rect {...R(g.band)} rx={12} fill="white" fillOpacity={0.03} stroke="white" strokeOpacity={0.12} strokeDasharray={addable ? "4 5" : undefined} />
-      <Node b={g.agent} title={wrap(g.group.title)} sub={g.group.sub} dashed={addable} stroke={addable ? "#8aa0b3" : TEAL} size={12.5} />
-      {g.rows.map((r) => {
-        const ay = g.agent.y + g.agent.h / 2;
-        const person = r.human.by === "person";
-        const stroke = r.state === "addable" ? "#8aa0b3" : TEAL;
-        return (
-          <g key={r.tool}>
-            <path d={`M${g.agent.x + g.agent.w},${ay} C${g.agent.x + g.agent.w + 16},${ay} ${r.tool_.x - 16},${r.y} ${r.tool_.x},${r.y}`} fill="none" stroke={person ? AMBER : TEAL} strokeWidth={1.8} className="flow" markerEnd={`url(#${id}-${person ? "a" : "t"})`} />
-            <Node b={r.tool_} title={r.tool} stroke={stroke} dashed={r.state === "addable"} size={11.5} fill="#0a4a6e" />
-            <Arrow id={id} path={[[r.tool_.x + r.tool_.w, r.y], [r.data_.x, r.y]]} tone={person ? "a" : "t"} width={1.8} />
-            <Pill b={r.pill} person={person} />
-            <g>
-              <rect {...R(r.data_)} rx={7} fill="#06314f" fillOpacity={0.9} stroke={person ? AMBER : stroke} strokeOpacity={0.9} strokeWidth={1.4} strokeDasharray={r.state === "addable" ? "5 4" : undefined} />
-              <text x={r.data_.x + 12} y={r.y - 1.5} fontSize={11.5} fontWeight={600} fill="white">
-                {r.data.title}
-              </text>
-              <text x={r.data_.x + 12} y={r.y + 11} fontSize={9.5} fill={TEAL_SOFT} fillOpacity={0.65}>
-                {r.data.sub}
-              </text>
-            </g>
-          </g>
-        );
-      })}
+      <rect {...R(b)} rx={8} fill="#3a2d10" fillOpacity={0.9} stroke={AMBER} strokeWidth={1.6} />
+      <g transform={`translate(${b.x + 17},${b.y + b.h / 2 + 1})`} fill="none" stroke={AMBER} strokeWidth={1.5}>
+        <circle cy={-4} r={3.4} />
+        <path d="M-5.6,6 a5.6,5.6 0 0 1 11.2,0" />
+      </g>
+      <text x={b.x + 34} y={b.y + 15} fontSize={12} fontWeight={600} fill="white">
+        {title}
+      </text>
+      <text x={b.x + 34} y={b.y + 28} fontSize={9.5} fill="#ffd58a" fillOpacity={0.85}>
+        {sub}
+      </text>
+    </g>
+  );
+}
+
+function DataNode({ b, title, sub, addable }: { b: Box; title: string; sub: string; addable?: boolean }) {
+  return (
+    <g>
+      <rect {...R(b)} rx={8} fill="#06314f" fillOpacity={0.9} stroke={addable ? "#8aa0b3" : TEAL} strokeWidth={1.5} strokeDasharray={addable ? "5 4" : undefined} />
+      <text x={b.x + 12} y={b.y + 15} fontSize={12} fontWeight={600} fill="white">
+        {title}
+      </text>
+      <text x={b.x + 12} y={b.y + 28} fontSize={9.5} fill={TEAL_SOFT} fillOpacity={0.65}>
+        {sub}
+      </text>
     </g>
   );
 }
@@ -184,39 +170,75 @@ function Group({ g, id }: { g: Placed; id: string }) {
 export function InsideDiagram() {
   const id = "in";
   const l = layoutInside();
+  const tone = { goldman: GS, bny: TEAL };
+  const right = (b: Box): [number, number] => [b.x + b.w, b.y + b.h / 2];
+  const left = (b: Box): [number, number] => [b.x, b.y + b.h / 2];
   const ops = l.groups[0];
-  const oy = l.orch.y + l.orch.h / 2;
+  const client = l.groups[1];
   return (
     <figure>
-      <svg viewBox={`0 0 1000 ${INSIDE_HEIGHT}`} className="w-full" role="img" aria-label="What happens inside BNY after trust is established: agents, tools, databases and the steps that need a person">
+      <svg viewBox={`0 0 1000 ${INSIDE_HEIGHT}`} className="w-full" role="img" aria-label="What happens inside BNY after trust is established: agents, databases and the steps that need a person">
         <Defs id={id} />
-        <text x={130} y={19} fontSize={10.5} fill={TEAL_SOFT} fillOpacity={0.6} textAnchor="start">
-          The reply goes back out through the gateway; only approved fields leave
-        </text>
-
-        {l.groups.map((g) => (
-          <Group key={g.group.id} g={g} id={id} />
+        {IN_ZONES.map((z) => (
+          <g key={z.id}>
+            <rect {...R(z)} rx={14} fill={tone[z.tone]} fillOpacity={0.07} stroke={tone[z.tone]} strokeOpacity={0.45} />
+            <text x={z.x + z.w / 2} y={z.y + 22} textAnchor="middle" fontSize={12} fontWeight={600} fill={tone[z.tone]}>
+              {z.label}
+            </text>
+          </g>
         ))}
 
-        <Node b={l.gateway} title="BNY gateway" sub="request in, reply out" size={12.5} />
+        {/* The way in, as in the first diagram */}
+        <Arrow id={id} tone="g" path={[[142, 195], [180, 195]]} />
+        <Arrow id={id} path={[[270, 230], [270, l.gate.y]]} />
+        <Arrow id={id} path={[[360, l.cy], [405, l.cy]]} />
+        {/* The way back out */}
+        <Arrow id={id} path={[[l.orch.x + 40, l.orch.y + l.orch.h], [l.orch.x + 40, 505], [360, 505]]} />
+        <Arrow id={id} tone="g" path={[[180, 505], [85, 505], [85, 240]]} />
+
+        {/* The orchestrator hands the case to each agent */}
+        {l.groups.map((g) => (
+          <path key={g.group.id} d={link(right(l.orch), left(g.agent))} fill="none" stroke={g.group.state === "addable" ? "#8aa0b3" : TEAL} strokeWidth={2} className="flow" markerEnd={`url(#${id}-t)`} />
+        ))}
+        {/* Each agent reaches its databases, or waits for a person */}
+        {l.groups.map((g) =>
+          g.items.map((it) => (
+            <path key={it.title} d={link(right(g.agent), left(it.box))} fill="none" stroke={it.kind === "person" ? AMBER : it.kind === "addable" ? "#8aa0b3" : TEAL} strokeWidth={1.8} className="flow" markerEnd={`url(#${id}-${it.kind === "person" ? "a" : "t"})`} />
+          )),
+        )}
+
+        <Node b={l.gs} title="Goldman's agent" sub="outside BNY" stroke={GS} size={12.5} />
+        <Node b={l.edge} title="mTLS edge" sub="encrypted, identified" dashed />
+        <Node b={l.gate} title="Intake Gateway" sub="six checks, no model" />
+        <Node b={l.outbound} title="Outbound filter" sub="approved fields only" />
         <Node b={l.orch} title={["Settlement", "Fails", "Orchestrator"]} sub="routes the case" size={12.5} fill="#0a4a6e" />
-        <Node b={l.outbound} title="Outbound filter" sub="automatic, rules only" size={12.5} />
-
-        <Arrow id={id} path={[[l.gateway.x + l.gateway.w, oy], [l.orch.x, oy]]} />
         {l.groups.map((g) => (
-          <path key={g.group.id} d={`M${l.orch.x + l.orch.w},${oy} C${l.orch.x + l.orch.w + 15},${oy} ${g.agent.x - 15},${g.agent.y + g.agent.h / 2} ${g.agent.x},${g.agent.y + g.agent.h / 2}`} fill="none" stroke={TEAL} strokeWidth={2} className="flow" markerEnd={`url(#${id}-t)`} />
+          <Node key={g.group.id} b={g.agent} title={g.group.title} sub={g.group.sub} dashed={g.group.state === "addable"} stroke={g.group.state === "addable" ? "#8aa0b3" : TEAL} size={12} />
         ))}
-        <Arrow id={id} path={[[ops.agent.x + 70, ops.agent.y], [ops.agent.x + 70, l.outbound.y + l.outbound.h]]} />
-        <Arrow id={id} path={[[l.outbound.x, l.outbound.y + 25], [l.gateway.x + l.gateway.w / 2, l.outbound.y + 25], [l.gateway.x + l.gateway.w / 2, l.gateway.y]]} />
+        {l.groups.flatMap((g) => g.items).map((it) => (it.kind === "person" ? <PersonNode key={it.title} b={it.box} title={it.title} sub={it.sub} /> : <DataNode key={it.title} b={it.box} title={it.title} sub={it.sub} addable={it.kind === "addable"} />))}
 
-        <rect {...R(l.audit)} rx={9} fill="white" fillOpacity={0.04} stroke="white" strokeOpacity={0.25} strokeDasharray="4 5" />
-        <text x={l.audit.x + l.audit.w / 2} y={l.audit.y + l.audit.h / 2 + 4} textAnchor="middle" fontSize={12} fontWeight={600} fill={TEAL_SOFT}>
-          Audit log: every tool call, approval and message is recorded
-        </text>
+        <Badge x={161} y={195} n={1} tone={GS} />
+        <Badge x={270} y={(230 + l.gate.y) / 2} n={2} />
+        <Badge x={382} y={l.cy} n={3} />
+        <Badge x={545} y={l.cy} n={4} />
+        <Badge x={722} y={(right(ops.agent)[1] + left(ops.items[1].box)[1]) / 2 + 2} n={5} />
+        <Badge x={722} y={(right(client.agent)[1] + left(client.items[1].box)[1]) / 2 + 2} n={6} tone={AMBER} />
+        <Badge x={l.orch.x + 40} y={(l.orch.y + l.orch.h + 505) / 2} n={7} />
+        <Badge x={85} y={380} n={8} tone={GS} />
       </svg>
+      <figcaption className="mt-3 grid gap-x-6 gap-y-1.5 text-sm text-white/75 sm:grid-cols-2 lg:grid-cols-3">
+        {IN_CAPTIONS.map((c, i) => (
+          <p key={c} className="flex gap-2">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold text-white" style={{ borderColor: i === 5 ? AMBER : i === 0 || i === 7 ? GS : TEAL }}>
+              {i + 1}
+            </span>
+            {c}
+          </p>
+        ))}
+      </figcaption>
       <p className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-white/60">
         <span className="flex items-center gap-2">
-          <span className="h-3 w-5 rounded-sm border" style={{ borderColor: TEAL, background: `${TEAL}30` }} /> Automatic: the agent acts alone
+          <span className="h-3 w-5 rounded-sm border" style={{ borderColor: TEAL }} /> Reads on its own
         </span>
         <span className="flex items-center gap-2">
           <span className="h-3 w-5 rounded-sm border" style={{ borderColor: AMBER, background: `${AMBER}30` }} /> A named person approves first
@@ -224,7 +246,7 @@ export function InsideDiagram() {
         <span className="flex items-center gap-2">
           <span className="h-3 w-5 rounded-sm border border-dashed border-white/50" /> Could be connected next
         </span>
-        <span>Solid boxes work in the prototype today.</span>
+        <span>Every step is written to the audit log.</span>
       </p>
     </figure>
   );
