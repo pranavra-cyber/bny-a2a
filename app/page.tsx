@@ -1,5 +1,5 @@
-import { Overview } from "@/components/proto/Overview";
+import { Landing } from "@/components/proto/Landing";
 
 export default function Page() {
-  return <Overview />;
+  return <Landing />;
 }

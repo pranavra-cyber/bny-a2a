@@ -117,7 +117,7 @@ export function PersonaDock() {
               </p>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1">
-              <Link href="/" className="font-medium text-teal hover:underline">
+              <Link href="/prototype" className="font-medium text-teal hover:underline">
                 Prototype overview
               </Link>
               {runId && (

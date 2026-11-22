@@ -128,7 +128,7 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
         setPersonaId(p.id);
         store.set("a2a.persona", p.id);
         // The overview isn't a workspace: introduce people where they land.
-        if (window.location.pathname !== "/") introduce(p.id);
+        if (window.location.pathname !== "/" && window.location.pathname !== "/prototype") introduce(p.id);
       }
       if (r) setRun(r);
       if (m && (m === "replay" || (m === "live" && !cfg.liveProblems.length))) setModeState(m);

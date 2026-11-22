@@ -189,7 +189,7 @@ function goldmanLei(): string {
   return ssi.counterparty_lei;
 }
 
-type Registry = { members: MembershipRecord[]; tokens: Map<string, string> };
+type Registry = { members: MembershipRecord[]; tokens: Map<string, string>; suspended: Set<string> };
 const g = globalThis as unknown as { __a2aRegistry?: Registry };
 
 export function registry(): Registry {
@@ -238,9 +238,19 @@ export function registry(): Registry {
   for (const m of members)
     for (const a of m.agents)
       tokens.set(a.agentId, issueToken({ sub: a.agentId, clientId: a.clientId, firm: m.firm, scopes: a.approvedSkills }, 24 * 3600));
-  g.__a2aRegistry = { members, tokens };
+  g.__a2aRegistry = { members, tokens, suspended: new Set() };
   return g.__a2aRegistry;
 }
+
+/**
+ * Network-operator control: a suspended firm's valid, unexpired credentials stop working on the next
+ * message. The token is not revoked at the issuer; the gateway checks the registry on every call.
+ */
+// A registry built by an older copy of this module (a hot reload in dev) has no set yet.
+const suspendedSet = () => (registry().suspended ??= new Set());
+export const suspendFirm = (firm: MembershipRecord["firm"]) => void suspendedSet().add(firm);
+export const reinstateFirm = (firm: MembershipRecord["firm"]) => void suspendedSet().delete(firm);
+export const isSuspended = (firm: MembershipRecord["firm"]) => suspendedSet().has(firm);
 
 export function membershipFor(agentId: string): { member: MembershipRecord; agent: MembershipRecord["agents"][number] } | null {
   for (const member of registry().members) {

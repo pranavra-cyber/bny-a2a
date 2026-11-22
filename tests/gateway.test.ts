@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { inbound } from "../lib/a2a/gateway";
-import { tokenFor } from "../lib/a2a/registry";
+import { reinstateFirm, suspendFirm, tokenFor } from "../lib/a2a/registry";
 import type { Message } from "../lib/a2a/types";
 
 const send = (text: string, simulate?: { forgedCard?: boolean }) => {
@@ -30,5 +30,21 @@ describe("card check wording", () => {
     const r = send("hi", { forgedCard: true });
     expect(r.checks.find((c) => c.id === "card")!.detail).toContain("Goldman Sachs & Co. LLC");
     expect(send("hi").checks.find((c) => c.id === "card")!.detail).toBe("signed with Goldman Sachs & Co. LLC's registered key");
+  });
+});
+
+describe("suspension", () => {
+  it("rejects a suspended firm's valid token on the next message, and accepts it again once reinstated", () => {
+    expect(send("hi").accepted).toBe(true);
+    suspendFirm("goldman");
+    try {
+      const r = send("hi");
+      expect(r.accepted).toBe(false);
+      expect(r.reason).toContain("suspended by the network operator");
+      expect(r.checks.find((c) => c.id === "identity")!.ok).toBe(false);
+    } finally {
+      reinstateFirm("goldman");
+    }
+    expect(send("hi").accepted).toBe(true);
   });
 });
