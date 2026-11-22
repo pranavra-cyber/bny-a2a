@@ -1,10 +1,12 @@
 "use client";
 // The attack console: a prototype stage, not a product screen. The external
 // attacker and the rogue Goldman insider each pick a preset way to slip past BNY's
-// gateway, launch it, and watch the real gateway code respond step by step.
+// gateway, launch it, and watch the real gateway code respond, as a chat: the attacker
+// on the right, BNY's gateway and agents on the left.
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type AttackBubble, chatFor } from "@/lib/attackNarration";
 import { type AttackId, type AttackPreset, type AttackResult, type AttackStep, attacksBy, type Attacker } from "@/lib/attackCatalog";
 import { PersonaDock } from "../proto/PersonaDock";
 import { useProto } from "../proto/Proto";
@@ -34,12 +36,17 @@ export function AttackConsole() {
     return () => clearTimeout(t);
   }, [who]);
 
-  // Reveal the gateway's response one step at a time.
+  // The conversation, revealed one bubble at a time: the next speaker "types" first.
+  const bubbles = useMemo(() => (result ? chatFor(preset, result.steps) : []), [preset, result]);
   useEffect(() => {
-    if (!result || shown >= result.steps.length + 1) return;
-    const t = setTimeout(() => setShown((n) => n + 1), shown === 0 ? 250 : 650);
+    if (!result || shown > bubbles.length) return;
+    const t = setTimeout(() => setShown((n) => n + 1), shown === bubbles.length ? 900 : pauseFor(bubbles[shown]));
     return () => clearTimeout(t);
-  }, [result, shown]);
+  }, [result, bubbles, shown]);
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [shown]);
 
   const launch = async () => {
     setBusy(true);
@@ -86,7 +93,7 @@ export function AttackConsole() {
               return (
                 <li key={a.id}>
                   <button
-                    onClick={() => (setSel(a.id), setShown(r ? r.steps.length + 1 : 0))}
+                    onClick={() => (setSel(a.id), setShown(r ? chatFor(a, r.steps).length + 1 : 0))}
                     aria-current={a.id === preset.id ? "true" : undefined}
                     className={`w-full rounded-md px-3 py-2 text-left transition ${a.id === preset.id ? "bg-white/10 ring-1 ring-[#e0484c]/50" : "hover:bg-white/5"}`}
                   >
@@ -103,7 +110,7 @@ export function AttackConsole() {
           <button onClick={() => setPersona(other)} className="mt-6 w-full rounded-md border border-white/10 px-3 py-2 text-left text-xs text-white/60 hover:border-white/30 hover:text-white">
             Try it {other === "insider" ? "from inside Goldman instead (rogue insider)" : "from outside the network instead (attacker)"} →
           </button>
-          <Link href="/" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
+          <Link href="/prototype" className="mt-2 block px-1 text-xs text-white/40 hover:text-white/70">
             Prototype overview
           </Link>
         </aside>
@@ -118,17 +125,26 @@ export function AttackConsole() {
           </div>
 
           {result && (
-            <section aria-live="polite" className="mt-6 space-y-3">
-              {result.steps.slice(0, shown).map((s, i) => (
-                <StepView key={i} s={s} />
-              ))}
-              {shown > result.steps.length && (
-                <div className="dock-in rounded-lg border border-[#3fbf7f]/40 bg-[#3fbf7f]/10 px-4 py-3">
+            <section aria-live="polite" aria-label="The attack, as a conversation" className="mt-6">
+              <div className="flex justify-between px-1 font-mono text-[10px] tracking-[0.14em] text-white/35 uppercase">
+                <span>BNY</span>
+                <span>Attacker</span>
+              </div>
+              <div className="mt-2 space-y-2.5">
+                {bubbles.slice(0, shown).map((b, i) => (
+                  <Bubble key={i} b={b} />
+                ))}
+                {shown < bubbles.length && <Typing side={bubbles[shown].side} />}
+              </div>
+              {shown > bubbles.length && (
+                <div className="dock-in mt-4 rounded-lg border border-[#3fbf7f]/40 bg-[#3fbf7f]/10 px-4 py-3">
                   <p className="font-mono text-xs font-semibold tracking-wide text-[#3fbf7f] uppercase">Attack stopped · {result.stoppedBy}</p>
                   <p className="mt-1 text-sm text-white">{result.outcome}</p>
                   <p className="mt-1 text-xs text-white/50">BNY&apos;s gateway logged the attempt for Compliance.</p>
                 </div>
               )}
+              {shown > bubbles.length && <p className="mt-6 text-[11px] leading-snug text-white/40">The commentary is written for this demo. The gateway checks and filter results marked &quot;real check&quot; are produced by BNY&apos;s gateway code as the attack runs.</p>}
+              <div ref={endRef} />
             </section>
           )}
         </main>
@@ -182,40 +198,76 @@ const KIND: Record<AttackStep["kind"], { label: string; cls: string }> = {
   returned: { label: "response", cls: "text-[#c9a7ff]" },
 };
 
-function StepView({ s }: { s: AttackStep }) {
+/** How long the next speaker types before its bubble appears. */
+const pauseFor = (b: AttackBubble) => (b.kind === "sent" ? 400 : b.kind === "narration" ? 1100 : 850);
+
+function Typing({ side }: { side: "left" | "right" }) {
+  return (
+    <div aria-hidden className={`dock-in flex ${side === "right" ? "justify-end" : ""}`}>
+      <span className={`flex gap-1 rounded-2xl border border-white/10 bg-white/[0.04] px-3.5 py-3 ${side === "right" ? "rounded-tr-sm" : "rounded-tl-sm"}`}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/40" style={{ animationDelay: `${i * 160}ms` }} />
+        ))}
+      </span>
+    </div>
+  );
+}
+
+function Bubble({ b }: { b: AttackBubble }) {
+  const right = b.side === "right";
+  const wrap = `dock-in flex ${right ? "justify-end" : ""}`;
+  const shape = `max-w-[88%] rounded-2xl px-4 py-2.5 ${right ? "rounded-tr-sm" : "rounded-tl-sm"}`;
+  if (b.kind === "narration")
+    return (
+      <div className={wrap}>
+        <p className={`${shape} border border-white/10 bg-white/[0.04] text-[13px] leading-snug text-white/75`}>{b.text}</p>
+      </div>
+    );
+  if (b.kind === "real")
+    return (
+      <div className={wrap}>
+        <p className={`${shape} border border-white/15 bg-white/[0.06] text-[12px] leading-snug`}>
+          <span className="mr-1.5 rounded bg-[#7fb2ff]/15 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-[#7fb2ff] uppercase">real check</span>
+          <span className={b.ok ? "text-[#3fbf7f]" : "text-[#ff6b6e]"}>{b.ok ? "✓" : "✗"}</span> <span className="font-medium text-white/90">{b.label}</span> <span className="text-white/70">{b.text}</span>
+        </p>
+      </div>
+    );
+  const s = b.step;
   const k = KIND[s.kind];
   return (
-    <article className="dock-in rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3">
-      <p className="flex items-center gap-2 font-mono text-[11px]">
-        <span className={`font-semibold tracking-wide uppercase ${k.cls}`}>{k.label}</span>
-        {s.ok === false && <span className="rounded bg-[#e0484c]/20 px-1.5 text-[#ff8a8d]">blocked</span>}
-      </p>
-      <h3 className="mt-1 text-sm font-semibold text-white">{s.title}</h3>
-      {s.text && <pre className="mt-2 max-h-48 overflow-auto rounded bg-black/40 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-white/80">{s.text}</pre>}
-      {s.fields && Object.keys(s.fields).length > 0 && (
-        <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-0.5 font-mono text-[11px]">
-          {Object.entries(s.fields).map(([f, v]) => (
-            <div key={f} className="contents">
-              <dt className="text-white/40">{f}</dt>
-              <dd className="break-all text-white/80">{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {s.checks && (
-        <ul className="mt-2 space-y-0.5 font-mono text-[11px]">
-          {s.checks.map((c) => {
-            const flag = !c.ok && (c.id === "injection" || c.id === "fields" || c.id === "disclosure");
-            return (
-              <li key={c.id} className="flex gap-2">
-                <span className={c.ok ? "text-[#3fbf7f]" : flag ? "text-[#f0c674]" : "text-[#ff6b6e]"}>{c.ok ? "✓" : flag ? "⚑" : "✗"}</span>
-                <span className="text-white/85">{c.label}</span>
-                <span className="text-white/45">{c.detail}</span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </article>
+    <div className={wrap}>
+      <article className={`${shape} border ${right ? "border-[#e0484c]/35 bg-[#e0484c]/10" : "border-white/10 bg-white/[0.04]"}`}>
+        <p className="flex items-center gap-2 font-mono text-[11px]">
+          <span className={`font-semibold tracking-wide uppercase ${k.cls}`}>{k.label}</span>
+          {s.ok === false && <span className="rounded bg-[#e0484c]/20 px-1.5 text-[#ff8a8d]">blocked</span>}
+        </p>
+        <h3 className="mt-1 text-sm font-semibold text-white">{s.title}</h3>
+        {s.text && <pre className="mt-2 max-h-48 overflow-auto rounded bg-black/40 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-white/80">{s.text}</pre>}
+        {s.fields && Object.keys(s.fields).length > 0 && (
+          <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-0.5 font-mono text-[11px]">
+            {Object.entries(s.fields).map(([f, v]) => (
+              <div key={f} className="contents">
+                <dt className="text-white/40">{f}</dt>
+                <dd className="break-all text-white/80">{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {s.checks && (
+          <ul className="mt-2 space-y-0.5 font-mono text-[11px]">
+            {s.checks.map((c) => {
+              const flag = !c.ok && (c.id === "injection" || c.id === "fields" || c.id === "disclosure");
+              return (
+                <li key={c.id} className="flex gap-2">
+                  <span className={c.ok ? "text-[#3fbf7f]" : flag ? "text-[#f0c674]" : "text-[#ff6b6e]"}>{c.ok ? "✓" : flag ? "⚑" : "✗"}</span>
+                  <span className="text-white/85">{c.label}</span>
+                  <span className="text-white/45">{c.detail}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </article>
+    </div>
   );
 }

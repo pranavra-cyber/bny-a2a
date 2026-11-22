@@ -30,7 +30,9 @@ function caseTerms(): string[] {
   const bny = scopeFor("bny");
   const instruction = bny.read("bny/settlement_instructions").find((i) => i.instruction_id === "BNYI-20261118-5527301");
   const account = instruction && bny.read("bny/client_accounts").find((a) => a.account_id === instruction.client_account_id);
-  return instruction ? sensitiveTerms({ instruction, account } as BnyCase) : [];
+  // An empty term list would let the outbound filter pass client data and report a false "contained".
+  if (!instruction || !account) throw new Error("attack console: BNY instruction BNYI-20261118-5527301 or its client account is missing from the synthetic data");
+  return sensitiveTerms({ instruction, account } as BnyCase);
 }
 
 function send(opts: { from: string; domain: string; token: string | null; skill: string; text: string; data: Record<string, unknown>; turns?: number; simulate?: Simulate }) {
@@ -73,7 +75,7 @@ export function runAttack(id: AttackId): AttackResult {
     case "forged-card":
       return refused(send({ from: "gs-outreach", domain: "gs.example", token: gs, skill: "settlement.dk-inquiry", text: preset.prompt, data: FIELDS, simulate: { forgedCard: true } }), "Nothing. The name is right but the proof is wrong.");
     case "stolen-pass":
-      return refused(send({ from: "gs-outreach", domain: "gs-agents.example", token: gs, skill: "settlement.status", text: preset.prompt, data: { dtc_reference: DTC_REF } }), "Nothing. A token only works for the agent holding Goldman's certificate, at Goldman's attested address, and expires within minutes.");
+      return refused(send({ from: "gs-outreach", domain: "gs-agents.example", token: gs, skill: "settlement.status", text: preset.prompt, data: { dtc_reference: DTC_REF } }), "Nothing. The token itself is genuine and unexpired, but it was presented from gs-agents.example, not Goldman's attested domain, so the identity check rejects it. (Holder binding is simulated here, and the demo token lasts 24 hours, so expiry is not what stops this.)");
     case "replay": {
       const first = send({ from: "gs-outreach", domain: "gs.example", token: gs, skill: "settlement.dk-inquiry", text: preset.prompt, data: FIELDS });
       steps.push({ kind: "gateway", title: "The original, sent by Goldman earlier, was accepted", checks: first.checks, ok: true });

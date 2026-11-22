@@ -1,6 +1,8 @@
 // The people in the prototype (from the operations-flow deck). Synthetic people;
 // the portraits are illustrations in public/personas. Safe for client components.
 import type { Seat } from "./engine/guide";
+import { FINAL } from "./engine/status";
+import type { RunStatus } from "./engine/types";
 
 export type PersonaId = "chen" | "torres" | "sharma" | "kim" | "nguyen" | "hacker" | "insider";
 
@@ -126,3 +128,17 @@ export const personaForSeat = (seat: Seat) => PERSONAS.find((p) => p.seat === se
 
 /** The client contact: outside the prototype, reached by Teams and email. */
 export const CLIENT = { name: "Emily Carter", role: "Trade Operations Analyst", firm: "Allianz Global Investors", photo: "/personas/carter.svg" };
+
+/**
+ * Who may open the Supervision tab (BNY's backstage narration of the agents' reasoning).
+ * Only BNY internal people with an oversight role: Priya supervises the case live; Sarah reviews
+ * it read-only once it has closed. Everyone else, including Goldman and the client, gets null.
+ * Each firm only ever sees its own backstage. This is a prototype gate on who is being played,
+ * not authentication.
+ */
+export type SupervisionAccess = "live" | "read-only" | "waiting-for-close";
+export function supervisionAccess(id: PersonaId, status?: RunStatus | null): SupervisionAccess | null {
+  if (id === "sharma") return "live";
+  if (id === "nguyen") return status && FINAL.has(status) ? "read-only" : "waiting-for-close";
+  return null;
+}

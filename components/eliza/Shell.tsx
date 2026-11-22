@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { supervisionAccess } from "@/lib/personas";
 import { BNY_CONNECTIONS, BNY_EMPLOYEES, type Connection, GS_CONNECTIONS, LIVE_CHAT_ID } from "@/lib/sideChats";
 import { PersonaDock } from "../proto/PersonaDock";
 import { store, useProto } from "../proto/Proto";
@@ -290,7 +291,7 @@ export function Shell({
   pulseOnboard?: boolean;
   children: React.ReactNode;
 }) {
-  const { persona, hydrated } = useProto();
+  const { persona, hydrated, summary } = useProto();
   const gs = persona.firm === "Goldman Sachs";
   // Until David starts an onboarding, Goldman's request waits in his notifications on every page.
   const [requestWaiting, setRequestWaiting] = useState(false);
@@ -321,6 +322,11 @@ export function Shell({
             {subtitle && <div className="truncate text-xs text-muted">{subtitle}</div>}
           </div>
           {right}
+          {hydrated && supervisionAccess(persona.id, summary?.status) && (
+            <Link href="/eliza/supervision" className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas">
+              Supervision
+            </Link>
+          )}
           {!gs && (
             <Link href="/eliza/documents" aria-label="Documents and data sources" title="Documents and data sources" className="flex h-9 w-9 items-center justify-center rounded-full text-ink hover:bg-canvas">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>

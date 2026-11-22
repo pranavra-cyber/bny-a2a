@@ -2,6 +2,7 @@
 // Prototype overview: sets the scene and the cast before the prototype starts.
 // Its dark look marks it as part of the prototype, not the product.
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DISCLAIMER } from "@/lib/constants";
 import { CLIENT, type Persona, PERSONAS } from "@/lib/personas";
@@ -118,6 +119,15 @@ export function Overview() {
               ))}
             </div>
           </div>
+          <Link href="/secured" className="group flex items-center gap-3 rounded-lg bg-[#3fbf7f]/[0.08] p-2.5 text-left ring-1 ring-[#3fbf7f]/25 transition hover:bg-[#3fbf7f]/[0.16] hover:ring-[#3fbf7f]/60">
+            <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#3fbf7f]/20 text-[#3fbf7f]">
+              ✓
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-white">Secured: how a legitimate connection is made safe</span>
+              <span className="block text-xs text-white/60">Watch Goldman discover, authenticate and cross BNY&apos;s gateway, step by step, as a conversation.</span>
+            </span>
+          </Link>
           <p className="text-[11px] text-white/40 short:hidden">{DISCLAIMER}</p>
         </section>
       </div>

@@ -6,7 +6,7 @@
 // (they show the user experience of those controls; no real crypto runs).
 import "server-only";
 import { verifyToken } from "./auth";
-import { membershipFor } from "./registry";
+import { isSuspended, membershipFor } from "./registry";
 import type { GatewayCheck, Message, Part } from "./types";
 
 export const MAX_TURNS = 10;
@@ -110,6 +110,8 @@ const textOf = (parts: Part[]) =>
 const dataOf = (parts: Part[]) =>
   Object.assign({}, ...parts.filter((p) => p.kind === "data").map((p) => (p as { data: Record<string, unknown> }).data));
 
+const escapeText = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 export function inbound(req: InboundRequest): InboundResult {
   const checks: GatewayCheck[] = [];
   const reject = (reason: string): InboundResult => ({ accepted: false, reason, checks });
@@ -128,6 +130,7 @@ export function inbound(req: InboundRequest): InboundResult {
   const { member } = membership;
   const identityProblems = [
     token.claims.sub !== req.fromAgentId && "token subject does not match sender",
+    isSuspended(member.firm) && `${member.legalName} is suspended by the network operator`,
     member.kycStatus !== "VERIFIED" && `KYC ${member.kycStatus}`,
     member.domainAttestation !== "ATTESTED" && "domain not attested",
     member.domain !== req.fromDomain && `sender domain ${req.fromDomain} does not match attested ${member.domain}`,
@@ -142,7 +145,7 @@ export function inbound(req: InboundRequest): InboundResult {
 
   // 1b. Simulated proofs: Agent Card signature (registry key), holder-bound token, message signature, fresh nonce.
   const sim = req.simulate ?? {};
-  checks.push({ id: "card", label: "Agent Card signature", ok: !sim.forgedCard, detail: sim.forgedCard ? "card signature invalid: does not match the registry's key for Goldman" : "signed with Goldman's registered key" });
+  checks.push({ id: "card", label: "Agent Card signature", ok: !sim.forgedCard, detail: sim.forgedCard ? `card signature invalid: does not match the registry's key for ${member.legalName}` : `signed with ${member.legalName}'s registered key` });
   if (sim.forgedCard) return reject("card signature invalid");
   checks.push({ id: "holder", label: "Token holder", ok: true, detail: "token bound to this agent's certificate" });
   checks.push({ id: "signature", label: "Message signature", ok: !sim.tampered, detail: sim.tampered ? "signature mismatch: the message was changed after signing" : "valid" });
@@ -190,7 +193,7 @@ export function inbound(req: InboundRequest): InboundResult {
     accepted: true,
     checks,
     delivered: {
-      quotedText: `<counterparty_message untrusted="true" from="${req.fromAgentId}">\n${text.replace(/</g, "‹")}\n</counterparty_message>`,
+      quotedText: `<counterparty_message untrusted="true" from="${req.fromAgentId}">\n${escapeText(text)}\n</counterparty_message>`,
       data: allowed,
       dropped,
       injection: [...new Set(injection)],

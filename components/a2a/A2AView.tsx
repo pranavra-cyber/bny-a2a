@@ -12,6 +12,7 @@ import { Shell } from "../eliza/Shell";
 import { useProto } from "../proto/Proto";
 import { ErrorNote, Json, Pill, RecordChips } from "../ui";
 import { useRun } from "../useRun";
+import { ControlsPanel } from "./ControlsPanel";
 import { buildTrace, type Kind, milestones, type TraceItem } from "./model";
 
 const hhmm = (iso: string) => fmtEt(iso).slice(0, 5);
@@ -20,7 +21,7 @@ export function A2AView() {
   const params = useSearchParams();
   const { runId: caseRun } = useProto();
   const runId = params.get("run") ?? caseRun;
-  const [tab, setTab] = useState<"security" | "technical">(params.get("tab") === "technical" ? "technical" : "security");
+  const [tab, setTab] = useState<"security" | "technical" | "controls">(params.get("tab") === "technical" ? "technical" : params.get("tab") === "controls" ? "controls" : "security");
   const [selected, setSelected] = useState<string | null>(null);
   const { summary, events, error } = useRun(runId, "network");
   const trace = useMemo(() => buildTrace(events), [events]);
@@ -34,15 +35,17 @@ export function A2AView() {
       subtitle={summary ? `${summary.scenario === "golden" ? "NVDA 10,000 · AllianzGI Global Equity" : `Safety test ${summary.scenario.toUpperCase()}`} · run ${summary.id}` : "Network view: both firms and the gateway"}
       right={
         <div role="tablist" aria-label="View" className="inline-flex rounded-md bg-canvas p-0.5 text-sm">
-          {(["security", "technical"] as const).map((t) => (
+          {(["security", "technical", "controls"] as const).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`rounded px-3 py-1.5 font-medium ${tab === t ? "bg-white text-navy shadow-sm" : "text-muted hover:text-ink"}`}>
-              {t === "security" ? "Security view" : "Technical view"}
+              {t === "security" ? "Security view" : t === "technical" ? "Technical view" : "Real vs simulated"}
             </button>
           ))}
         </div>
       }
     >
-      {!runId ? (
+      {tab === "controls" ? (
+        <ControlsPanel />
+      ) : !runId ? (
         <div className="p-8 text-sm text-muted">
           No case yet. <Link href="/eliza/case" className="font-medium text-teal hover:underline">Start the live case</Link>, or try to break in from the{" "}
           <Link href="/attack" className="font-medium text-teal hover:underline">attack console</Link>.
