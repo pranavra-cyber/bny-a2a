@@ -10,8 +10,6 @@ import { supervisionAccess } from "@/lib/personas";
 import { useProto } from "../proto/Proto";
 import { Shell } from "./Shell";
 
-const SPEEDS = [0.5, 1, 2, 4] as const;
-type Speed = (typeof SPEEDS)[number];
 
 const words = (t = "") => (t ? t.split(" ") : []);
 /** How many steps a bubble reveals in: a run bubble appears whole; narration streams word by word, then its tool list one by one, then its closing line. */
@@ -46,17 +44,15 @@ function Chat({ readOnly, initial }: { readOnly: boolean; initial: SupervisedSce
   const [shown, setShown] = useState(0); // messages fully shown
   const [stage, setStage] = useState<"typing" | "reveal">("typing"); // the next message: its speaker typing, or the message appearing
   const [unit, setUnit] = useState(0); // steps of the next message revealed so far
-  const [playing, setPlaying] = useState(true);
-  const [speed, setSpeed] = useState<Speed>(1);
   const script = SUPERVISION[scenario];
   const done = shown >= script.length;
   const next = script[shown];
   const endRef = useRef<HTMLDivElement>(null);
 
   // One message at a time: the speaker types (the orchestrator "thinks", showing nothing), then the
-  // message appears, narration word by word. Each step waits on a timer, so Pause freezes it where it is.
+  // message appears, word by word. Each step waits on a timer.
   useEffect(() => {
-    if (!playing || done) return;
+    if (done) return;
     const total = unitsOf(next);
     const advance =
       stage === "typing"
@@ -65,9 +61,9 @@ function Chat({ readOnly, initial }: { readOnly: boolean; initial: SupervisedSce
           ? () => setUnit(unit + 1)
           : () => (setShown(shown + 1), setStage("typing"), setUnit(0));
     const wait = stage === "typing" ? pauseFor(next) : unit < total ? unitDelay(next, unit) : HOLD_MS;
-    const t = setTimeout(advance, wait / speed);
+    const t = setTimeout(advance, wait);
     return () => clearTimeout(t);
-  }, [playing, done, shown, stage, unit, next, speed]);
+  }, [done, shown, stage, unit, next]);
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: stage === "reveal" ? "auto" : "smooth" });
   }, [shown, stage, unit]);
@@ -76,68 +72,34 @@ function Chat({ readOnly, initial }: { readOnly: boolean; initial: SupervisedSce
     setShown(0);
     setStage("typing");
     setUnit(0);
-    setPlaying(true);
   };
-  const btn = "rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20 disabled:opacity-40";
-  const typing = playing && !done && stage === "typing";
+  const typing = !done && stage === "typing";
   return (
     <div className="mx-auto max-w-3xl px-5 py-5 pb-28">
-      <div className="proto rounded-lg bg-[#0b0d12] px-4 py-3 text-[#d7dde8]">
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => setPlaying(!playing)} disabled={done} aria-pressed={playing} className={btn}>
-            {playing && !done ? "Pause" : "Auto-play"}
-          </button>
-          <button
-            onClick={() => {
-              setPlaying(false);
-              setShown(Math.min(shown + 1, script.length));
-              setStage("typing");
-              setUnit(0);
+      <div className="flex flex-wrap items-center gap-3 px-1">
+        <label className="flex items-center gap-1.5 text-xs text-muted">
+          Scenario
+          <select
+            value={scenario}
+            onChange={(e) => {
+              setScenario(e.target.value as SupervisedScenario);
+              reset();
             }}
-            disabled={done}
-            className={btn}
+            className="rounded-md border border-line bg-white px-2 py-1 text-sm text-ink"
           >
-            Step
+            {SUPERVISED.map((s) => (
+              <option key={s} value={s}>
+                {SCENARIO_LABEL[s]}
+              </option>
+            ))}
+          </select>
+        </label>
+        {readOnly && <span className="rounded bg-white px-1.5 py-px text-xs text-muted ring-1 ring-line">Read-only · case closed</span>}
+        {done && (
+          <button onClick={reset} className="ml-auto text-xs font-medium text-teal hover:underline">
+            Replay
           </button>
-          <button onClick={reset} className={btn}>
-            Restart
-          </button>
-          <label className="ml-1 flex items-center gap-1.5 text-xs text-white/50">
-            Speed
-            <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as Speed)} className="rounded-md border border-white/15 bg-[#0b0d12] px-2 py-1 text-sm text-white">
-              {SPEEDS.map((s) => (
-                <option key={s} value={s}>
-                  {s}×
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-1.5 text-xs text-white/50">
-            Scenario
-            <select
-              value={scenario}
-              onChange={(e) => {
-                setScenario(e.target.value as SupervisedScenario);
-                reset();
-              }}
-              className="rounded-md border border-white/15 bg-[#0b0d12] px-2 py-1 text-sm text-white"
-            >
-              {SUPERVISED.map((s) => (
-                <option key={s} value={s}>
-                  {SCENARIO_LABEL[s]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <span className="ml-auto text-xs text-white/50 tabular">
-            {shown} of {script.length}
-          </span>
-        </div>
-        <p className="mt-2 text-xs text-white/55">
-          <span className="font-semibold text-white/80">Narration is scripted.</span>{" "}
-          It was written for this demo and is not live model output. Bubbles tagged &quot;from the run&quot; carry the real gateway checks, fields and messages from the recorded case, and play the same whatever the run is doing.
-          {readOnly && <span className="ml-2 rounded bg-white/10 px-1.5 py-px text-white/70">Read-only · case closed</span>}
-        </p>
+        )}
       </div>
 
       <div className="mt-2 flex justify-between px-1 text-[11px] font-semibold tracking-wide text-muted uppercase">
@@ -151,7 +113,7 @@ function Chat({ readOnly, initial }: { readOnly: boolean; initial: SupervisedSce
         {!done && stage === "reveal" && <Row key={next.id} m={next} reveal={unit} />}
         {typing && <Typing m={next} />}
       </ol>
-      {done && <p className="mt-6 text-center text-xs text-muted">End of the conversation. Restart to play it again.</p>}
+      <p className="mt-8 text-[11px] leading-snug text-muted">The agents&apos; reasoning here is written for this demo from the recorded case. The gateway checks, fields and messages are the real ones from that case.</p>
       <div ref={endRef} />
     </div>
   );
@@ -193,7 +155,6 @@ function Row({ m, reveal }: { m: ChatMessage; reveal?: number }) {
       <p className={`flex flex-wrap items-center gap-1.5 text-[11px] ${right ? "justify-end" : ""}`}>
         <SpeakerBadge m={m} />
         {m.to && <span className="text-muted">→ {m.to}</span>}
-        <span className={`rounded px-1.5 py-px font-semibold tracking-wide uppercase ${m.source === "narration" ? "bg-white text-muted ring-1 ring-line" : "bg-teal-soft text-navy"}`}>{m.source === "narration" ? "narration" : "from the run"}</span>
         <span className="text-muted">{m.step}</span>
       </p>
       <Bubble m={m} reveal={reveal} right={right} />
@@ -202,7 +163,6 @@ function Row({ m, reveal }: { m: ChatMessage; reveal?: number }) {
 }
 
 function Bubble({ m, reveal, right }: { m: ChatMessage; reveal?: number; right: boolean }) {
-  const narration = m.source === "narration";
   const failed = m.checks?.filter((c) => !c.ok) ?? [];
   const tw = words(m.text).length;
   const cn = m.candidates?.length ?? 0;
@@ -210,10 +170,10 @@ function Bubble({ m, reveal, right }: { m: ChatMessage; reveal?: number; right: 
   const text = r >= tw ? m.text : words(m.text).slice(0, r).join(" ");
   const candidates = m.candidates?.slice(0, Math.max(0, r - tw));
   const footer = r >= tw + cn ? words(m.footer).slice(0, r - tw - cn).join(" ") : "";
-  const tone = narration ? "border border-dashed border-line bg-canvas" : right ? "border border-teal/30 bg-teal-soft" : "border border-line bg-white";
+  const tone = right ? "border border-teal/30 bg-teal-soft" : "border border-line bg-white";
   return (
     <article className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 ${right ? "rounded-tr-sm" : "rounded-tl-sm"} ${tone}`}>
-      <p className={`text-sm leading-snug ${narration ? "text-muted italic" : "text-ink"}`}>{text}</p>
+      <p className="text-sm leading-snug text-ink">{text}</p>
 
       {candidates && candidates.length > 0 && (
         <ul className="mt-2 space-y-1 text-sm">
@@ -227,7 +187,7 @@ function Bubble({ m, reveal, right }: { m: ChatMessage; reveal?: number; right: 
           ))}
         </ul>
       )}
-      {footer && <p className={`mt-2 text-sm leading-snug ${narration ? "text-muted italic" : "text-ink"}`}>{footer}</p>}
+      {footer && <p className="mt-2 text-sm leading-snug text-ink">{footer}</p>}
 
       {m.fields && m.fields.length > 0 && (
         <p className="mt-2 text-xs">

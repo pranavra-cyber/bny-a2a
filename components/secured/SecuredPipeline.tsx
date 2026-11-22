@@ -9,8 +9,6 @@ import { useEffect, useRef, useState } from "react";
 import { PROVENANCE_LABEL, type Provenance, SECURED, type SecuredMessage, SPEAKER_LABEL, type Speaker } from "@/lib/securedScript";
 import { PersonaDock } from "../proto/PersonaDock";
 
-const SPEEDS = [0.5, 1, 2, 4] as const;
-type Speed = (typeof SPEEDS)[number];
 
 const unitsOf = (m: SecuredMessage) => 1 + (m.steps?.length ?? 0);
 const pauseFor = (m: SecuredMessage) => 700 + Math.min((m.text ?? "").length, 140) * 4 + (m.code || m.split ? 500 : 0);
@@ -39,21 +37,19 @@ export function SecuredPipeline() {
   const [shown, setShown] = useState(0);
   const [stage, setStage] = useState<"typing" | "reveal">("typing");
   const [unit, setUnit] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const [speed, setSpeed] = useState<Speed>(1);
   const done = shown >= SECURED.length;
   const next = SECURED[shown];
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!playing || done) return;
+    if (done) return;
     const total = unitsOf(next);
     const advance =
       stage === "typing" ? () => (setStage("reveal"), setUnit(1)) : unit < total ? () => setUnit(unit + 1) : () => (setShown(shown + 1), setStage("typing"), setUnit(0));
     const wait = stage === "typing" ? pauseFor(next) : unit < total ? STEP_MS : HOLD_MS;
-    const t = setTimeout(advance, wait / speed);
+    const t = setTimeout(advance, wait);
     return () => clearTimeout(t);
-  }, [playing, done, shown, stage, unit, next, speed]);
+  }, [done, shown, stage, unit, next]);
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: stage === "reveal" ? "auto" : "smooth" });
   }, [shown, stage, unit]);
@@ -62,9 +58,7 @@ export function SecuredPipeline() {
     setShown(0);
     setStage("typing");
     setUnit(0);
-    setPlaying(true);
   };
-  const btn = "rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20 disabled:opacity-40";
   return (
     <div className="proto min-h-svh bg-[#0b0d12] font-sans text-[#d7dde8]">
       <header className="flex flex-wrap items-center gap-4 border-b border-white/10 px-6 py-3">
@@ -76,43 +70,6 @@ export function SecuredPipeline() {
       </header>
 
       <main className="mx-auto max-w-3xl px-5 py-5 pb-28">
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3">
-          <button onClick={() => setPlaying(!playing)} disabled={done} aria-pressed={playing} className={btn}>
-            {playing && !done ? "Pause" : "Auto-play"}
-          </button>
-          <button
-            onClick={() => {
-              setPlaying(false);
-              setShown(Math.min(shown + 1, SECURED.length));
-              setStage("typing");
-              setUnit(0);
-            }}
-            disabled={done}
-            className={btn}
-          >
-            Step
-          </button>
-          <button onClick={restart} className={btn}>
-            Restart
-          </button>
-          <label className="ml-1 flex items-center gap-1.5 text-xs text-white/50">
-            Speed
-            <select value={speed} onChange={(e) => setSpeed(Number(e.target.value) as Speed)} className="rounded-md border border-white/15 bg-[#0b0d12] px-2 py-1 text-sm text-white">
-              {SPEEDS.map((s) => (
-                <option key={s} value={s}>
-                  {s}×
-                </option>
-              ))}
-            </select>
-          </label>
-          <span className="ml-auto text-xs text-white/50 tabular">
-            {shown} of {SECURED.length}
-          </span>
-          <p className="w-full text-xs text-white/55">
-            <span className="font-semibold text-white/80">An illustrative walkthrough of the target pipeline.</span> Names, ids and values are synthetic examples. The tag on each message says what this prototype does with that step: enforced in its code, partly enforced, or simulated with no real cryptography (mTLS, RS256/JWKS signatures and rate limits are simulated; tokens are HMAC-signed by the registry).
-          </p>
-        </div>
-
         <div className="mt-4 flex justify-between px-1 font-mono text-[10px] tracking-[0.14em] text-white/35 uppercase">
           <span>BNY</span>
           <span>Goldman</span>
@@ -122,9 +79,14 @@ export function SecuredPipeline() {
             <Row key={m.id} m={m} />
           ))}
           {!done && stage === "reveal" && <Row key={next.id} m={next} reveal={unit} />}
-          {playing && !done && stage === "typing" && <Typing m={next} />}
+          {!done && stage === "typing" && <Typing m={next} />}
         </ol>
-        {done && <p className="mt-6 text-center text-xs text-white/40">End of the exchange. Restart to play it again.</p>}
+        {done && (
+          <button onClick={restart} className="mt-6 block w-full text-center text-xs font-medium text-[#3fbf7f] hover:underline">
+            Replay
+          </button>
+        )}
+        <p className="mt-8 text-[11px] leading-snug text-white/40">An illustrative walkthrough with synthetic values. The tag on each message says what this prototype does with that step: enforced in its code, partly enforced, or simulated (mTLS, signature checks and rate limits run no real cryptography; tokens are HMAC-signed by the registry).</p>
         <div ref={endRef} />
       </main>
       <PersonaDock />

@@ -143,6 +143,7 @@ export function AttackConsole() {
                   <p className="mt-1 text-xs text-white/50">BNY&apos;s gateway logged the attempt for Compliance.</p>
                 </div>
               )}
+              {shown > bubbles.length && <p className="mt-6 text-[11px] leading-snug text-white/40">The commentary is written for this demo. The gateway checks and filter results marked &quot;real check&quot; are produced by BNY&apos;s gateway code as the attack runs.</p>}
               <div ref={endRef} />
             </section>
           )}
@@ -219,10 +220,7 @@ function Bubble({ b }: { b: AttackBubble }) {
   if (b.kind === "narration")
     return (
       <div className={wrap}>
-        <p className={`${shape} border border-dashed border-white/15 text-[12px] leading-snug text-white/45 italic`}>
-          <span className="mr-1.5 rounded bg-white/5 px-1 py-px font-mono text-[9px] font-semibold tracking-wide text-white/40 uppercase not-italic">narration</span>
-          {b.text}
-        </p>
+        <p className={`${shape} border border-white/10 bg-white/[0.04] text-[13px] leading-snug text-white/75`}>{b.text}</p>
       </div>
     );
   if (b.kind === "real")
