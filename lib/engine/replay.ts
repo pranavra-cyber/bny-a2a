@@ -2,7 +2,7 @@
 // for a click so the presenter drives the demo; the recorded cost is shown as-is.
 import "server-only";
 import { checkpoint } from "./chat";
-import { AUTO_CHECKPOINTS, relayNoticeDetail, relayNoticeTitle } from "./guide";
+import { AUTO_CHECKPOINTS, AUTO_NOTICES, type CheckpointId, firmOfSeat, relayNoticeDetail, relayNoticeTitle, SEATS } from "./guide";
 import type { Recording } from "./persist";
 import type { Run } from "./run";
 
@@ -39,7 +39,21 @@ export async function replayRun(run: Run, rec: Recording): Promise<void> {
     if (ev.kind === "approval") continue; // re-emitted below with the actual approver
     if (ev.kind === "chat" || ev.modelCall?.agent.includes("Copilot")) continue; // chat happens live
     if (ev.kind === "checkpoint" && ev.checkpoint && AUTO_CHECKPOINTS.has(ev.checkpoint.id)) {
-      relayFrom = { actor: ev.actor };
+      // A step that now runs on its own: no stop. Tell the person, as a live run does.
+      const notice = AUTO_NOTICES[ev.checkpoint.id as CheckpointId];
+      if (notice) {
+        const firm = firmOfSeat(notice.seat);
+        run.emit({
+          kind: "notification",
+          lane: firm,
+          audience: [firm],
+          desk: notice.seat,
+          actor: ev.actor,
+          title: notice.title,
+          detail: notice.detail,
+          notification: { seat: notice.seat, level: "info", channel: "app", from: SEATS[notice.seat].assistant },
+        });
+      } else relayFrom = { actor: ev.actor };
       flushAudit(ev.seq);
       continue;
     }

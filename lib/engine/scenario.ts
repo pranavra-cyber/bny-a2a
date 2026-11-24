@@ -22,7 +22,7 @@ import { type GsCase, findOpenDkFails, loadGsCase } from "../tools/goldman";
 import { validateFindings, type Finding } from "../tools/grounding";
 import type { ToolCtx } from "../tools/common";
 import { checkpoint, say } from "./chat";
-import { type Checkpoint, CLIENT_CONTACT, firmOfSeat, GREETING, INTAKE_SUGGESTIONS, relayNoticeDetail, relayNoticeTitle, type Seat, SEATS } from "./guide";
+import { AUTO_NOTICES, type Checkpoint, type CheckpointId, CLIENT_CONTACT, firmOfSeat, GREETING, INTAKE_SUGGESTIONS, relayNoticeDetail, relayNoticeTitle, type Seat, SEATS, STEP_CAUSE_FOUND, STEP_HANDED_OVER, STEP_HOLDING } from "./guide";
 import { persistRun } from "./persist";
 import { CUTOFF, type Run } from "./run";
 import type { Actor, ApprovalRequest, EscalationReason, Firm, Lane, ResolvedRecord } from "./types";
@@ -131,6 +131,12 @@ async function approval(cs: CaseState, desk: Seat, actor: Actor, title: string, 
   audit(cs, actor, `review ${req.kind}`, d.outcome, { approver: d.by });
   run.emit({ kind: "approval", lane: firm, audience: [firm], desk, actor: { ...actor, name: d.by }, title: `${title}: ${d.outcome} by ${d.by}`, decision: { kind: req.kind, outcome: d.outcome, by: d.by } });
   return d;
+}
+
+/** A step that used to wait for a person now runs on its own: tell them instead (see AUTO_NOTICES). */
+function autoNotice(cs: CaseState, id: CheckpointId) {
+  const n = AUTO_NOTICES[id]!;
+  notify(cs, n.seat, "info", n.title, { detail: n.detail });
 }
 
 // ---------- messaging ----------
@@ -560,7 +566,7 @@ async function caseFlow(cs: CaseState) {
   notify(cs, "bny", "action", "Goldman Sachs' agent is asking about a DK'd NVDA delivery", {
     channel: "teams",
     from: "Settlement Fails Orchestrator",
-    detail: `Delivery ${String(delivered.data.dtc_reference)} of ${n(Number(delivered.data.quantity_delivered))} was DK'd at 08:16 ET. The gateway verified the sender. Open the case in Eliza.`,
+    detail: `Delivery ${String(delivered.data.dtc_reference)} of ${n(Number(delivered.data.quantity_delivered))} was DK'd at 08:16 ET. The gateway verified the sender; the Settlement Ops Agent is working it. Open the case in Eliza to follow along.`,
   });
 
   // FP3: claims about BNY must cite a BNY record (RULE).
@@ -569,17 +575,8 @@ async function caseFlow(cs: CaseState) {
 
   await sendToGoldman(cs, { text: "Request received. BNY is investigating.", data: { dtc_reference: fields.dtc_reference, instruction_status: "UNDER_REVIEW", requested_action: "wait" }, state: "working", title: "investigating", sender: ACTORS.bnyCaseRule });
 
-  await gate(cs, {
-    id: "investigate",
-    seat: "bny",
-    prompt:
-      `Good morning, Priya. Goldman Sachs' Outreach Agent is asking why delivery ${String(delivered.data.dtc_reference)} of ${n(Number(delivered.data.quantity_delivered))} ${String(delivered.data.isin)} was DK'd. ` +
-      `The gateway verified it: registered agent, signed card and message, its own token, allowed skill. I see only BNY's records and the ${Object.keys(delivered.data).length} fields Goldman sent. Shall the Settlement Ops Agent compare the details?`,
-    actions: [{ id: "investigate", label: "Compare the details", kind: "primary", keywords: ["investigat", "look", "check", "find", "search", "records", "dig", "compare"] }],
-    questions: ["What exactly did Goldman send us?", "Could this message be a spoof?", "What happens if this misses the cutoff?"],
-  });
-
-  // 3. Find the cause (RULE lookups + AGENT comparison + RULE check).
+  // 3. Find the cause (RULE lookups + AGENT comparison + RULE check). Runs on its own; Priya is told.
+  autoNotice(cs, "investigate");
   const bnyT = tool(cs, "bny", ACTORS.bnyCaseRule);
   const bc = investigateDelivery(bnyT, { dtcReference: String(delivered.data.dtc_reference ?? ""), isin: String(delivered.data.isin ?? ""), settleDate: String(delivered.data.settle_date ?? "") });
   if (!bc) throw escalation("grounding", "No BNY instruction matches the counterparty's delivery reference");
@@ -598,47 +595,27 @@ async function caseFlow(cs: CaseState) {
   audit(cs, ACTORS.bnyCaseRule, "check cause", triProblems.length ? triProblems.join("; ") : "client must re-instruct", { dataAccessed: refsOf(triRecs) });
   if (triProblems.length) throw escalation("grounding", `The cause could not be confirmed: ${triProblems.join("; ")}. Needs an analyst.`);
   cs.notes.bny.push(tri.assessment, tri.rootCause);
-  step(cs, "bny", ACTORS.bnyCase, `Cause found: the client's instruction differs · urgency ${Math.round(tri.urgency.score)}/100`, {
+  step(cs, "bny", ACTORS.bnyCase, `${STEP_CAUSE_FOUND}: the client's instruction differs · urgency ${Math.round(tri.urgency.score)}/100`, {
     detail: `${tri.assessment}\n${tri.rootCause}\nUrgency: ${tri.urgency.rationale}`,
     records: triRecs,
   });
 
-  await gate(cs, {
-    id: "handover",
-    seat: "bny",
-    prompt:
-      `${tri.rootCause} BNY can't change a client's instruction, so this goes to Client Service to ask AllianzGI to check and re-instruct by 11:30 ET. ` +
-      "Once the request goes to the client, Goldman's agent is told to hold. Hand the case to Daniel Kim in Client Service?",
-    actions: [
-      { id: "handover", label: "Hand to Client Service", kind: "primary", keywords: ["hand", "client service", "daniel", "pass", "transfer", "assign", "yes"] },
-      { id: "cancel", label: "Keep it and work it by hand", kind: "cancel", keywords: ["by hand", "myself", "keep it"] },
-    ],
-    questions: ["Why can't we just fix the instruction ourselves?", "What happens if this misses the cutoff?", "How close are we to cutoff?"],
-  });
-
-  // 4. Hand over (RULE).
+  // 4. Hand over (RULE): only the client can re-instruct, so the case goes to Client Service on its own.
   run.clock.at("09:08:00");
-  step(cs, "bny", ACTORS.bnyCaseRule, "Case handed to Client Service", { detail: "Client Team Agent assigned; Daniel Kim notified in Teams." });
-  audit(cs, ACTORS.bnyOps, "hand over to client service", "handed to Daniel Kim", { approver: "Priya Sharma" });
-  notify(cs, "bny-cs", "action", "Priya Sharma handed you a client re-instruction: AGI GLEQ NVDA", {
+  step(cs, "bny", ACTORS.bnyCaseRule, STEP_HANDED_OVER, { detail: "BNY can't change a client's instruction. Client Team Agent assigned; Daniel Kim notified in Teams." });
+  audit(cs, ACTORS.bnyCaseRule, "hand over to client service", "handed to Daniel Kim automatically (client must re-instruct)");
+  autoNotice(cs, "handover");
+  notify(cs, "bny-cs", "action", "New client re-instruction: AGI GLEQ NVDA", {
     channel: "teams",
-    from: "Priya Sharma",
-    detail: `AllianzGI's instruction is for ${n(bc.instruction.quantity)}; Goldman delivered ${n(c.delivery.quantity)} against an affirmed confirm. The client has to re-instruct by 11:30 ET. Tier 1, $1.86m.`,
+    from: "Settlement Fails Orchestrator",
+    detail: `AllianzGI's instruction is for ${n(bc.instruction.quantity)}; Goldman delivered ${n(c.delivery.quantity)} against an affirmed confirm. The client has to re-instruct by 11:30 ET. Tier 1, $1.86m. The Client Team Agent is drafting the email for your approval.`,
   });
   const blocked = delivered.injection.length ? [`request in counterparty text (${delivered.injection.join(", ")})`] : [];
 
   // ===== BNY Client Service: Daniel Kim =====
-  await gate(cs, {
-    id: "contact",
-    seat: "bny-cs",
-    prompt:
-      `Hi Daniel. Priya handed you this case: AllianzGI's instruction ${bc.instruction.instruction_id} is for ${n(bc.instruction.quantity)} NVDA, but Goldman delivered ${n(c.delivery.quantity)}, matching its affirmed confirm. ` +
-      "Only the client can re-instruct, and same-day instructions are due by 11:30 ET. Shall the Client Team Agent draft the request to the client?",
-    actions: [{ id: "draft", label: "Draft the request to the client", kind: "primary", keywords: ["draft", "write", "prepare", "message", "email", "ask", "client", "emily"] }],
-    questions: ["Who is the right contact at AllianzGI?", "What happens if this misses the cutoff?"],
-  });
+  autoNotice(cs, "contact");
 
-  // 5. Ask the client: the Client Team Agent drafts (AGENT); Daniel approves and sends by Teams and email (HUMAN).
+  // 5. Ask the client: the Client Team Agent drafts on its own (AGENT); Daniel decides whether it is sent (HUMAN).
   const ctT = tool(cs, "bny", ACTORS.bnyClientTeamRule);
   const cc = clientContext(ctT, bc);
   const cf = clientFields(bc, c.delivery.quantity);
@@ -718,19 +695,15 @@ async function caseFlow(cs: CaseState) {
   notify(cs, "bny-cs", "info", relayNoticeTitle(fixTime), { channel: "teams", from: "BNY Settlement Ops Agent", detail: relayNoticeDetail(late) });
 
   // ===== Goldman: Michael Torres =====
-  notify(cs, "goldman", "action", `BNY expects a fix by ${fixTime}: hold our side`, { channel: "teams", from: "GS Fails Assistant", detail: fixOut.text });
+  notify(cs, "goldman", "info", `BNY expects a fix by ${fixTime}: holding our side`, { channel: "teams", from: "GS Fails Assistant", detail: fixOut.text });
   const holdInterp = await interpretReply(run, c, fixOut.data, fixOut.text, [holdOut.text]);
   const holdRecs = grounded(cs, "goldman", ACTORS.gsOutreach, holdInterp.findings);
   step(cs, "goldman", ACTORS.gsOutreach, holdInterp.action === "hold" ? "Recommends holding our side as is" : "Recommends a different action", { detail: holdInterp.summary, records: holdRecs });
   if (holdInterp.action !== "hold") throw escalation("grounding", "Goldman's agent did not agree to hold.", "goldman");
-  await gate(cs, {
-    id: "hold",
-    seat: "goldman",
-    prompt: `BNY says its client will re-instruct by ${fixTime} and asks us to keep our side as is. Our delivery matches the affirmed confirm, so there's nothing for us to change. Hold and wait for BNY's go-ahead to redeliver?`,
-    actions: [{ id: "hold", label: "Hold and wait", kind: "primary", keywords: ["hold", "wait", "ok", "fine", "yes", "keep"] }],
-    questions: ["What happens if this misses the cutoff?", "Can we trust this reply?"],
-  });
-  step(cs, "goldman", ACTORS.gsOutreachRule, "Holding: our side stays as is", { detail: `Fail ${c.fail.gs_fail_id} noted: custodian's client re-instructing by ${fixTime}.` });
+  // Holding needs no change on Goldman's side, so it happens on its own; Michael is told.
+  step(cs, "goldman", ACTORS.gsOutreachRule, STEP_HOLDING, { detail: `Fail ${c.fail.gs_fail_id} noted: custodian's client re-instructing by ${fixTime}.` });
+  audit(cs, ACTORS.gsOutreachRule, "hold", `holding automatically until BNY's go-ahead (fix expected by ${fixTime})`);
+  autoNotice(cs, "hold");
 
   // 8. Re-instruct: the client's corrected MT541 arrives and replaces the old instruction (RULE).
   run.clock.at(late ? "11:52:00" : "11:08:00");

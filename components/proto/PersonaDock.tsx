@@ -1,8 +1,9 @@
 "use client";
 // The prototype's own control, not part of the product: who you are, your task,
-// and a way to switch people. It opens by itself once, the first time you become
-// someone, then tucks itself away. When the case moves to someone else, a small
-// hint appears beside it instead.
+// and a way to switch people. It opens by itself only when you become someone (on
+// landing, or switching person), then tucks itself away; a click anywhere outside it
+// or Escape closes it. When the case moves to someone else, a small hint appears
+// beside it instead.
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -11,31 +12,28 @@ import { FINAL } from "@/lib/engine/status";
 import { type Persona, PERSONAS, personaForSeat } from "@/lib/personas";
 import { useProto } from "./Proto";
 
-const OPEN_MS = 6000;
-
 export function PersonaDock() {
-  const { persona, setPersona, summary, introKey, mode, runId, setRunId, setDockOpen } = useProto();
-  const [open, setOpen] = useState(false);
-  const [pinned, setPinned] = useState(false);
+  // Open state lives in the provider: this dock remounts with every page, and a remount
+  // must never reopen it.
+  const { persona, setPersona, summary, mode, runId, setRunId, dockOpen: expanded, setDockOpen } = useProto();
   const [moved, setMoved] = useState<Persona | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const root = useRef<HTMLDivElement>(null);
   const lastTurn = useRef<string | null | undefined>(undefined);
 
-  const peek = (ms = OPEN_MS) => {
-    setOpen(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setOpen(false), ms);
-  };
-
-  // Introduce the person you just became.
+  // A click anywhere outside the dock, or Escape, collapses it.
   useEffect(() => {
-    if (!introKey) return;
-    const t = setTimeout(() => {
-      setMoved(null);
-      peek();
-    }, 0);
-    return () => clearTimeout(t);
-  }, [introKey]);
+    if (!expanded) return;
+    const onDown = (e: MouseEvent) => {
+      if (root.current && !root.current.contains(e.target as Node)) setDockOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDockOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [expanded, setDockOpen]);
 
   // When the case moves to someone else, offer to switch to them.
   const turn = summary && !FINAL.has(summary.status) ? summary.turn : null;
@@ -47,22 +45,20 @@ export function PersonaDock() {
     return () => clearTimeout(t);
   }, [turn, persona.seat]);
 
-  const expanded = open || pinned;
-  useEffect(() => setDockOpen(expanded), [expanded, setDockOpen]);
   const waitingOn = turn ? personaForSeat(turn) : null;
 
   return (
-    <div className="proto fixed right-4 bottom-4 z-40 flex max-w-[calc(100vw-2rem)] flex-col items-end gap-2">
+    <div ref={root} className="proto fixed right-4 bottom-4 z-40 flex max-w-[calc(100vw-2rem)] flex-col items-end gap-2">
       {expanded && (
         <section
           aria-label="Prototype controls"
-          onMouseEnter={() => clearTimeout(timer.current)}
-          onMouseLeave={() => !pinned && peek(2500)}
+          // Hovering keeps it open (cancels the auto-close); it then stays until a click outside.
+          onMouseEnter={() => setDockOpen(true)}
           className="dock-in w-[22rem] max-w-full overflow-hidden rounded-xl bg-navy text-white shadow-2xl ring-1 ring-white/10"
         >
           <header className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
             <span className="text-[11px] font-semibold tracking-[0.14em] text-teal uppercase">Eliza A2A Prototype</span>
-            <button onClick={() => (setPinned(false), setOpen(false))} className="text-xs text-white/60 hover:text-white" aria-label="Close prototype controls">
+            <button onClick={() => setDockOpen(false)} className="text-xs text-white/60 hover:text-white" aria-label="Close prototype controls">
               Close
             </button>
           </header>
@@ -145,7 +141,7 @@ export function PersonaDock() {
       )}
 
       <button
-        onClick={() => (expanded ? (setPinned(false), setOpen(false)) : (setPinned(true), setMoved(null)))}
+        onClick={() => (expanded ? setDockOpen(false) : (setDockOpen(true), setMoved(null)))}
         aria-expanded={expanded}
         className="flex items-center gap-2 rounded-full bg-navy py-1.5 pr-4 pl-1.5 text-sm text-white shadow-xl ring-1 ring-white/10 hover:bg-navy-2"
       >

@@ -33,7 +33,7 @@ export function SupervisionPage() {
   const note = (text: string) => <p className="mx-auto max-w-xl px-6 py-12 text-sm text-muted">{text}</p>;
   let body: React.ReactNode;
   if (!hydrated) body = null;
-  else if (!access) body = note("Supervision is BNY's own backstage. It is available to BNY's Settlement Operations lead and Compliance only.");
+  else if (!access) body = note("Supervision is BNY's own backstage. It is available to BNY Compliance only.");
   else if (access === "waiting-for-close") body = note("This case is still open. Compliance can review the supervision conversation once the case has closed.");
   else body = <Chat readOnly={access === "read-only"} initial={SUPERVISED.includes(summary?.scenario as SupervisedScenario) ? (summary!.scenario as SupervisedScenario) : "golden"} />;
   return <Shell title="Supervision" subtitle={access ? "BNY backstage · how the agents reasoned, and what the gateway did" : undefined}>{body}</Shell>;

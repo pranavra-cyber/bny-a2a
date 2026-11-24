@@ -1,5 +1,5 @@
 {
- "createdAt": "2026-11-19T18:45:44.830Z",
+ "createdAt": "2026-11-24T18:00:51.522Z",
  "mode": "live",
  "model": "gpt-6.1-terra",
  "dkAt": "2026-11-19T13:16:02.000Z",
@@ -88,29 +88,30 @@
      "basis": "measured"
     },
     "fieldsShared": {
-     "value": 2,
+     "value": 3,
      "basis": "measured",
      "note": "fields detected in the drafted email"
     },
     "tokens": {
-     "value": 2653,
+     "value": 2451,
      "basis": "measured"
     },
     "costUsd": {
-     "value": 0.007909,
+     "value": 0.006899,
      "basis": "measured"
     }
    },
    "fieldsSharedList": [
     "dtc_reference",
+    "isin",
     "quantity"
    ],
-   "detail": "The delivery was DK'd for a reported quantity mismatch, but the recorded DTC and BNY quantities are both 20,000. The correct instruction and cause cannot be verified from the supplied records. Participant 7101 is recorded as the DTC receiver but as the counterparty on the BNY instruction; its role requires confirmation."
+   "detail": "The delivery was DK'd for a reported quantity mismatch, but both supplied quantity records show 20,000 shares. The cause and correct instruction cannot be verified. The client allocation, repair item and inquiry log were not provided, so the correct side cannot be established before contacting the counterparty. The DTC receiver participant also conflicts with the counterparty participant on the BNY instruction."
   },
   {
    "mode": "a2a",
    "label": "A2A (this design)",
-   "description": "Full multi-agent run r_5497d540 (live, gpt-6.1-terra).",
+   "description": "Full multi-agent run r_fc8192ee (live, gpt-6.1-terra).",
    "metrics": {
     "minutesToResolution": {
      "value": 181,
@@ -140,12 +141,12 @@
      "note": "distinct fields BNY sent across the boundary"
     },
     "tokens": {
-     "value": 11428,
+     "value": 11777,
      "basis": "measured",
      "note": "API usage fields"
     },
     "costUsd": {
-     "value": 0.019184100000000003,
+     "value": 0.021941,
      "basis": "measured"
     }
    },
@@ -164,14 +165,14 @@
  ],
  "emails": [
   {
-   "to": "Cobalt Investment Managers Core Portfolio",
-   "subject": "Action requested: DK on CIM-261118-9595",
-   "body": "Dear Client,\n\nThe delivery under DTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. Both the DTC activity and your recorded instruction show 20,000 shares and USD 7,802,400; the cause is not yet verified.\n\nPlease check your latest allocation and intended settlement details, including the counterparty, and re-instruct or confirm the correct details. Please also advise of any relevant repair or inquiry.\n\nRegards,\nBNY Operations"
+   "to": "Cobalt Investment Managers",
+   "subject": "Please check and re-instruct: CIM-261118-9595",
+   "body": "Hello,\n\nDTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. Our instruction and the supplied DTC activity both show 20,000 shares and USD 7,802,400 for ISIN US4370761029. Please check your latest allocation, quantity, amount and counterparty details, and re-instruct or confirm the correct details.\n\nThe DTC activity identifies participant 7101 as the receiver, while our instruction identifies 7101 as the counterparty. Please check this as well.\n\nThank you,\nBNY Operations"
   },
   {
-   "to": "Morgan Stanley & Co. LLC — Fails Desk (participant 7101; role to be confirmed)",
-   "subject": "DK notification: DTC-DO-20261119-000044",
-   "body": "Dear Fails Desk,\n\nDTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. The recorded DTC delivery and our instruction both show 20,000 shares and USD 7,802,400. We have asked our client to check and confirm or re-instruct; the correct details and cause are not yet verified.\n\nPlease check the delivery and confirm your role and instruction details. Our records show participant 7101 as the DTC receiver but as the counterparty on our instruction.\n\nRegards,\nBNY Operations"
+   "to": "Morgan Stanley & Co. LLC fails desk — address not provided",
+   "subject": "DK under investigation: DTC-DO-20261119-000044",
+   "body": "Hello,\n\nDTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. The supplied DTC activity and our instruction both show 20,000 shares and USD 7,802,400 for ISIN US4370761029. We have asked our client to check and re-instruct or confirm.\n\nWe cannot yet establish which side is correct. The DTC activity identifies 7101 as receiver, whereas our instruction identifies 7101 as the counterparty; please check the participant details and your delivery instruction.\n\nThank you,\nBNY Operations"
   }
  ]
 }

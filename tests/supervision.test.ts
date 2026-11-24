@@ -42,7 +42,8 @@ describe("supervision scripts", () => {
       ["orchestrator", "run", "reply"],
     ]);
     expect(g.filter((m) => m.tool).map((m) => m.tool)).toEqual(["get_trade", "check_status", "ssi lookup", "knowledge"]);
-    expect(g[0].text).toBe("Sends settlement.dk-inquiry: Please explain the quantity mismatch underlying the DK and confirm whether we should redeliver before cutoff.");
+    // Goldman's own wording comes from the recorded model run, so only its shape is fixed.
+    expect(g[0].text).toMatch(/^Sends settlement\.dk-inquiry: .*(DK|mismatch)/);
     expect(g[2].text).toMatch(/^New DK inquiry from Goldman on DTC-DO-20261119-000318\. They delivered 10,000;/);
     expect(g[9].text).toBe("This needs a client re-instruction. Handing to the Client Team Agent to draft the request for Daniel to approve.");
   });

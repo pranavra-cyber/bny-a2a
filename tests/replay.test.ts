@@ -45,8 +45,13 @@ describe("replay of saved recordings", () => {
     await replayRun(run, rec!);
     unsub();
     expect(run.status).toBe("settled");
-    expect(stops).not.toContain("client-reply");
-    expect(run.events.some((e) => e.kind === "checkpoint" && e.checkpoint?.id === "client-reply")).toBe(false);
+    // Steps that now run on their own never stop a replay of an older recording.
+    for (const id of ["client-reply", "investigate", "handover", "contact", "hold"]) {
+      expect(stops).not.toContain(id);
+      expect(run.events.some((e) => e.kind === "checkpoint" && e.checkpoint?.id === id)).toBe(false);
+    }
+    expect(stops).toEqual(["request", "send"]);
+    expect(run.events.some((e) => e.kind === "notification" && e.desk === "goldman" && e.title === "Holding our side while BNY's client re-instructs")).toBe(true);
     const notice = run.events.find((e) => e.kind === "notification" && e.desk === "bny-cs" && e.title.startsWith("Sent to Goldman automatically"));
     expect(notice?.title).toMatch(/fix expected by 11:15 ET$/);
   }, 20000);

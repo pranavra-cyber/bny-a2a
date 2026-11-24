@@ -43,11 +43,19 @@ export function useRun(runId: string | null, view: View) {
       setSummary(p.summary);
       setEvents(p.events);
     };
+    // A lone 404 can be a request that reached another server instance, or one sent before a
+    // just-started run is visible: only a run of them means the case is really gone.
+    let missing = 0;
     const startPolling = () => {
       const tick = () =>
         fetch(`/api/runs/${runId}?view=${view}`)
           .then(async (r) => {
-            if (r.status === 404) throw new Error("This run was not found. The server may have restarted, which clears runs that weren't saved.");
+            if (r.status === 404) {
+              if (++missing >= 4) throw new Error("This run was not found. The server may have restarted, which clears runs that weren't saved.");
+              return;
+            }
+            if (!r.ok) return; // transient: try again on the next tick
+            missing = 0;
             apply(await r.json());
             setError(null);
           })

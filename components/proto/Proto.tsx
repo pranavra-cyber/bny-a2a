@@ -73,10 +73,11 @@ type Ctx = {
   /** "proto" is the prototype's own voice (dark), not the product's. */
   snack: (text: string, tone?: "ok" | "proto") => void;
   toast: (t: Toast, delayMs?: number) => void;
-  /** Bumped when you become someone for the first time, so the dock can introduce them. */
-  introKey: number;
+  /** Whether the prototype dock (bottom right) is expanded. Kept here, not in the dock, so a
+   * page change (which remounts the dock) never reopens it. */
   dockOpen: boolean;
-  setDockOpen: (open: boolean) => void;
+  /** Opens or closes the dock; with autoCloseMs it tucks itself away after that long. */
+  setDockOpen: (open: boolean, autoCloseMs?: number) => void;
   /** True once the remembered person and case are restored (after mount). */
   hydrated: boolean;
 };
@@ -93,8 +94,11 @@ export const useProto = () => {
 const fromPath = (path: string): PersonaId | null =>
   path.startsWith("/eliza/audit") ? "nguyen" : path.startsWith("/eliza/case") ? "torres" : path.startsWith("/attack") ? "hacker" : null;
 
-const INTRODUCED = "a2a.introducedTo";
 const TOASTED = "a2a.toasted";
+/** How long the dock stays open after you become someone, unless you hover it. */
+const DOCK_INTRO_MS = 6000;
+/** Consecutive 404s (polled every 2s) before an open case is treated as gone. */
+const RUN_GONE_AFTER = 5;
 
 export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: React.ReactNode }) {
   const router = useRouter();
@@ -104,18 +108,19 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
   const [summary, setSummary] = useState<RunSummary | null>(null);
   const [snacks, setSnacks] = useState<Snack[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [introKey, setIntroKey] = useState(0);
-  const [dockOpen, setDockOpen] = useState(false);
+  const [dockOpen, setDockOpenState] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const queued = useRef<Toast[]>([]);
+  const dockTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const personaRef = useRef<PersonaId>("chen");
 
-  /** The first time you become someone, the dock introduces them. Never again after that. */
-  const introduce = useCallback((id: PersonaId) => {
-    const seen = store.list(INTRODUCED);
-    if (seen.includes(id)) return;
-    store.set(INTRODUCED, JSON.stringify([...seen, id]));
-    setIntroKey((k) => k + 1);
+  const setDockOpen = useCallback((open: boolean, autoCloseMs?: number) => {
+    clearTimeout(dockTimer.current);
+    setDockOpenState(open);
+    if (open && autoCloseMs) dockTimer.current = setTimeout(() => setDockOpenState(false), autoCloseMs);
   }, []);
+  /** The dock opens only when you become someone: on landing, and on each switch to another person. */
+  const introduce = useCallback(() => setDockOpen(true, DOCK_INTRO_MS), [setDockOpen]);
 
   // Restore after mount (localStorage is not available during server render).
   useEffect(() => {
@@ -126,9 +131,10 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
     const t = setTimeout(() => {
       if (p) {
         setPersonaId(p.id);
+        personaRef.current = p.id;
         store.set("a2a.persona", p.id);
         // The overview isn't a workspace: introduce people where they land.
-        if (window.location.pathname !== "/" && window.location.pathname !== "/prototype") introduce(p.id);
+        if (window.location.pathname !== "/" && window.location.pathname !== "/prototype") introduce();
       }
       if (r) setRun(r);
       if (m && (m === "replay" || (m === "live" && !cfg.liveProblems.length))) setModeState(m);
@@ -139,9 +145,11 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
 
   const setPersona = useCallback(
     (id: PersonaId, go = true) => {
+      const switched = id !== personaRef.current;
+      personaRef.current = id;
       setPersonaId(id);
       store.set("a2a.persona", id);
-      introduce(id);
+      if (switched) introduce();
       if (go) router.push(personaById(id)!.home);
     },
     [router, introduce],
@@ -155,6 +163,12 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
       store.set(TOASTED, JSON.stringify(store.list(TOASTED).filter((k) => !k.startsWith("case:"))));
       store.set("a2a.modeChosen", null);
     }
+  }, []);
+  /** The case was lost on the server (not the user's choice): forget it but keep the chosen mode. */
+  const forgetRun = useCallback(() => {
+    setRun(null);
+    store.set("a2a.run", null);
+    setSummary(null);
   }, []);
   const setMode = useCallback((m: RunMode) => {
     setModeState(m);
@@ -197,14 +211,17 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
   useEffect(() => {
     if (!runId) return;
     let alive = true;
+    let missing = 0;
     const tick = () =>
       fetch(`/api/runs/${runId}?view=network&summary=1`)
         .then((r) => {
           if (r.status === 404) {
-            // The server restarted and the run is gone: forget it.
-            if (alive) setRunId(null);
+            // A single 404 can be a request served by another server instance, or one sent
+            // before the new run is visible. Only after a run of them is the case really gone.
+            if (alive && ++missing >= RUN_GONE_AFTER) forgetRun();
             return null;
           }
+          missing = 0;
           return r.json();
         })
         .then((d) => alive && d && setSummary(d.summary))
@@ -215,11 +232,11 @@ export function ProtoProvider({ cfg, children }: { cfg: DemoConfig; children: Re
       alive = false;
       clearInterval(t);
     };
-  }, [runId, setRunId]);
+  }, [runId, forgetRun]);
 
   const value = useMemo<Ctx>(
-    () => ({ cfg, persona: personaById(personaId) ?? PERSONAS[0], setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen, setDockOpen, hydrated }),
-    [cfg, personaId, setPersona, runId, setRunId, summary, mode, setMode, snack, toast, introKey, dockOpen, hydrated],
+    () => ({ cfg, persona: personaById(personaId) ?? PERSONAS[0], setPersona, runId, setRunId, summary, mode, setMode, snack, toast, dockOpen, setDockOpen, hydrated }),
+    [cfg, personaId, setPersona, runId, setRunId, summary, mode, setMode, snack, toast, dockOpen, setDockOpen, hydrated],
   );
 
   return (

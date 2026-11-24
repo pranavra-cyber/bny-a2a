@@ -3,7 +3,7 @@
 // glance on the right. The case starts at Goldman, in Michael's assistant.
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { RunEvent } from "@/lib/engine/types";
 import { store, type Toast } from "../proto/Proto";
 import { GREETING, INTAKE_SUGGESTIONS, type Seat, SEATS } from "@/lib/engine/guide";
@@ -31,12 +31,16 @@ export function CaseView() {
   const params = useSearchParams();
   const router = useRouter();
   const seat: Seat = persona.seat ?? "bny";
+  const handled = useRef<string | null>(null);
   useEffect(() => {
-    // ?new=1 starts over; ?run=<id> opens a specific case (a shared link).
-    if (params.get("new") || params.get("run")) {
-      setRunId(params.get("run"));
-      router.replace("/eliza/case");
-    }
+    // ?new=1 starts over; ?run=<id> opens a specific case (a shared link). Acted on once per
+    // link: if the effect runs again before the URL is cleaned up (for instance after the
+    // case has just been started), it must not reset the new case.
+    const q = params.toString();
+    if (!(params.get("new") || params.get("run")) || handled.current === q) return;
+    handled.current = q;
+    setRunId(params.get("run"));
+    router.replace("/eliza/case");
   }, [params, router, setRunId]);
   const title = seat === "goldman" ? "NVDA 10,000 · DK by BNY" : "NVDA 10,000 · rejected delivery from Goldman Sachs";
   if (!runId) return seat === "goldman" ? <NewCase title={title} /> : <NotYet title={title} seat={seat} />;

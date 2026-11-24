@@ -1,0 +1,177 @@
+{
+ "createdAt": "2026-11-19T18:45:44.830Z",
+ "mode": "live",
+ "model": "gpt-6.1-terra",
+ "dkAt": "2026-11-19T13:16:02.000Z",
+ "rows": [
+  {
+   "mode": "manual",
+   "label": "Manual baseline",
+   "description": "Today's phone/email chase. Assumed from interviews and the Nov 18-19 ops chat; not measured.",
+   "metrics": {
+    "minutesToResolution": {
+     "value": 324,
+     "basis": "assumed",
+     "note": "DK 08:16 → settled ~13:40: client reply ~10:30, GS fails desk found and told ~11:30, late-instruction exception needed"
+    },
+    "turns": {
+     "value": 11,
+     "basis": "assumed",
+     "note": "emails and calls across BNY, AllianzGI and Goldman"
+    },
+    "toolCalls": {
+     "value": 0,
+     "basis": "assumed",
+     "note": "manual screen lookups"
+    },
+    "humanApprovals": {
+     "value": 2,
+     "basis": "assumed"
+    },
+    "escalations": {
+     "value": 1,
+     "basis": "assumed",
+     "note": "flagged to team lead"
+    },
+    "fieldsShared": {
+     "value": 9,
+     "basis": "assumed",
+     "note": "free-text email typically includes client, fund and instruction details"
+    },
+    "tokens": {
+     "value": 0,
+     "basis": "assumed"
+    },
+    "costUsd": {
+     "value": 0,
+     "basis": "assumed"
+    }
+   },
+   "fieldsSharedList": [
+    "dtc_reference",
+    "isin",
+    "quantity",
+    "settle_date",
+    "instruction_id",
+    "participant",
+    "client name",
+    "fund",
+    "account"
+   ]
+  },
+  {
+   "mode": "single",
+   "label": "Single agent with tools",
+   "description": "One BNY agent with every BNY tool but no channel to Goldman: it drafts emails to the client and the counterparty and waits for replies.",
+   "metrics": {
+    "minutesToResolution": {
+     "value": 244,
+     "basis": "assumed",
+     "note": "agent ready ~09:10; client reply ~10:30; finding and briefing the right GS contact ~60 min; redelivery; settles ~12:20"
+    },
+    "turns": {
+     "value": 6,
+     "basis": "assumed",
+     "note": "client email and reply, counterparty email, follow-up, fix time, redelivery notice"
+    },
+    "toolCalls": {
+     "value": 7,
+     "basis": "measured"
+    },
+    "humanApprovals": {
+     "value": 2,
+     "basis": "assumed",
+     "note": "BNY client service + GS ops"
+    },
+    "escalations": {
+     "value": 0,
+     "basis": "measured"
+    },
+    "fieldsShared": {
+     "value": 2,
+     "basis": "measured",
+     "note": "fields detected in the drafted email"
+    },
+    "tokens": {
+     "value": 2653,
+     "basis": "measured"
+    },
+    "costUsd": {
+     "value": 0.007909,
+     "basis": "measured"
+    }
+   },
+   "fieldsSharedList": [
+    "dtc_reference",
+    "quantity"
+   ],
+   "detail": "The delivery was DK'd for a reported quantity mismatch, but the recorded DTC and BNY quantities are both 20,000. The correct instruction and cause cannot be verified from the supplied records. Participant 7101 is recorded as the DTC receiver but as the counterparty on the BNY instruction; its role requires confirmation."
+  },
+  {
+   "mode": "a2a",
+   "label": "A2A (this design)",
+   "description": "Full multi-agent run r_5497d540 (live, gpt-6.1-terra).",
+   "metrics": {
+    "minutesToResolution": {
+     "value": 181,
+     "basis": "scripted",
+     "note": "DK 08:16 → settled 11:17:00 ET; human review times are scripted assumptions"
+    },
+    "turns": {
+     "value": 5,
+     "basis": "measured",
+     "note": "cross-firm messages through the gateway"
+    },
+    "toolCalls": {
+     "value": 17,
+     "basis": "measured"
+    },
+    "humanApprovals": {
+     "value": 2,
+     "basis": "measured"
+    },
+    "escalations": {
+     "value": 0,
+     "basis": "measured"
+    },
+    "fieldsShared": {
+     "value": 9,
+     "basis": "measured",
+     "note": "distinct fields BNY sent across the boundary"
+    },
+    "tokens": {
+     "value": 11428,
+     "basis": "measured",
+     "note": "API usage fields"
+    },
+    "costUsd": {
+     "value": 0.019184100000000003,
+     "basis": "measured"
+    }
+   },
+   "fieldsSharedList": [
+    "dtc_reference",
+    "instruction_status",
+    "requested_action",
+    "isin",
+    "settle_date",
+    "resolution",
+    "expected_fix_time",
+    "settle_by",
+    "quantity_instructed"
+   ]
+  }
+ ],
+ "emails": [
+  {
+   "to": "Cobalt Investment Managers Core Portfolio",
+   "subject": "Action requested: DK on CIM-261118-9595",
+   "body": "Dear Client,\n\nThe delivery under DTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. Both the DTC activity and your recorded instruction show 20,000 shares and USD 7,802,400; the cause is not yet verified.\n\nPlease check your latest allocation and intended settlement details, including the counterparty, and re-instruct or confirm the correct details. Please also advise of any relevant repair or inquiry.\n\nRegards,\nBNY Operations"
+  },
+  {
+   "to": "Morgan Stanley & Co. LLC — Fails Desk (participant 7101; role to be confirmed)",
+   "subject": "DK notification: DTC-DO-20261119-000044",
+   "body": "Dear Fails Desk,\n\nDTC reference DTC-DO-20261119-000044 was DK'd for a reported quantity mismatch. The recorded DTC delivery and our instruction both show 20,000 shares and USD 7,802,400. We have asked our client to check and confirm or re-instruct; the correct details and cause are not yet verified.\n\nPlease check the delivery and confirm your role and instruction details. Our records show participant 7101 as the DTC receiver but as the counterparty on our instruction.\n\nRegards,\nBNY Operations"
+  }
+ ]
+}

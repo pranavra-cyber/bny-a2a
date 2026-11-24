@@ -49,7 +49,7 @@ export const PERSONAS: Persona[] = [
     photo: "/personas/torres.svg",
     section: "Live A2A case",
     task: "Chase the rejected delivery",
-    taskLine: "Goldman's NVDA delivery was rejected by BNY; ask BNY's agent why, then hold and redeliver.",
+    taskLine: "Goldman's NVDA delivery was rejected by BNY; approve the inquiry to BNY's agent, then approve the redelivery. Holding in between happens on its own.",
     seat: "goldman",
     home: "/eliza/case",
     decides: "Any change to Goldman's own instruction, and the redelivery.",
@@ -62,8 +62,8 @@ export const PERSONAS: Persona[] = [
     firm: "BNY",
     photo: "/personas/sharma.svg",
     section: "Live A2A case",
-    task: "Find the cause and hand it over",
-    taskLine: "Supervise BNY's Settlement Ops Agent as it finds whose side differs, and step in if it gets stuck.",
+    task: "Watch the agent find the cause",
+    taskLine: "BNY's Settlement Ops Agent compares the details and hands the case to Client Service on its own; you're told as it goes and step in only for exceptions.",
     seat: "bny",
     home: "/eliza/case",
     decides: "Instruction changes not sent by the client, and late-instruction exceptions.",
@@ -77,7 +77,7 @@ export const PERSONAS: Persona[] = [
     photo: "/personas/kim.svg",
     section: "Live A2A case",
     task: "Ask the client to re-instruct",
-    taskLine: "Approve the agent's draft to the client, email it to AllianzGI, and pass the client's fix time back.",
+    taskLine: "The agent drafts the request to the client on its own; you decide whether to email it to AllianzGI. The client's fix time goes back automatically.",
     seat: "bny-cs",
     home: "/eliza/case",
     decides: "Every message to the client, before it is sent.",
@@ -131,14 +131,13 @@ export const CLIENT = { name: "Emily Carter", role: "Trade Operations Analyst", 
 
 /**
  * Who may open the Supervision tab (BNY's backstage narration of the agents' reasoning).
- * Only BNY internal people with an oversight role: Priya supervises the case live; Sarah reviews
- * it read-only once it has closed. Everyone else, including Goldman and the client, gets null.
+ * Only Sarah, BNY Compliance: she supervises the case live while it runs and reviews it read-only
+ * once it has closed. Everyone else, including Priya, Goldman and the client, gets null.
  * Each firm only ever sees its own backstage. This is a prototype gate on who is being played,
  * not authentication.
  */
 export type SupervisionAccess = "live" | "read-only" | "waiting-for-close";
 export function supervisionAccess(id: PersonaId, status?: RunStatus | null): SupervisionAccess | null {
-  if (id === "sharma") return "live";
-  if (id === "nguyen") return status && FINAL.has(status) ? "read-only" : "waiting-for-close";
+  if (id === "nguyen") return status && FINAL.has(status) ? "read-only" : "live";
   return null;
 }

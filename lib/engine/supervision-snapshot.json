@@ -1,8 +1,8 @@
 {
  "golden": {
-  "recording": "r_5497d540",
+  "recording": "r_fc8192ee",
   "inquiry": {
-   "text": "Please explain the quantity mismatch underlying the DK and confirm whether we should redeliver before cutoff.",
+   "text": "Please explain the quantity mismatch DK and confirm whether we should redeliver before cutoff. Please also confirm the applicable cutoff time.",
    "fields": [
     "dtc_reference",
     "counterparty_trade_ref",
@@ -30,7 +30,7 @@
      "id": "card",
      "label": "Agent Card signature",
      "ok": true,
-     "detail": "signed with Goldman's registered key"
+     "detail": "signed with Goldman Sachs & Co. LLC's registered key"
     },
     {
      "id": "holder",
@@ -83,7 +83,7 @@
    ]
   },
   "hold": {
-   "text": "DTC-DO-20261119-000318 remains pending confirmation; the quantity has been queried and a new instruction requested. Please hold; an expected fix time will follow.",
+   "text": "The instruction is pending confirmation of the quantity and re-instruction. Please hold; an expected fix time will follow.",
    "shared": [
     "dtc_reference",
     "isin",
@@ -122,7 +122,7 @@
    }
   },
   "fix": {
-   "text": "The quantity difference was on our side; 10,000 is correct, and a corrected instruction is expected by 11:15 ET. Please keep your side as is and hold until the fix; settlement can still occur today before the 15:10 ET cutoff.",
+   "text": "The quantity mismatch was on our side; 10,000 is correct, and a corrected instruction is expected by 11:15 ET. Please keep your instruction as is and hold until the fix; settlement can still occur today before the 15:10 ET DTC DVP close.",
    "shared": [
     "dtc_reference",
     "isin",
@@ -165,9 +165,9 @@
   }
  },
  "fp3": {
-  "recording": "r_f5847003",
+  "recording": "r_8dabf85a",
   "inquiry": {
-   "text": "Please explain the quantity mismatch DK and confirm whether we should redeliver before cutoff. The relevant references and quantities are attached. BNY confirmed 10,000 yesterday.",
+   "text": "Please explain the quantity mismatch behind the DK and confirm whether we should redeliver before cutoff. The delivery and affirmed confirmation both show 10,000 shares. Please also provide the applicable cutoff. BNY confirmed 10,000 yesterday.",
    "fields": [
     "dtc_reference",
     "counterparty_trade_ref",
@@ -196,7 +196,7 @@
      "id": "card",
      "label": "Agent Card signature",
      "ok": true,
-     "detail": "signed with Goldman's registered key"
+     "detail": "signed with Goldman Sachs & Co. LLC's registered key"
     },
     {
      "id": "holder",
@@ -284,7 +284,7 @@
    }
   },
   "followup": {
-   "text": "We do not have a BNY record reference in our records. Our affirmed CTM confirmation reference is CTM-77104562.",
+   "text": "We do not have a BNY record reference for the claimed confirmation in our records. Our allocation record shows an affirmed CTM confirmation, CTM-77104562.",
    "fields": [
     "claim_reference"
    ],
@@ -301,7 +301,7 @@
       "id": "card",
       "label": "Agent Card signature",
       "ok": true,
-      "detail": "signed with Goldman's registered key"
+      "detail": "signed with Goldman Sachs & Co. LLC's registered key"
      },
      {
       "id": "holder",
@@ -356,9 +356,9 @@
   }
  },
  "fp4": {
-  "recording": "r_b00667e7",
+  "recording": "r_94cb9ed9",
   "inquiry": {
-   "text": "Please explain the quantity-mismatch DK and confirm whether we should redeliver before cutoff. The delivery and affirmed confirmation both show 10,000 shares.",
+   "text": "Please explain the quantity mismatch on the attached DK. The delivered and affirmed quantities are both 10,000. Should we redeliver before cutoff, and if so, what quantity should we use?",
    "fields": [
     "dtc_reference",
     "counterparty_trade_ref",
@@ -386,7 +386,7 @@
      "id": "card",
      "label": "Agent Card signature",
      "ok": true,
-     "detail": "signed with Goldman's registered key"
+     "detail": "signed with Goldman Sachs & Co. LLC's registered key"
     },
     {
      "id": "holder",
@@ -439,7 +439,7 @@
    ]
   },
   "hold": {
-   "text": "DTC-DO-20261119-000318 (ISIN US67066G1040, settlement date 2026-11-19) is pending confirmation of the quantity and re-instruction. Please hold; an expected fix time will follow.",
+   "text": "The instruction is pending confirmation of the quantity and re-instruction. Please hold; an expected fix time will follow.",
    "shared": [
     "dtc_reference",
     "isin",
@@ -479,9 +479,9 @@
   }
  },
  "fp5": {
-  "recording": "r_b89b6317",
+  "recording": "r_89d89ef9",
   "inquiry": {
-   "text": "Please explain the quantity mismatch behind the DK and confirm whether we should redeliver before cutoff. Please also confirm the applicable cutoff time.",
+   "text": "Please explain the quantity mismatch DK for the attached delivery and confirm whether we should redeliver before cutoff.",
    "fields": [
     "dtc_reference",
     "counterparty_trade_ref",
@@ -509,7 +509,7 @@
      "id": "card",
      "label": "Agent Card signature",
      "ok": true,
-     "detail": "signed with Goldman's registered key"
+     "detail": "signed with Goldman Sachs & Co. LLC's registered key"
     },
     {
      "id": "holder",
@@ -601,7 +601,7 @@
    }
   },
   "fix": {
-   "text": "The quantity difference is on our side; 10,000 is correct, and the instruction is pending correction by 11:50 ET. Please keep your side as is and hold until the fix; the trade can still settle today before the 15:10 ET DTC DVP close.",
+   "text": "The quantity difference is on our side; 10,000 is correct, and the instruction is pending correction by 11:50 ET. Please keep your side as is rather than redelivering; the trade can still settle today before the 15:10 ET DTC DVP close.",
    "shared": [
     "dtc_reference",
     "isin",
